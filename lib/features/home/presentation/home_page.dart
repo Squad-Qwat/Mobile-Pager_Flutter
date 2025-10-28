@@ -371,7 +371,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  activity['tableNum'],
+                                  '${activity['tableNum'] ?? -1}',
                                   style: GoogleFonts.inter(
                                     fontSize: 16, 
                                     fontWeight: FontWeight.w700
