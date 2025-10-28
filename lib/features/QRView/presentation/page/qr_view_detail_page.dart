@@ -47,10 +47,10 @@ class _QrDetailPageState extends State<QrDetailPage>
       final qrImagesBytes = await qrImage.toImageAsBytes(
         size: 512,
         format: ImageByteFormat.png,
-        decoration: PrettyQrDecoration(
+        decoration: const PrettyQrDecoration(
           image: PrettyQrDecorationImage(
             image: NetworkImage('url'),
-            scale: 5.0,
+            scale: 0.25,
             padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
           ),
           quietZone: PrettyQrQuietZone.standart,
@@ -96,10 +96,10 @@ class _QrDetailPageState extends State<QrDetailPage>
       final qrImagesBytes = await qrImage.toImageAsBytes(
         size: 512,
         format: ImageByteFormat.png,
-        decoration: PrettyQrDecoration(
+        decoration: const PrettyQrDecoration(
           image: PrettyQrDecorationImage(
             image: NetworkImage('url'),
-            scale: 5.0,
+            scale: 0.25,
             padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
           ),
           quietZone: PrettyQrQuietZone.standart,
@@ -218,10 +218,10 @@ class _QrDetailPageState extends State<QrDetailPage>
                 ),
                 child: PrettyQrView(
                   qrImage: qrImage,
-                  decoration: PrettyQrDecoration(
+                  decoration: const PrettyQrDecoration(
                     image: PrettyQrDecorationImage(
                       image: NetworkImage('url'),
-                      scale: 5.0,
+                      scale: 0.25,
                       padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
                     ),
                     quietZone: PrettyQrQuietZone.standart,
