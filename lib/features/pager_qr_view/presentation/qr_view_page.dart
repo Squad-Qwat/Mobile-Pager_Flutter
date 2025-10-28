@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
@@ -13,7 +14,7 @@ class QRViewPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'QR Pager',
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: AppColor.textPrimary,
           ),
@@ -25,16 +26,13 @@ class QRViewPage extends StatelessWidget {
         padding: const EdgeInsets.all(AppPadding.p16),
         child: Column(
           children: [
-            Text(
-              'QR Pager',
-              style: GoogleFonts.dmSans(
-                fontSize: 18,
-                color: AppColor.textPrimary,
-              ),
+            Text('QR Pager'),
+            PrimaryButton(
+              text: "Buat QR Pager",
+              onPressed: () {
+                Navigator.of(context).pushNamed(AppRoutes.addPager);
+              },
             ),
-            PrimaryButton(text: "Buat QR Pager", onPressed: () {
-              
-            }),
           ],
         ),
       ),

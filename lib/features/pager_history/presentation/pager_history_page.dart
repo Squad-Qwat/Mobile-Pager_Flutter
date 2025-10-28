@@ -13,7 +13,7 @@ class PagerHistortPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Inbox',
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: AppColor.textPrimary,
           ),
@@ -24,7 +24,7 @@ class PagerHistortPage extends StatelessWidget {
       body: Center(
         child: Text(
           'Inbox Page',
-          style: GoogleFonts.dmSans(fontSize: 18, color: AppColor.textPrimary),
+          style: GoogleFonts.inter(fontSize: 18, color: AppColor.textPrimary),
         ),
       ),
     );

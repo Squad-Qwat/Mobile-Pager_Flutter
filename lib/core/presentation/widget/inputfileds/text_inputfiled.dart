@@ -119,7 +119,7 @@ class _TextInputFieldState extends State<TextInputField> {
             widget.label!,
             style:
                 widget.labelStyle ??
-                GoogleFonts.dmSans(
+                GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColor.textPrimary,
@@ -146,7 +146,7 @@ class _TextInputFieldState extends State<TextInputField> {
           autovalidateMode: widget.autovalidateMode,
           style:
               widget.textStyle ??
-              GoogleFonts.dmSans(
+              GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
                 color: widget.enabled
@@ -157,19 +157,19 @@ class _TextInputFieldState extends State<TextInputField> {
             hintText: widget.hint,
             hintStyle:
                 widget.hintStyle ??
-                GoogleFonts.dmSans(
+                GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   color: AppColor.textSecondary,
                 ),
             helperText: widget.helperText,
-            helperStyle: GoogleFonts.dmSans(
+            helperStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.textSecondary,
             ),
             errorText: widget.errorText,
-            errorStyle: GoogleFonts.dmSans(
+            errorStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.error,
@@ -207,7 +207,7 @@ class _TextInputFieldState extends State<TextInputField> {
                 widget.contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             counterText: widget.showCharacterCounter ? null : '',
-            counterStyle: GoogleFonts.dmSans(
+            counterStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.textSecondary,

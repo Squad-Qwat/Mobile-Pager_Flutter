@@ -33,10 +33,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(
             "Halo, John Doe",
-            style: GoogleFonts.dmSans(
-              fontSize: 24,
-              color: AppColor.primary,
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w900,
+              color: AppColor.primary,
             ),
           ),
           const Spacer(),

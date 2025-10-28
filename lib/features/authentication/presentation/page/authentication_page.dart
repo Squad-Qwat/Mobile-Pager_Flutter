@@ -41,7 +41,7 @@ class AuthenticationPage extends StatelessWidget {
   Widget _buildWelcomeText() {
     return Text(
       'Welcome to Moger',
-      style: GoogleFonts.dmSans(
+      style: GoogleFonts.inter(
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: AppColor.textPrimary,
@@ -53,7 +53,7 @@ class AuthenticationPage extends StatelessWidget {
   Widget _buildSubtitle() {
     return Text(
       'Sign in to continue and manage your requests',
-      style: GoogleFonts.dmSans(
+      style: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColor.textSecondary,
@@ -98,7 +98,7 @@ class AuthenticationPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   'Sign in with Google',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColor.textPrimary,
@@ -120,7 +120,7 @@ class AuthenticationPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'OR',
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColor.textSecondary,
@@ -151,7 +151,7 @@ class AuthenticationPage extends StatelessWidget {
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w400,
             color: AppColor.textSecondary,
@@ -160,7 +160,7 @@ class AuthenticationPage extends StatelessWidget {
             const TextSpan(text: 'By continuing, you agree to our '),
             TextSpan(
               text: 'Terms of Service',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColor.primary,
@@ -169,7 +169,7 @@ class AuthenticationPage extends StatelessWidget {
             const TextSpan(text: ' and '),
             TextSpan(
               text: 'Privacy Policy',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColor.primary,
@@ -184,7 +184,7 @@ class AuthenticationPage extends StatelessWidget {
   void _handleGoogleSignIn(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Google Sign In clicked', style: GoogleFonts.dmSans()),
+        content: Text('Google Sign In clicked', style: GoogleFonts.inter()),
         backgroundColor: AppColor.primary,
       ),
     );
@@ -193,7 +193,7 @@ class AuthenticationPage extends StatelessWidget {
   void _handleCustomerSignIn(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Customer Sign In clicked', style: GoogleFonts.dmSans()),
+        content: Text('Customer Sign In clicked', style: GoogleFonts.inter()),
         backgroundColor: AppColor.primary,
       ),
     );

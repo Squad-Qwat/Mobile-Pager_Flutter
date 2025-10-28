@@ -95,7 +95,7 @@ class _MainNavigationState extends State<MainNavigation> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 color: isSelected ? AppColor.primary : AppColor.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

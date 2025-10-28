@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mobile Pager',
       debugShowCheckedModeBanner: false,
+      initialRoute: AppRoutes.home,
       routes: {
         AppRoutes.home: (context) => const MainNavigation(),
         AppRoutes.qrView: (context) => const QRViewPage(),
@@ -27,18 +29,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: AppColor.primary,
+        textTheme: GoogleFonts.interTextTheme().apply(
+          bodyColor: AppColor.textPrimary,
+          displayColor: AppColor.textPrimary,
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColor.primary,
           primary: AppColor.primary,
         ),
         scaffoldBackgroundColor: AppColor.background,
       ),
-      // Change to MainNavigation to see the new home page
-      home: const MainNavigation(),
-      // Uncomment to see authentication page
-      // home: const AuthenticationPage(),
-      // Uncomment to see demo page
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
