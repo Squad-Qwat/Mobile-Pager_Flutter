@@ -10,18 +10,16 @@ import 'package:mobile_pager_flutter/features/authentication/presentation/provid
 import 'package:mobile_pager_flutter/features/notifications/domain/models/notification_model.dart';
 import 'package:mobile_pager_flutter/features/notifications/presentation/providers/notification_providers.dart';
 
-class NotificationHistoryPage extends ConsumerWidget {
+class NotificationHistoryPage extends ConsumerWidget 
+{
   const NotificationHistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) 
+  {
     final user = ref.watch(authNotifierProvider.select((state) => state.user));
 
-    if (user == null) {
-      return Scaffold(
-        body: Center(child: Text('Please login')),
-      );
-    }
+    if (user == null) {return Scaffold(body: Center(child: Text('Please login')));}
 
     final notificationsAsync = ref.watch(userNotificationsProvider(user.uid));
 
@@ -38,7 +36,7 @@ class NotificationHistoryPage extends ConsumerWidget {
         backgroundColor: AppColor.white,
         elevation: 0,
         iconTheme: IconThemeData(color: AppColor.textPrimary),
-        actions: [
+        actions: <Widget>[
           IconButton(
             onPressed: () => _markAllAsRead(context, ref, user.uid),
             icon: Icon(Iconsax.tick_circle),
@@ -54,12 +52,14 @@ class NotificationHistoryPage extends ConsumerWidget {
             style: GoogleFonts.inter(color: Colors.red),
           ),
         ),
-        data: (notifications) {
-          if (notifications.isEmpty) {
+        data: (notifications) 
+        {
+          if (notifications.isEmpty) 
+          {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: <Widget>[
                   Icon(
                     Iconsax.notification,
                     size: 80,
@@ -77,11 +77,11 @@ class NotificationHistoryPage extends ConsumerWidget {
               ),
             );
           }
-
           return ListView.builder(
             padding: EdgeInsets.all(AppPadding.p16),
             itemCount: notifications.length,
-            itemBuilder: (context, index) {
+            itemBuilder: (context, index) 
+            {
               final notification = notifications[index];
               return _buildNotificationCard(context, ref, notification);
             },
@@ -91,18 +91,15 @@ class NotificationHistoryPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNotificationCard(
-    BuildContext context,
-    WidgetRef ref,
-    NotificationModel notification,
-  ) {
+  Widget _buildNotificationCard(BuildContext context, WidgetRef ref, NotificationModel notification) 
+  {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: notification.isRead ? Colors.white : AppColor.primary.withOpacity(0.05),
+        color: notification.isRead ? Colors.white : AppColor.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: notification.isRead ? Colors.grey.shade200 : AppColor.primary.withOpacity(0.3),
+          color: notification.isRead ? Colors.grey.shade200 : AppColor.primary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -113,11 +110,11 @@ class NotificationHistoryPage extends ConsumerWidget {
           padding: EdgeInsets.all(16.w),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Container(
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: _getNotificationColor(notification.type).withOpacity(0.1),
+                  color: _getNotificationColor(notification.type).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -130,7 +127,7 @@ class NotificationHistoryPage extends ConsumerWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -144,7 +141,7 @@ class NotificationHistoryPage extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (!notification.isRead)
+                        if (!notification.isRead)...[
                           Container(
                             width: 8,
                             height: 8,
@@ -153,6 +150,7 @@ class NotificationHistoryPage extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
+                        ]
                       ],
                     ),
                     SizedBox(height: 6.h),
@@ -181,8 +179,10 @@ class NotificationHistoryPage extends ConsumerWidget {
     );
   }
 
-  IconData _getNotificationIcon(NotificationType type) {
-    switch (type) {
+  IconData _getNotificationIcon(NotificationType type) 
+  {
+    switch (type) 
+    {
       case NotificationType.newCustomer:
         return Iconsax.user_add;
       case NotificationType.orderReady:
@@ -195,13 +195,13 @@ class NotificationHistoryPage extends ConsumerWidget {
         return Iconsax.close_circle;
       case NotificationType.orderFinished:
         return Iconsax.verify;
-      default:
-        return Iconsax.notification;
-    }
+    } // 'default' case already covered, no need to add it
   }
 
-  Color _getNotificationColor(NotificationType type) {
-    switch (type) {
+  Color _getNotificationColor(NotificationType type) 
+  {
+    switch (type) 
+    {
       case NotificationType.newCustomer:
         return Colors.blue;
       case NotificationType.orderReady:
@@ -214,31 +214,26 @@ class NotificationHistoryPage extends ConsumerWidget {
         return Colors.red;
       case NotificationType.orderFinished:
         return Colors.green.shade700;
-      default:
-        return AppColor.primary;
-    }
+    } // 'default' case already covered, no need to add it
   }
 
-  String _formatTime(DateTime dateTime) {
+  String _formatTime(DateTime dateTime) 
+  {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
-    if (difference.inMinutes < 1) {
-      return 'Baru saja';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} menit yang lalu';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} jam yang lalu';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} hari yang lalu';
-    } else {
-      return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
-    }
+    if (difference.inMinutes < 1) {return 'Baru saja';} 
+    else if (difference.inMinutes < 60) {return '${difference.inMinutes} menit yang lalu';} 
+    else if (difference.inHours < 24) {return '${difference.inHours} jam yang lalu';} 
+    else if (difference.inDays < 7) {return '${difference.inDays} hari yang lalu';} 
+    else {return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);}
   }
 
-  void _handleNotificationTap(WidgetRef ref, NotificationModel notification) {
+  void _handleNotificationTap(WidgetRef ref, NotificationModel notification) 
+  {
     // Mark as read
-    if (!notification.isRead) {
+    if (!notification.isRead) 
+    {
       final repository = ref.read(notificationRepositoryProvider);
       repository.markAsRead(notification.id);
     }
@@ -247,12 +242,15 @@ class NotificationHistoryPage extends ConsumerWidget {
     // For example, navigate to pager detail page
   }
 
-  void _markAllAsRead(BuildContext context, WidgetRef ref, String userId) async {
-    try {
+  void _markAllAsRead(BuildContext context, WidgetRef ref, String userId) async 
+  {
+    try 
+    {
       final repository = ref.read(notificationRepositoryProvider);
       await repository.markAllAsRead(userId);
 
-      if (context.mounted) {
+      if (context.mounted) 
+      {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -264,8 +262,11 @@ class NotificationHistoryPage extends ConsumerWidget {
           ),
         );
       }
-    } catch (e) {
-      if (context.mounted) {
+    } 
+    catch (e) 
+    {
+      if (context.mounted) 
+      {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

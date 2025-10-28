@@ -1,10 +1,14 @@
 import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
 
 /// Enum untuk filter waktu
-enum TimeFilter {
+enum TimeFilter 
+{
+  general,
   today,
+  yesterday,
   thisWeek,
   thisMonth,
+  lastMonth,
   customRange,
   customMonthYear,
 }
@@ -57,21 +61,18 @@ class HistoryFilterOptions {
 }
 
 /// Service untuk filtering dan sorting history
-class HistoryFilterService {
+class HistoryFilterService 
+{
   /// Filter history berdasarkan options
-  static List<History> filterHistory(
-    List<History> historyList,
-    HistoryFilterOptions options,
-  ) {
+  static List<History> filterHistory(List<History> historyList, HistoryFilterOptions options) 
+  {
     List<History> filtered = historyList;
 
     // 1. Filter by time
     filtered = _filterByTime(filtered, options);
 
     // 2. Filter by search query
-    if (options.searchQuery.isNotEmpty) {
-      filtered = _filterBySearch(filtered, options.searchQuery);
-    }
+    if (options.searchQuery.isNotEmpty) {filtered = _filterBySearch(filtered, options.searchQuery);}
 
     // 3. Sort
     filtered = _sortHistory(filtered, options.sortOrder);
@@ -80,13 +81,12 @@ class HistoryFilterService {
   }
 
   /// Filter berdasarkan waktu
-  static List<History> _filterByTime(
-    List<History> historyList,
-    HistoryFilterOptions options,
-  ) {
+  static List<History> _filterByTime(List<History> historyList, HistoryFilterOptions options) 
+  {
     final now = DateTime.now();
 
-    switch (options.timeFilter) {
+    switch (options.timeFilter) 
+    {
       case TimeFilter.today:
         final startOfDay = DateTime(now.year, now.month, now.day);
         final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
@@ -144,17 +144,35 @@ class HistoryFilterService {
 
       // default:
       //   return historyList;
+      case TimeFilter.general:
+        return historyList
+        .where((h) =>
+                h.createdAt.isAfter(DateTime(0000, 0, 0, 0)) &&
+                h.createdAt.isBefore(DateTime(0000, 0, 0, 0)))
+        .toList();
+      case TimeFilter.yesterday:
+        final startOfDay = DateTime(now.year, now.month, now.day-1);
+        final endOfDay = DateTime(now.year, now.month, now.day-1, 23, 59, 59);
+        return historyList
+            .where((h) =>
+                h.createdAt.isAfter(startOfDay) &&
+                h.createdAt.isBefore(endOfDay))
+            .toList();
+      case TimeFilter.lastMonth:
+        final startOfMonth = DateTime(now.year, now.month-1, 1);
+        return historyList
+            .where((h) => h.createdAt.isAfter(startOfMonth))
+            .toList();
     }
   }
 
   /// Filter berdasarkan search query
-  static List<History> _filterBySearch(
-    List<History> historyList,
-    String query,
-  ) {
+  static List<History> _filterBySearch(List<History> historyList, String query) 
+  {
     final lowerQuery = query.toLowerCase();
 
-    return historyList.where((h) {
+    return historyList.where((h) 
+    {
       final matchesOrderId = h.orderId.toLowerCase().contains(lowerQuery);
       final matchesQueueNumber =
           h.queueNumber.toLowerCase().contains(lowerQuery);
@@ -170,25 +188,22 @@ class HistoryFilterService {
   }
 
   /// Sort history
-  static List<History> _sortHistory(
-    List<History> historyList,
-    SortOrder sortOrder,
-  ) {
+  static List<History> _sortHistory(List<History> historyList,SortOrder sortOrder) 
+  {
     final sorted = List<History>.from(historyList);
 
-    sorted.sort((a, b) {
-      if (sortOrder == SortOrder.dateDescending) {
-        return b.createdAt.compareTo(a.createdAt);
-      } else {
-        return a.createdAt.compareTo(b.createdAt);
-      }
+    sorted.sort((a, b) 
+    {
+      if (sortOrder == SortOrder.dateDescending) {return b.createdAt.compareTo(a.createdAt);} 
+      else {return a.createdAt.compareTo(b.createdAt);}
     });
 
     return sorted;
   }
 
   /// Get date range label untuk display
-  static String getTimeFilterLabel(HistoryFilterOptions options) {
+  static String getTimeFilterLabel(HistoryFilterOptions options) 
+  {
     // final now = DateTime.now();
 
     switch (options.timeFilter) {
@@ -208,17 +223,22 @@ class HistoryFilterService {
           return '${_getMonthName(options.month!)} ${options.year}';
         }
         return 'Pilih Bulan';
+      case TimeFilter.general:
+        return 'Waktu Umum';
+      case TimeFilter.yesterday:
+        return 'Kemarin';
+      case TimeFilter.lastMonth:
+        return 'Bulan lalu';
       }
   }
 
   /// Format date untuk display
-  static String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
+  static String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
 
   /// Get month name
-  static String _getMonthName(int month) {
-    const months = [
+  static String _getMonthName(int month) 
+  {
+    const months = <String>[
       'Januari',
       'Februari',
       'Maret',

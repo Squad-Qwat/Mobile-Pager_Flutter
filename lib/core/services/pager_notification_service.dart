@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -6,28 +7,26 @@ import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.da
 import 'package:vibration/vibration.dart';
 
 /// Service to handle pager-specific notifications with sound and vibration
-class PagerNotificationService {
-  static final PagerNotificationService _instance =
-      PagerNotificationService._internal();
-  factory PagerNotificationService() => _instance;
+class PagerNotificationService 
+{
+  static final PagerNotificationService _instance = PagerNotificationService._internal();
+  factory PagerNotificationService() => _instance; 
   PagerNotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
   Timer? _vibrationTimer;
-  Timer? _soundTimer;
+  // Timer? _soundTimer;
 
   /// Initialize the pager notification service
-  Future<void> initialize() async {
-    if (_isInitialized) return;
+  Future<void> initialize() async 
+  {
+    if (_isInitialized) {return;}
 
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
+    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -44,11 +43,12 @@ class PagerNotificationService {
     await _createPagerCallChannel();
 
     _isInitialized = true;
-    print('✅ PagerNotificationService initialized');
+    stdout.write('✅ PagerNotificationService initialized');
   }
 
   /// Create a high-priority notification channel for pager calls
-  Future<void> _createPagerCallChannel() async {
+  Future<void> _createPagerCallChannel() async 
+  {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'pager_call_channel', // id
       'Pager Calls', // name
@@ -61,17 +61,16 @@ class PagerNotificationService {
       showBadge: true,
     );
 
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+    await _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+    ?.createNotificationChannel(channel);
 
-    print('✅ Pager call notification channel created');
+    stdout.write('✅ Pager call notification channel created');
   }
 
   /// Show notification when pager status changes to "ringing"
-  Future<void> showPagerCallNotification(PagerModel pager, String merchantName) async {
-    print('🔔 Showing pager call notification for: ${pager.displayId}');
+  Future<void> showPagerCallNotification(PagerModel pager, String merchantName) async 
+  {
+    stdout.write('🔔 Showing pager call notification for: ${pager.displayId}');
 
     // Start continuous vibration
     await _startContinuousVibration();
@@ -94,7 +93,8 @@ class PagerNotificationService {
       autoCancel: false,
       ticker: '$merchantName memanggil Anda',
       styleInformation: BigTextStyleInformation(
-        '$merchantName memanggil Anda!\n\nNomor Antrian: ${pager.queueNumber}\nPager: ${pager.displayId}\n\nPesanan Anda sudah siap! Silakan ambil pesanan Anda.',
+        '''$merchantName memanggil Anda!\n\nNomor Antrian: ${pager.queueNumber}\nPager: ${pager.displayId}\n\n
+        Pesanan Anda sudah siap! Silakan ambil pesanan Anda.''',
         contentTitle: '📞 $merchantName memanggil Anda',
         summaryText: 'Antrian ${pager.queueNumber}',
       ),
@@ -130,16 +130,19 @@ class PagerNotificationService {
       payload: pager.pagerId,
     );
 
-    print('✅ Pager call notification shown with sound and vibration');
+    stdout.write('✅ Pager call notification shown with sound and vibration');
   }
 
   /// Start continuous vibration pattern
-  Future<void> _startContinuousVibration() async {
-    try {
-      // Check if device has vibrator
+  /// Check if device has vibrator
+  Future<void> _startContinuousVibration() async 
+  {
+    try 
+    {
       final hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator != true) {
-        print('⚠️ Device does not have vibrator');
+      if (hasVibrator != true) 
+      {
+        stdout.write('⚠️ Device does not have vibrator');
         return;
       }
 
@@ -150,10 +153,12 @@ class PagerNotificationService {
       int vibrationCount = 0;
       const maxVibrations = 30; // 30 seconds
 
-      _vibrationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (vibrationCount >= maxVibrations) {
+      _vibrationTimer = Timer.periodic(const Duration(seconds: 1), (timer) 
+      {
+        if (vibrationCount >= maxVibrations) 
+        {
           timer.cancel();
-          print('⏹️ Vibration stopped after 30 seconds');
+          stdout.write('⏹️ Vibration stopped after 30 seconds');
           return;
         }
 
@@ -162,44 +167,43 @@ class PagerNotificationService {
         vibrationCount++;
       });
 
-      print('✅ Started continuous vibration');
-    } catch (e) {
-      print('❌ Error starting vibration: $e');
-    }
+      stdout.write('✅ Started continuous vibration');
+    } 
+    catch (e) {stdout.write('❌ Error starting vibration: $e');}
   }
 
   /// Stop continuous vibration
-  Future<void> stopVibration() async {
-    try {
+  Future<void> stopVibration() async 
+  {
+    try 
+    {
       _vibrationTimer?.cancel();
       _vibrationTimer = null;
       await Vibration.cancel();
-      print('⏹️ Vibration stopped');
-    } catch (e) {
-      print('❌ Error stopping vibration: $e');
-    }
+      stdout.write('⏹️ Vibration stopped');
+    } 
+    catch (e) {stdout.write('❌ Error stopping vibration: $e');}
   }
 
   /// Cancel pager call notification
-  Future<void> cancelPagerCallNotification(String pagerId) async {
+  Future<void> cancelPagerCallNotification(String pagerId) async 
+  {
     await _localNotifications.cancel(pagerId.hashCode);
     await stopVibration();
-    print('🔕 Pager call notification cancelled for: $pagerId');
+    stdout.write('🔕 Pager call notification cancelled for: $pagerId');
   }
 
   /// Cancel all notifications
-  Future<void> cancelAllNotifications() async {
+  Future<void> cancelAllNotifications() async 
+  {
     await _localNotifications.cancelAll();
     await stopVibration();
-    print('🔕 All notifications cancelled');
+    stdout.write('🔕 All notifications cancelled');
   }
 
   /// Show notification for status change (ready, finished, etc.)
-  Future<void> showStatusChangeNotification({
-    required String pagerId,
-    required String title,
-    required String body,
-  }) async {
+  Future<void> showStatusChangeNotification({required String pagerId, required String title, required String body}) async 
+  {
     final AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'pager_status_channel',

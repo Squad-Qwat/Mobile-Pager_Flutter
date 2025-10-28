@@ -45,30 +45,31 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     List<PagerModel> filtered = List.from(pagers);
 
     // Apply time filter
-    if (_filterOptions.timeFilter != 'all') 
+    if (_filterOptions.timeFilter != TimeFilter.general) 
     {
       final now = DateTime.now();
-      filtered = filtered.where((pager) 
+      filtered = filtered.where(
+        (pager) 
       {
         final pagerDate = pager.activatedAt ?? pager.createdAt;
 
         switch (_filterOptions.timeFilter) 
         {
-          case 'today':
+          case TimeFilter.today:
             return pagerDate.year == now.year &&
                 pagerDate.month == now.month &&
                 pagerDate.day == now.day;
-          case 'yesterday':
+          case TimeFilter.yesterday:
             final yesterday = now.subtract(const Duration(days: 1));
             return pagerDate.year == yesterday.year &&
                 pagerDate.month == yesterday.month &&
                 pagerDate.day == yesterday.day;
-          case 'this_week':
+          case TimeFilter.thisWeek:
             final weekStart = now.subtract(Duration(days: now.weekday - 1));
             return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
-          case 'this_month':
+          case TimeFilter.thisMonth:
             return pagerDate.year == now.year && pagerDate.month == now.month;
-          case 'last_month':
+          case TimeFilter.lastMonth:
             final lastMonth = DateTime(now.year, now.month - 1);
             return pagerDate.year == lastMonth.year &&
                 pagerDate.month == lastMonth.month;

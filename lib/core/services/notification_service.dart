@@ -1,22 +1,23 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 import 'package:mobile_pager_flutter/features/notifications/domain/models/notification_model.dart';
 import 'package:mobile_pager_flutter/features/notifications/domain/repositories/i_notification_repository.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
 
-class NotificationService {
+class NotificationService 
+{
   final INotificationRepository _notificationRepository;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   NotificationService(this._notificationRepository);
 
   /// Send notification when customer joins queue (to merchant)
-  Future<void> sendNewCustomerNotification({
-    required String merchantId,
-    required PagerModel pager,
-  }) async {
-    try {
+  Future<void> sendNewCustomerNotification({required String merchantId, required PagerModel pager}) async 
+  {
+    try 
+    {
       // Create notification in Firestore
       final notification = NotificationModel(
         id: '',
@@ -24,7 +25,8 @@ class NotificationService {
         title: 'Customer Baru',
         body: 'Customer baru bergabung dengan nomor antrian ${pager.number}',
         type: NotificationType.newCustomer,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -39,24 +41,23 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending new customer notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending new customer notification: $e');}
   }
 
   /// Send notification when order is ready (to customer)
-  Future<void> sendOrderReadyNotification({
-    required String customerId,
-    required PagerModel pager,
-  }) async {
-    try {
+  Future<void> sendOrderReadyNotification({required String customerId, required PagerModel pager}) async 
+  {
+    try 
+    {
       final notification = NotificationModel(
         id: '',
         userId: customerId,
         title: 'Pesanan Anda Siap!',
         body: 'Pesanan Anda dengan nomor ${pager.number} sudah siap. Silakan ambil.',
         type: NotificationType.orderReady,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -70,24 +71,23 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending order ready notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending order ready notification: $e');}
   }
 
   /// Send notification when customer is being called (to customer)
-  Future<void> sendOrderCallingNotification({
-    required String customerId,
-    required PagerModel pager,
-  }) async {
-    try {
+  Future<void> sendOrderCallingNotification({required String customerId, required PagerModel pager}) async 
+  {
+    try 
+    {
       final notification = NotificationModel(
         id: '',
         userId: customerId,
         title: 'Waktunya Ambil Pesanan!',
         body: 'Nomor antrian ${pager.number} dipanggil. Segera ke counter!',
         type: NotificationType.orderCalling,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -101,18 +101,19 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending order calling notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending order calling notification: $e');}
   }
 
   /// Send notification when order will expire soon (to customer)
   Future<void> sendOrderExpiringSoonNotification({
     required String customerId,
     required PagerModel pager,
-    required int minutesRemaining,
-  }) async {
-    try {
+    required int minutesRemaining
+  }) async 
+  {
+    try 
+    {
       final notification = NotificationModel(
         id: '',
         userId: customerId,
@@ -120,7 +121,8 @@ class NotificationService {
         body:
             'Pesanan ${pager.number} akan kadaluarsa dalam $minutesRemaining menit. Segera ambil!',
         type: NotificationType.orderExpiringSoon,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -134,24 +136,23 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending expiring soon notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending expiring soon notification: $e');}
   }
 
   /// Send notification when order has expired (to customer)
-  Future<void> sendOrderExpiredNotification({
-    required String customerId,
-    required PagerModel pager,
-  }) async {
-    try {
+  Future<void> sendOrderExpiredNotification({required String customerId, required PagerModel pager}) async 
+  {
+    try 
+    {
       final notification = NotificationModel(
         id: '',
         userId: customerId,
         title: 'Pesanan Kadaluarsa',
         body: 'Maaf, pesanan ${pager.number} telah kadaluarsa karena tidak diambil.',
         type: NotificationType.orderExpired,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -165,24 +166,23 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending order expired notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending order expired notification: $e');}
   }
 
   /// Send notification when order is finished (to customer)
-  Future<void> sendOrderFinishedNotification({
-    required String customerId,
-    required PagerModel pager,
-  }) async {
-    try {
+  Future<void> sendOrderFinishedNotification({required String customerId, required PagerModel pager}) async 
+  {
+    try 
+    {
       final notification = NotificationModel(
         id: '',
         userId: customerId,
         title: 'Terima Kasih!',
         body: 'Terima kasih telah menggunakan layanan kami. Pesanan ${pager.number} selesai.',
         type: NotificationType.orderFinished,
-        data: {
+        data: 
+        {
           'pagerId': pager.id,
           'pagerNumber': pager.number,
         },
@@ -196,32 +196,34 @@ class NotificationService {
         body: notification.body,
         data: notification.data ?? {},
       );
-    } catch (e) {
-      print('Error sending order finished notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending order finished notification: $e');}
   }
 
   /// Send FCM push notification via Firebase Cloud Functions
   /// Note: This requires a backend Cloud Function to send FCM messages
   /// For now, this is a placeholder that gets the token
   Future<void> _sendFCMNotification({
-    required String userId,
-    required String title,
-    required String body,
-    required Map<String, dynamic> data,
-  }) async {
-    try {
+    required String userId, 
+    required String title, 
+    required String body, 
+    required Map<String, dynamic> data
+  }) async 
+  {
+    try 
+    {
       // Get user's FCM token
       final token = await _notificationRepository.getFCMToken(userId);
-      if (token == null) {
-        print('No FCM token found for user: $userId');
+      if (token == null) 
+      {
+        stdout.write('No FCM token found for user: $userId');
         return;
       }
 
       // TODO: Call your Cloud Function here to send FCM notification
       // For now, we just print the token
-      print('Would send FCM to token: $token');
-      print('Title: $title, Body: $body');
+      stdout.write('Would send FCM to token: $token');
+      stdout.write('Title: $title, Body: $body');
 
       // Example of what the Cloud Function call would look like:
       // await http.post(
@@ -234,8 +236,7 @@ class NotificationService {
       //     'data': data,
       //   }),
       // );
-    } catch (e) {
-      print('Error sending FCM notification: $e');
-    }
+    } 
+    catch (e) {stdout.write('Error sending FCM notification: $e');}
   }
 }
