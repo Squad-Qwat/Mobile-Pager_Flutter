@@ -1,10 +1,14 @@
 import 'dart:io';
+import 'dart:ui'; // untuk menggunakan ImageByteFormat
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart'; // Merevisi implementasi QR saat ini
+import 'package:path_provider/path_provider.dart'; // Merevisi implementasi unduh QR
+import 'package:share_plus/share_plus.dart'; // Merevisi implementasi bagi QR
 
 class QrDetailPage extends StatefulWidget 
 {
@@ -19,6 +23,12 @@ class _QrDetailPageState extends State<QrDetailPage>
   bool _isQueueActive = true;
   bool _isFullScreen = false;
 
+  @protected
+  late QrImage qrImage;
+  final String qrData = "My QR";
+
+
+
   void poppingButtons(){if (Navigator.canPop(context)) {Navigator.pop(context);}}
 
   // Karena belum integrasi ke fungsi lain, sementara ini dulu
@@ -27,8 +37,110 @@ class _QrDetailPageState extends State<QrDetailPage>
 
   // Belum ada implementasi yang bagus
   void printQR(){stdout.write("QR has been printed");}
-  void shareQR(){stdout.write("QR has been shared");}
-  void downloadQR(){stdout.write("QR has been downloaded");}
+
+  
+  Future<void> shareQR() async
+  {
+    stdout.write("Menyiapkan QR untuk dibagikan...");
+
+    try 
+    {
+      final qrImagesBytes = await qrImage.toImageAsBytes(
+        size: 512,
+        format: ImageByteFormat.png,
+        decoration: PrettyQrDecoration(
+          image: PrettyQrDecorationImage(
+            image: NetworkImage('url'),
+            scale: 5.0,
+            padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
+          ),
+          quietZone: PrettyQrQuietZone.standart,
+          background: Colors.white
+        ));
+      
+      if (qrImagesBytes == null) 
+      {
+        stdout.write("Gagal menghasilkan bytes gambar QR");
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final path = '${tempDir.path}/queue_qr.png';
+      // 4. Write bytes to file
+      await File(path).writeAsBytes(qrImagesBytes.buffer.asUint8List());
+      
+      // 5. Share the file using share_plus
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(path)],
+        text: "Scan this QR to join the queue!",
+        subject: "Queue QR Code",
+      ));
+
+      /*
+      Replacement for this, as this part is deprecated:
+      await Share.shareXFiles(
+        [XFile(path)], 
+        text: "Scan this QR to join the queue!", 
+        subject: "Queue QR Code"
+      );
+      */
+      stdout.write("Share dialog launched.");
+    } catch (e) {stderr.write("$e");}
+  }
+
+
+  Future<void> downloadQR() async 
+  {
+    stdout.write("Menghasilkan byte gambar QR...");
+    try 
+    {
+      final qrImagesBytes = await qrImage.toImageAsBytes(
+        size: 512,
+        format: ImageByteFormat.png,
+        decoration: PrettyQrDecoration(
+          image: PrettyQrDecorationImage(
+            image: NetworkImage('url'),
+            scale: 5.0,
+            padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
+          ),
+          quietZone: PrettyQrQuietZone.standart,
+          background: Colors.white
+        ));
+
+      if (qrImagesBytes == null) 
+      {
+        stdout.write("Gagal menghasilkan bytes gambar QR");
+        return;
+      }
+      
+      final directory = await getApplicationDocumentsDirectory();
+
+      final fileName = "qr_queue_${DateTime.now().millisecondsSinceEpoch}.png";
+      final path = "${directory.path}/$fileName";
+
+      final file = File(path);
+
+      await file.writeAsBytes(qrImagesBytes.buffer.asUint8List());
+      stdout.write("Bytes gambar QR berhasil dibuat (${qrImagesBytes.lengthInBytes} bytes).");
+    } 
+    catch (e) {stderr.write("Terjadi kesalahan saat menghasilkan kode QR: $e");}  
+  }
+
+  void callShareQR() async {await shareQR();}
+  void callDownloadQR() async {await downloadQR();}
+
+  @override
+  void initState() 
+  {
+    super.initState();
+
+    final qrCode = QrCode.fromData(
+      data: qrData, 
+      errorCorrectLevel: QrErrorCorrectLevel.H
+    );
+
+    qrImage = QrImage(qrCode);
+  }
 
 
   @override
@@ -40,9 +152,6 @@ class _QrDetailPageState extends State<QrDetailPage>
     const int estimatedWaitTime = 28;
     const String qrLabel = "Counter 1 (Dine-in)";
     const String qrCategory = "Regular Queue (antrian biasa)";
-
-    // Placeholder untuk gambar QR (Pakai link untuk sementara)
-    const String qrImageUrl ="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=YourQueueDataHere";
 
     return Scaffold(
       appBar: AppBar(
@@ -108,49 +217,17 @@ class _QrDetailPageState extends State<QrDetailPage>
                     ),
                   ],
                 ),
-                child: Image.network(
-                  qrImageUrl,
-                  width: 250,
-                  height: 250,
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) 
-                  {
-                    if (loadingProgress == null){return child;}
-                    return SizedBox(
-                      width: 250,
-                      height: 250,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: AppColor.primary,
-                        ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) 
-                  {
-                    return Container(
-                      width: 250,
-                      height: 250,
-                      color: AppColor.grey100,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Iconsax.danger_copy,
-                              color: AppColor.error, size: 60),
-                          const SizedBox(height: AppPadding.p8),
-                          Text(
-                            "Gagal memuat QR",
-                            style: GoogleFonts.inter(
-                                color: AppColor.textSecondary),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                child: PrettyQrView(
+                  qrImage: qrImage,
+                  decoration: PrettyQrDecoration(
+                    image: PrettyQrDecorationImage(
+                      image: NetworkImage('url'),
+                      scale: 5.0,
+                      padding: EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0)
+                    ),
+                    quietZone: PrettyQrQuietZone.standart,
+                    background: Colors.white
+                  ),
                 ),
               ),
               const SizedBox(height: AppPadding.p32),
@@ -247,7 +324,7 @@ class _QrDetailPageState extends State<QrDetailPage>
                 text: "Download QR",
                 icon: Iconsax.document_download_copy,
                 backgroundColor: AppColor.primary,
-                onPressed: downloadQR,
+                onPressed: callDownloadQR,
               ),
               const SizedBox(height: AppPadding.p16),
               PrimaryButton(
@@ -261,7 +338,7 @@ class _QrDetailPageState extends State<QrDetailPage>
                 text: "Share Link",
                 icon: Iconsax.share_copy,
                 backgroundColor: AppColor.accent,
-                onPressed: shareQR,
+                onPressed: callShareQR,
               ),
             ],
           ),
