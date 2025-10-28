@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/home/presentation/home_page.dart';
+import 'package:mobile_pager_flutter/features/pager_history/presentation/pager_history_page.dart';
+import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -16,8 +18,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const TransactionPage(),
-    const InboxPage(),
+    const QRViewPage(),
+    const PagerHistortPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -100,61 +102,6 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// Placeholder pages for Transaction and Inbox
-class TransactionPage extends StatelessWidget {
-  const TransactionPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Transaction',
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.bold,
-            color: AppColor.textPrimary,
-          ),
-        ),
-        backgroundColor: AppColor.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Text(
-          'Transaction Page',
-          style: GoogleFonts.dmSans(fontSize: 18, color: AppColor.textPrimary),
-        ),
-      ),
-    );
-  }
-}
-
-class InboxPage extends StatelessWidget {
-  const InboxPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Inbox',
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.bold,
-            color: AppColor.textPrimary,
-          ),
-        ),
-        backgroundColor: AppColor.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Text(
-          'Inbox Page',
-          style: GoogleFonts.dmSans(fontSize: 18, color: AppColor.textPrimary),
         ),
       ),
     );
