@@ -62,17 +62,8 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, user, List pagers) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Trigger refresh by invalidating the provider
-        ref.invalidate(user.isMerchant
-            ? activePagersStreamProvider(user.uid)
-            : customerPagersStreamProvider(user.uid));
-        await Future.delayed(const Duration(milliseconds: 500));
-      },
-      child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        child: Column(
+    return SingleChildScrollView(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
           SizedBox(height: 24.h),
@@ -171,7 +162,10 @@ class HomePage extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                  itemCount: pagers.length,
+                  // Limit to 2 items for merchant on home page
+                  itemCount: user.isMerchant 
+                      ? (pagers.length > 2 ? 2 : pagers.length) 
+                      : pagers.length,
                   itemBuilder: (context, index) {
                     return PagerTicketCard(
                       pager: pagers[index],
@@ -182,7 +176,6 @@ class HomePage extends ConsumerWidget {
           SizedBox(height: 20),
           ],
         ),
-      ),
     );
   }
 

@@ -38,24 +38,18 @@ class ActivePagersPage extends ConsumerWidget {
             return _buildEmptyState();
           }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              // Refresh is handled automatically by stream
-              await Future.delayed(const Duration(milliseconds: 500));
-            },
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppPadding.p16,
-                vertical: 16.h,
-              ),
-              itemCount: pagers.length,
-              itemBuilder: (context, index) {
-                return PagerTicketCard(
-                  pager: pagers[index],
-                  isMerchant: user.isMerchant,
-                );
-              },
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppPadding.p16,
+              vertical: 16.h,
             ),
+            itemCount: pagers.length,
+            itemBuilder: (context, index) {
+              return PagerTicketCard(
+                pager: pagers[index],
+                isMerchant: user.isMerchant,
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

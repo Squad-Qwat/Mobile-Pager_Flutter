@@ -9,10 +9,10 @@ class HistoryFilterWidget extends StatefulWidget {
   final Function(HistoryFilterOptions) onFilterChanged;
 
   const HistoryFilterWidget({
-    Key? key,
+    super.key,
     required this.currentOptions,
     required this.onFilterChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<HistoryFilterWidget> createState() => _HistoryFilterWidgetState();

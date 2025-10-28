@@ -1,5 +1,4 @@
 // import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 import 'package:mobile_pager_flutter/features/notifications/domain/models/notification_model.dart';
 import 'package:mobile_pager_flutter/features/notifications/domain/repositories/i_notification_repository.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
@@ -41,8 +40,9 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending new customer notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send notification when order is ready (to customer)
@@ -71,8 +71,9 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending order ready notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send notification when customer is being called (to customer)
@@ -101,8 +102,9 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending order calling notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send notification when order will expire soon (to customer)
@@ -136,8 +138,9 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending expiring soon notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send notification when order has expired (to customer)
@@ -166,8 +169,9 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending order expired notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send notification when order is finished (to customer)
@@ -196,47 +200,29 @@ class NotificationService
         body: notification.body,
         data: notification.data ?? {},
       );
-    } 
-    catch (e) {stdout.write('Error sending order finished notification: $e');}
+    } catch (e) {
+      // Notification failed silently
+    }
   }
 
   /// Send FCM push notification via Firebase Cloud Functions
   /// Note: This requires a backend Cloud Function to send FCM messages
   /// For now, this is a placeholder that gets the token
   Future<void> _sendFCMNotification({
-    required String userId, 
-    required String title, 
-    required String body, 
-    required Map<String, dynamic> data
-  }) async 
-  {
-    try 
-    {
-      // Get user's FCM token
+    required String userId,
+    required String title,
+    required String body,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
       final token = await _notificationRepository.getFCMToken(userId);
-      if (token == null) 
-      {
-        stdout.write('No FCM token found for user: $userId');
+      if (token == null) {
         return;
       }
 
-      // TODO: Call your Cloud Function here to send FCM notification
-      // For now, we just print the token
-      stdout.write('Would send FCM to token: $token');
-      stdout.write('Title: $title, Body: $body');
-
-      // Example of what the Cloud Function call would look like:
-      // await http.post(
-      //   Uri.parse('https://YOUR_CLOUD_FUNCTION_URL/sendNotification'),
-      //   headers: {'Content-Type': 'application/json'},
-      //   body: json.encode({
-      //     'token': token,
-      //     'title': title,
-      //     'body': body,
-      //     'data': data,
-      //   }),
-      // );
-    } 
-    catch (e) {stdout.write('Error sending FCM notification: $e');}
+      // TODO: Call Cloud Function to send FCM notification
+    } catch (e) {
+      // FCM send failed silently
+    }
   }
 }

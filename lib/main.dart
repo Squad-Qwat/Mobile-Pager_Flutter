@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
@@ -10,7 +11,8 @@ import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
 import 'package:mobile_pager_flutter/core/services/pager_notification_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/about/presentation/about_page.dart';
-import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
+import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/pages/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
@@ -43,19 +45,24 @@ Future<void> main() async
 {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables (optional - won't crash if .env missing)
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Warning: Could not load .env file: $e');
+  }
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: false,
+  );
   // Configure Firestore settings for better connectivity on real devices
   // Temporarily disable persistence for testing
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: false); // Disabled for testing
 
-  // Set up FCM background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // Initialize FCM service
   await FCMService().initialize();
-
-  // Initialize Pager Notification Service
   await PagerNotificationService().initialize();
 
   runApp(const ProviderScope(child: MyApp()));
@@ -85,7 +92,6 @@ class MyApp extends StatelessWidget
             AppRoutes.authentication: (context) => const AuthenticationPage(),
             AppRoutes.detailPagerHistory: (context) =>
                 const DetailHistoryPage(pagerId: "a"),
-            AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
             AppRoutes.profile: (context) => const ProfilePage(),
             AppRoutes.activePagers: (context) => const ActivePagersPage(),
             AppRoutes.merchantSettings: (context) => const MerchantSettingsPage(),
@@ -93,6 +99,13 @@ class MyApp extends StatelessWidget
             AppRoutes.about: (context) => const AboutPage(),
           },
           onGenerateRoute: (settings) {
+            // Handle QR detail page with PagerModel argument
+            if (settings.name == AppRoutes.qrViewDetail) {
+              final pager = settings.arguments as PagerModel;
+              return MaterialPageRoute(
+                builder: (context) => QrDetailPage(pager: pager),
+              );
+            }
             // Handle customer detail page with arguments
             if (settings.name == AppRoutes.customerDetail) {
               final args = settings.arguments as Map<String, dynamic>;

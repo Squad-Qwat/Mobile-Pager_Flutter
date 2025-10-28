@@ -23,56 +23,40 @@ class PagerStatusListener {
   }
 
   Future<void> _initialize() async {
-    // Initialize notification service
     await _notificationService.initialize();
 
-    // Get current user
     final authState = _ref.read(authNotifierProvider);
     if (!authState.isAuthenticated || authState.user == null) {
-      print('⚠️ User not authenticated, skipping pager status listener');
       return;
     }
 
     final user = authState.user!;
 
-    // Only listen for customer pagers (not merchant)
     if (user.isMerchant) {
-      print('⚠️ User is merchant, skipping customer pager status listener');
       return;
     }
 
-    print('👂 Starting to listen for pager status changes for customer: ${user.uid}');
-
-    // Listen to customer's active pagers
     final repository = PagerRepositoryImpl();
     _subscription = repository.getCustomerActivePagers(user.uid).listen(
       (pagers) {
         _handlePagerUpdates(pagers);
       },
-      onError: (error) {
-        print('❌ Error listening to pager updates: $error');
-      },
+      onError: (error) {},
     );
   }
 
   void _handlePagerUpdates(List<PagerModel> pagers) {
-    print('🔄 Received ${pagers.length} active pagers');
-
     for (final pager in pagers) {
       final lastStatus = _lastKnownStatus[pager.pagerId];
       final currentStatus = pager.status;
 
-      // Check if status changed
       if (lastStatus != null && lastStatus != currentStatus) {
-        print('📊 Status changed for ${pager.displayId}: $lastStatus → $currentStatus');
         _handleStatusChange(pager, lastStatus, currentStatus);
       }
 
-      // Update last known status
       _lastKnownStatus[pager.pagerId] = currentStatus;
     }
 
-    // Clean up statuses for pagers that are no longer active
     final activePagerIds = pagers.map((p) => p.pagerId).toSet();
     _lastKnownStatus.removeWhere((key, value) => !activePagerIds.contains(key));
   }
@@ -82,9 +66,6 @@ class PagerStatusListener {
     PagerStatus oldStatus,
     PagerStatus newStatus,
   ) async {
-    print('🔔 Handling status change: ${pager.displayId} - $oldStatus → $newStatus');
-
-    // Get merchant name from Firestore
     String merchantName = 'Merchant';
     try {
       final merchantDoc = await FirebaseFirestore.instance
@@ -97,24 +78,17 @@ class PagerStatusListener {
                       'Merchant';
       }
     } catch (e) {
-      print('⚠️ Error getting merchant name: $e');
+      // Use default merchant name
     }
 
     switch (newStatus) {
       case PagerStatus.ringing:
-        // PAGER IS CALLING! Show full notification with vibration
-        print('📳 PAGER RINGING! Showing notification for ${pager.displayId}');
         await _notificationService.showPagerCallNotification(pager, merchantName);
         break;
 
       case PagerStatus.ready:
-        // Order is ready
-        print('✅ Order ready: ${pager.displayId}');
-        // Stop vibration immediately
         await _notificationService.stopVibration();
-        // Cancel ringing notification
         await _notificationService.cancelPagerCallNotification(pager.pagerId);
-        // Show ready notification
         await _notificationService.showStatusChangeNotification(
           pagerId: pager.pagerId,
           title: '✅ Pesanan Siap Diambil!',
@@ -123,20 +97,12 @@ class PagerStatusListener {
         break;
 
       case PagerStatus.finished:
-        // Order finished/collected
-        print('🎉 Order finished: ${pager.displayId}');
-        // Stop vibration immediately
         await _notificationService.stopVibration();
-        // Cancel all notifications
         await _notificationService.cancelPagerCallNotification(pager.pagerId);
         break;
 
       case PagerStatus.expired:
-        // Order expired
-        print('⏰ Order expired: ${pager.displayId}');
-        // Stop vibration immediately
         await _notificationService.stopVibration();
-        // Cancel all notifications
         await _notificationService.cancelPagerCallNotification(pager.pagerId);
         break;
 
@@ -146,7 +112,6 @@ class PagerStatusListener {
   }
 
   void dispose() {
-    print('🔌 Disposing pager status listener');
     _subscription?.cancel();
     _notificationService.stopVibration();
   }

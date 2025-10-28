@@ -1,18 +1,20 @@
+import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-class FCMService {
+class FCMService 
+{
   static final FCMService _instance = FCMService._internal();
   factory FCMService() => _instance;
   FCMService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   /// Initialize FCM
-  Future<void> initialize() async {
+  Future<void> initialize() async 
+  {
     // Request permission for iOS
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
@@ -24,9 +26,8 @@ class FCMService {
       sound: true,
     );
 
-    print('FCM Permission granted: ${settings.authorizationStatus}');
+    stdout.write('FCM Permission granted: ${settings.authorizationStatus}');
 
-    // Initialize local notifications
     await _initializeLocalNotifications();
 
     // Handle foreground messages
@@ -37,12 +38,11 @@ class FCMService {
   }
 
   /// Initialize local notifications for Android
-  Future<void> _initializeLocalNotifications() async {
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+  Future<void> _initializeLocalNotifications() async 
+  {
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
+    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -59,47 +59,44 @@ class FCMService {
     );
   }
 
-  /// Get FCM token
-  Future<String?> getToken() async {
-    try {
+  Future<String?> getToken() async 
+  {
+    try 
+    {
       String? token = await _firebaseMessaging.getToken();
-      print('FCM Token: $token');
+      stdout.write("FCM Token: $token");
       return token;
-    } catch (e) {
-      print('Error getting FCM token: $e');
+    } 
+    catch (e) 
+    {
+      debugPrint('Error getting FCM token: $e');
       return null;
     }
   }
 
-  /// Delete FCM token (on logout)
   Future<void> deleteToken() async {
-    try {
+    try 
+    {
       await _firebaseMessaging.deleteToken();
-      print('FCM Token deleted');
-    } catch (e) {
-      print('Error deleting FCM token: $e');
-    }
+      stdout.write("FCM Token Deleted Sucessfully!");
+    } 
+    catch (e) {debugPrint('Error deleting FCM token: $e');}
   }
 
-  /// Handle foreground messages
-  void _handleForegroundMessage(RemoteMessage message) {
-    print('Foreground message received: ${message.notification?.title}');
-    print('Message data: ${message.data}');
+  void _handleForegroundMessage(RemoteMessage message) 
+  {
+    stdout.write('Foreground message received: ${message.notification?.title}');
+    stdout.write('Message data: ${message.data}');
 
     // Check if this is a pager call notification
-    if (message.data['type'] == 'pager_call') {
-      print('📳 Pager call notification received!');
-      // PagerStatusListener will handle this via Firestore stream
-    }
-
-    // Show local notification
+    if (message.data['type'] == 'pager_call') {stdout.write('📳 Pager call notification received!');} // PagerStatusListener will handle this via Firestore stream
     _showLocalNotification(message);
   }
 
   /// Show local notification with custom sound and vibration
-  Future<void> _showLocalNotification(RemoteMessage message) async {
-    final AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
+  Future<void> _showLocalNotification(RemoteMessage message) async 
+  {
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'cammo_channel', // Channel ID
       'Cammo Notifications', // Channel name
       channelDescription: 'Notifications for pager call management',
@@ -132,28 +129,19 @@ class FCMService {
     );
   }
 
-  /// Handle notification tap when app is in background/terminated
-  void _handleMessageOpenedApp(RemoteMessage message) {
-    print('Notification tapped: ${message.data}');
-    // You can navigate to specific page based on message.data
-    // This will be handled in main.dart with navigation
-  }
+  void _handleMessageOpenedApp(RemoteMessage message) => stdout.write('Notification tapped: ${message.data}'); // Navigation handling can be added here
 
-  /// Handle notification tap from local notification
-  void _onNotificationTapped(NotificationResponse response) {
-    print('Local notification tapped: ${response.payload}');
-    // Handle navigation here if needed
-  }
+  void _onNotificationTapped(NotificationResponse response) => stdout.write('Local notification tapped: ${response.payload}'); // Navigation handling can be added here
 
-  /// Subscribe to topic (optional, for broadcast notifications)
-  Future<void> subscribeToTopic(String topic) async {
+  Future<void> subscribeToTopic(String topic) async 
+  {
     await _firebaseMessaging.subscribeToTopic(topic);
-    print('Subscribed to topic: $topic');
+    stdout.write("Subscribed to topic: $topic");
   }
 
-  /// Unsubscribe from topic
-  Future<void> unsubscribeFromTopic(String topic) async {
+  Future<void> unsubscribeFromTopic(String topic) async 
+  {
     await _firebaseMessaging.unsubscribeFromTopic(topic);
-    print('Unsubscribed from topic: $topic');
+    stdout.write("Unsubscribed from topic: $topic");
   }
 }

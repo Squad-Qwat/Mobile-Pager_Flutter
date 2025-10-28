@@ -8,9 +8,9 @@ final analyticsRepositoryProvider = Provider<IAnalyticsRepository>((ref) {
   return AnalyticsRepositoryImpl();
 });
 
-/// Future provider for merchant analytics
+/// Stream provider for merchant analytics (realtime updates)
 final merchantAnalyticsProvider =
-    FutureProvider.family<AnalyticsModel, String>((ref, merchantId) async {
+    StreamProvider.family<AnalyticsModel, String>((ref, merchantId) {
   final repository = ref.watch(analyticsRepositoryProvider);
-  return repository.getMerchantAnalytics(merchantId);
+  return repository.watchMerchantAnalytics(merchantId);
 });

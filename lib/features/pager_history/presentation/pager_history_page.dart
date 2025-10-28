@@ -23,7 +23,8 @@ enum HistoryViewMode
 
 class HistoryPage extends ConsumerStatefulWidget 
 {
-  const HistoryPage({Key? key}) : super(key: key);
+  // const HistoryPage({Key? key}) : super(key: key);
+  const HistoryPage({super.key});
 
   @override
   ConsumerState<HistoryPage> createState() => _HistoryPageState();
@@ -45,51 +46,56 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     List<PagerModel> filtered = List.from(pagers);
 
     // Apply time filter
-    if (_filterOptions.timeFilter != TimeFilter.general) 
+    if (_filterOptions.timeFilter == TimeFilter.general) 
     {
-      final now = DateTime.now();
-      filtered = filtered.where(
-        (pager) 
-      {
-        final pagerDate = pager.activatedAt ?? pager.createdAt;
-
-        switch (_filterOptions.timeFilter) 
-        {
-          case TimeFilter.today:
-            return pagerDate.year == now.year &&
-                pagerDate.month == now.month &&
-                pagerDate.day == now.day;
-          case TimeFilter.yesterday:
-            final yesterday = now.subtract(const Duration(days: 1));
-            return pagerDate.year == yesterday.year &&
-                pagerDate.month == yesterday.month &&
-                pagerDate.day == yesterday.day;
-          case TimeFilter.thisWeek:
-            final weekStart = now.subtract(Duration(days: now.weekday - 1));
-            return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
-          case TimeFilter.thisMonth:
-            return pagerDate.year == now.year && pagerDate.month == now.month;
-          case TimeFilter.lastMonth:
-            final lastMonth = DateTime(now.year, now.month - 1);
-            return pagerDate.year == lastMonth.year &&
-                pagerDate.month == lastMonth.month;
-          default:
-            return true;
-        }
-      }).toList();
+      filtered = filtered.where((pager) => true).toList(growable: false);
+      return filtered; // Return if filter is general
     }
+
+    final now = DateTime.now();
+    filtered = filtered.where((pager) 
+    {
+      final pagerDate = pager.activatedAt ?? pager.createdAt;
+
+      switch (_filterOptions.timeFilter) 
+      {
+        case TimeFilter.today:
+          return pagerDate.year == now.year &&
+              pagerDate.month == now.month &&
+              pagerDate.day == now.day;
+        case TimeFilter.yesterday:
+          final yesterday = now.subtract(const Duration(days: 1));
+          return pagerDate.year == yesterday.year &&
+              pagerDate.month == yesterday.month &&
+              pagerDate.day == yesterday.day;
+        case TimeFilter.thisWeek:
+          final weekStart = now.subtract(Duration(days: now.weekday - 1));
+          return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
+        case TimeFilter.thisMonth:
+          return pagerDate.year == now.year && pagerDate.month == now.month;
+        case TimeFilter.lastMonth:
+          final lastMonth = DateTime(now.year, now.month - 1);
+          return pagerDate.year == lastMonth.year &&
+              pagerDate.month == lastMonth.month;
+        default:
+          return true;
+      }
+    }).toList();
 
     // Apply search query
-    if (_filterOptions.searchQuery.isNotEmpty) 
+    if (_filterOptions.searchQuery.isEmpty) 
     {
-      final query = _filterOptions.searchQuery.toLowerCase();
-      filtered = filtered.where((pager) 
-      {
-        final displayId = pager.displayId.toLowerCase();
-        final queueNumber = pager.queueNumber?.toString().toLowerCase() ?? '';
-        return displayId.contains(query) || queueNumber.contains(query);
-      }).toList();
+      filtered = filtered.where((pager) => false).toList(growable: false);
+      return filtered; // return if search query is empty
     }
+
+    final query = _filterOptions.searchQuery.toLowerCase();
+    filtered = filtered.where((pager) 
+    {
+      final displayId = pager.displayId.toLowerCase();
+      final queueNumber = pager.queueNumber?.toString().toLowerCase() ?? '';
+      return displayId.contains(query) || queueNumber.contains(query);
+    }).toList();
 
     // Apply sorting
     filtered.sort((a, b) 
@@ -144,7 +150,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
       body: Column(
         children: <Widget>[
           // View Mode Selector (Only for merchant)
-          if (user.isMerchant)...[ _buildViewModeSelector()],
+          if (user.isMerchant)...[_buildViewModeSelector()],
 
           // Content based on view mode
           Expanded(
@@ -207,7 +213,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
                     ),
                     DropdownMenuItem<HistoryViewMode>(
                       value: HistoryViewMode.perCustomer,
-                      child: Text('Per Customer'),
+                      child: Text('Per Pelanggan'),
                     ),
                   ],
                   onChanged: (value) {if (value != null) {setState(() => _viewMode = value);}},
@@ -234,9 +240,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
             // Filter Widget
             HistoryFilterWidget(
               currentOptions: _filterOptions,
-              onFilterChanged: (newOptions) 
+              onFilterChanged: 
+              (newOptions) 
               {
-                setState(() => _filterOptions = newOptions);
+                setState(() =>_filterOptions = newOptions);
                 _applyFilters();
               },
             ),
@@ -246,8 +253,11 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
 
             // History List
             Expanded(
-              child: filteredPagers.isEmpty ? _buildEmptyState() : RefreshIndicator(
-                onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)), // Refresh is handled automatically by stream
+              child: filteredPagers.isEmpty 
+              ? _buildEmptyState() 
+              : RefreshIndicator(
+                // Refresh is handled automatically by stream
+                onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
                 child: ListView.builder(
                   padding: EdgeInsets.symmetric(
                     horizontal: AppPadding.p16,
@@ -282,7 +292,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
             ),
             const SizedBox(height: 8),
             Text(
-              "$error",
+              error.toString(),
               style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -305,7 +315,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
           color: AppColor.black,
         ),
       ),
-      actions: <Widget>[SizedBox(width: 8.w)] // Reset filter button
+      actions: <Widget>[SizedBox(width: 8.w)], // Reset filter button
     );
   }
 
@@ -325,16 +335,17 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
               fontWeight: FontWeight.w500,
             ),
           ),
-          if (count > 0)...[
+          if (count > 0)...
+          [
             Text(
               HistoryFilterService.getTimeFilterLabel(_filterOptions),
               style: GoogleFonts.inter(
                 fontSize: 12.sp,
                 color: AppColor.primary,
                 fontWeight: FontWeight.w600,
-              ),
-            ),
-          ]
+              )
+            )
+          ],
         ],
       ),
     );
@@ -373,7 +384,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
             },
             icon: Icon(Icons.refresh),
             label: Text('Reset Filter'),
-            style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h)),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+            ),
           ),
         ],
       ),
@@ -426,7 +439,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () =>Navigator.push(
+        onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => DetailHistoryPage(pagerId: pager.pagerId)),
         ),
@@ -490,7 +503,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
                 ),
 
                 // Label Column
-                if (pager.label != null)...[
+                if (pager.label != null)...
+                [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,7 +528,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
                       ],
                     ),
                   ),
-                ]
+                ],
               ],
             ),
             SizedBox(height: 12.h),
@@ -626,7 +640,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     else 
     {
       // Show merchant name for customer
-      final merchantSettingsAsync = ref.watch(merchantSettingsFutureProvider(pager.merchantId));
+      final merchantSettingsAsync =
+          ref.watch(merchantSettingsFutureProvider(pager.merchantId));
 
       return merchantSettingsAsync.when(
         data: (merchantSettings) {
@@ -694,8 +709,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     }
   }
 
-  Color _getStatusColor(PagerStatus status)
-   {
+  Color _getStatusColor(PagerStatus status) 
+  {
     switch (status) 
     {
       case PagerStatus.waiting:

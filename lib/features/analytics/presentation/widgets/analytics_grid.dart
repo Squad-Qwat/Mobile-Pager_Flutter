@@ -93,8 +93,8 @@ class AnalyticsGrid extends ConsumerWidget {
           ),
           _buildAnalyticsCard(
             title: 'Rata-rata',
-            value: '${analytics.averageWaitMinutes}',
-            subtitle: 'Menit',
+            value: analytics.formattedWaitTime,
+            subtitle: 'Tunggu',
             icon: Icons.schedule,
             color: Colors.orange,
           ),

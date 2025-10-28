@@ -6,6 +6,7 @@ abstract class IPagerRepository {
   Future<String> createTemporaryPager({
     required String merchantId,
     String? label,
+    String? invoiceImageUrl,
     Map<String, dynamic>? metadata,
   });
 

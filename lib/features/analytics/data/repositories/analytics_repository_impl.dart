@@ -8,66 +8,63 @@ class AnalyticsRepositoryImpl implements IAnalyticsRepository {
   final String _activeCollection = 'active_pagers';
 
   @override
-  Future<AnalyticsModel> getMerchantAnalytics(String merchantId) async {
-    try {
-      final now = DateTime.now();
-      final startOfToday = DateTime(now.year, now.month, now.day);
-      final startOfWeek = now.subtract(Duration(days: 7));
+  Stream<AnalyticsModel> watchMerchantAnalytics(String merchantId) {
+    return _firestore
+        .collection(_activeCollection)
+        .where('merchantId', isEqualTo: merchantId)
+        .snapshots()
+        .map((snapshot) => _calculateAnalytics(snapshot.docs));
+  }
 
-      // Query all active pagers for this merchant
-      final activePagersQuery = await _firestore
-          .collection(_activeCollection)
-          .where('merchantId', isEqualTo: merchantId)
-          .get();
+  AnalyticsModel _calculateAnalytics(List<QueryDocumentSnapshot> docs) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final startOfWeek = now.subtract(Duration(days: 7));
 
-      // Convert to PagerModel list
-      final allPagers = activePagersQuery.docs
-          .map((doc) => PagerModel.fromFirestore(doc))
-          .toList();
+    // Convert to PagerModel list
+    final allPagers = docs.map((doc) => PagerModel.fromFirestore(doc)).toList();
 
-      // Calculate today's pagers
-      final todayPagers = allPagers.where((pager) {
-        return pager.createdAt.isAfter(startOfToday);
-      }).length;
+    // Calculate today's pagers
+    final todayPagers = allPagers.where((pager) {
+      return pager.createdAt.isAfter(startOfToday);
+    }).length;
 
-      // Calculate weekly pagers
-      final weeklyPagers = allPagers.where((pager) {
-        return pager.createdAt.isAfter(startOfWeek);
-      }).length;
+    // Calculate weekly pagers
+    final weeklyPagers = allPagers.where((pager) {
+      return pager.createdAt.isAfter(startOfWeek);
+    }).length;
 
-      // Calculate average wait time (createdAt → finishedAt or current time)
-      final pagersWithWaitTime = allPagers.where((pager) {
-        return pager.status == PagerStatus.finished ||
-            pager.status == PagerStatus.expired;
-      }).toList();
+    // Calculate average SERVICE time (activatedAt → finishedAt)
+    // Service time = time from being called until finished
+    final finishedPagersList = allPagers.where((pager) {
+      return pager.status == PagerStatus.finished && 
+             pager.activatedAt != null && 
+             pager.finishedAt != null;
+    }).toList();
 
-      int totalWaitMinutes = 0;
-      for (var pager in pagersWithWaitTime) {
-        final endTime = pager.status == PagerStatus.finished
-            ? (pager.activatedAt ?? pager.createdAt)
-            : pager.createdAt;
-        final waitDuration = endTime.difference(pager.createdAt);
-        totalWaitMinutes += waitDuration.inMinutes;
+    int totalServiceSeconds = 0;
+    for (var pager in finishedPagersList) {
+      final duration = pager.finishedAt!.difference(pager.activatedAt!);
+      if (duration.inSeconds > 0) {
+        totalServiceSeconds += duration.inSeconds;
       }
-
-      final averageWaitMinutes = pagersWithWaitTime.isEmpty
-          ? 0
-          : (totalWaitMinutes / pagersWithWaitTime.length).round();
-
-      // Calculate completion rate (finished / total)
-      final finishedPagers =
-          allPagers.where((p) => p.status == PagerStatus.finished).length;
-      final completionRate =
-          allPagers.isEmpty ? 0.0 : (finishedPagers / allPagers.length) * 100;
-
-      return AnalyticsModel(
-        todayPagers: todayPagers,
-        weeklyPagers: weeklyPagers,
-        averageWaitMinutes: averageWaitMinutes,
-        completionRate: completionRate,
-      );
-    } catch (e) {
-      throw Exception('Failed to get analytics: $e');
     }
+
+    final averageWaitSeconds = finishedPagersList.isEmpty
+        ? 0
+        : (totalServiceSeconds / finishedPagersList.length).round();
+
+    // Calculate completion rate (finished / total)
+    final finishedPagers =
+        allPagers.where((p) => p.status == PagerStatus.finished).length;
+    final completionRate =
+        allPagers.isEmpty ? 0.0 : (finishedPagers / allPagers.length) * 100;
+
+    return AnalyticsModel(
+      todayPagers: todayPagers,
+      weeklyPagers: weeklyPagers,
+      averageWaitSeconds: averageWaitSeconds,
+      completionRate: completionRate,
+    );
   }
 }

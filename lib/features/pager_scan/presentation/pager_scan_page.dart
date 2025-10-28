@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,7 +27,8 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
+  void initState() 
+  {
     super.initState();
     cameraController = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
@@ -35,16 +36,20 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
   }
 
   @override
-  void dispose() {
+  void dispose() 
+  {
     cameraController.dispose();
     super.dispose();
   }
 
   /// Reset scanner when page becomes visible again
-  void _ensureScannerReady() {
-    if (!isScanning) {
-      print('🔄 [SCANNER] Resetting scanner for new scan');
-      setState(() {
+  void _ensureScannerReady() 
+  {
+    if (!isScanning) 
+    {
+      stdout.write('🔄 [SCANNER] Resetting scanner for new scan');
+      setState(() 
+      {
         isScanning = true;
         scannedData = null;
       });
@@ -52,14 +57,18 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
     }
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    if (!isScanning) return;
+  void _onDetect(BarcodeCapture capture) 
+  {
+    if (!isScanning) {return;}
 
     final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isNotEmpty) {
+    if (barcodes.isNotEmpty) 
+    {
       final barcode = barcodes.first;
-      if (barcode.rawValue != null) {
-        setState(() {
+      if (barcode.rawValue != null) 
+      {
+        setState(() 
+        {
           isScanning = false;
           scannedData = barcode.rawValue;
         });
@@ -69,13 +78,16 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
     }
   }
 
-  void _showScanResult(String data) async {
-    try {
+  void _showScanResult(String data) async 
+  {
+    try 
+    {
       final qrData = jsonDecode(data);
       final pagerId = qrData['pagerId'] as String?;
       final merchantId = qrData['merchantId'] as String?;
 
-      if (pagerId == null || merchantId == null) {
+      if (pagerId == null || merchantId == null) 
+      {
         _showErrorDialog(
           'Invalid QR Code',
           'QR code does not contain valid pager data',
@@ -87,14 +99,16 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
       final authState = ref.read(authNotifierProvider);
       final user = authState.user;
 
-      if (user == null) {
+      if (user == null) 
+      {
         _showErrorDialog('Not Authenticated', 'Please login to scan pagers');
         _resetScanner();
         return;
       }
 
       // Prepare customer info
-      final customerInfo = {
+      final customerInfo = <String, String?>
+      {
         'name': user.displayName ?? 'Guest',
         if (user.email != null) 'email': user.email,
         if (user.isGuest == true) 'guestId': user.guestId,
@@ -102,10 +116,10 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
 
       final customerType = user.isGuest == true ? 'guest' : 'registered';
 
-      print('🔍 Starting pager activation...');
-      print('   PagerId: $pagerId');
-      print('   CustomerId: ${user.uid}');
-      print('   CustomerType: $customerType');
+      stdout.write('🔍 Starting pager activation...');
+      stdout.write('   PagerId: $pagerId');
+      stdout.write('   CustomerId: ${user.uid}');
+      stdout.write('   CustomerType: $customerType');
 
       // Activate pager immediately without confirmation
       await ref
@@ -117,9 +131,9 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
             customerInfo: customerInfo,
           );
 
-      print('✅ Pager activation completed successfully');
+      stdout.write('✅ Pager activation completed successfully');
 
-      if (!mounted) return;
+      if (!mounted) {return;}
 
       // Navigate to Home page (index 0) to show success
       // Don't use Navigator.pop() because scanner is in bottom nav
@@ -137,9 +151,11 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } catch (e, stackTrace) {
-      print('❌ ERROR activating pager: $e');
-      print('📍 Stack trace: $stackTrace');
+    } 
+    catch (e, stackTrace) 
+    {
+      stderr.write('❌ ERROR activating pager: $e');
+      stderr.write('📍 Stack trace: $stackTrace');
 
       _showErrorDialog(
         'Scan Error',
@@ -149,15 +165,18 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
     }
   }
 
-  void _resetScanner() {
-    setState(() {
+  void _resetScanner() 
+  {
+    setState(() 
+    {
       isScanning = true;
       scannedData = null;
     });
     cameraController.start();
   }
 
-  void _showErrorDialog(String title, String message) {
+  void _showErrorDialog(String title, String message) 
+  {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -166,7 +185,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
         content: Text(message, style: GoogleFonts.inter()),
-        actions: [
+        actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('OK', style: GoogleFonts.inter()),
@@ -178,7 +197,8 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
 
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
     // Reset scanner when page is rebuilt (user returns to this tab)
@@ -189,7 +209,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
       appBar: _buildHeader(),
       body: SafeArea(
         child: Column(
-          children: [
+          children: <Widget>[
             SizedBox(height: 20),
             Padding(padding: EdgeInsets.symmetric(horizontal: AppPadding.p16)),
             SizedBox(height: 24),
@@ -205,7 +225,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Stack(
-                      children: [
+                      children: <Widget>[
                         MobileScanner(
                           controller: cameraController,
                           onDetect: _onDetect,
@@ -223,7 +243,8 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
     );
   }
 
-  PreferredSizeWidget _buildHeader() {
+  PreferredSizeWidget _buildHeader() 
+  {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,

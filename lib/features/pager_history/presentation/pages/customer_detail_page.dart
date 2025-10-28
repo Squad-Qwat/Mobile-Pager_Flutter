@@ -88,26 +88,15 @@ class CustomerDetailPage extends ConsumerWidget {
 
               // Order History List
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(customerPagerHistoryProvider(
-                      CustomerHistoryParams(
-                        merchantId: merchantId,
-                        customerId: customerId,
-                      ),
-                    ));
-                    await Future.delayed(const Duration(milliseconds: 500));
-                  },
-                  child: ListView.builder(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                    itemCount: pagers.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderCard(context, pagers[index]);
-                    },
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
                   ),
+                  itemCount: pagers.length,
+                  itemBuilder: (context, index) {
+                    return _buildOrderCard(context, pagers[index]);
+                  },
                 ),
               ),
             ],

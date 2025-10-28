@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/providers/navigation_provider.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
-import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/pages/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/pager_history_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';

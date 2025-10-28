@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
+import 'package:mobile_pager_flutter/core/services/guest_storage_service.dart';
 import 'package:mobile_pager_flutter/features/authentication/data/datasources/i_auth_remote_datasource.dart';
 import 'package:mobile_pager_flutter/features/authentication/domain/repositories/i_auth_repository.dart';
 
@@ -48,6 +49,33 @@ class AuthRepositoryImpl implements IAuthRepository {
   @override
   Future<UserModel> signInAsGuest() async {
     try {
+      final guestStorage = GuestStorageService();
+      
+      // Check if we have a stored guest UID from previous session
+      final storedGuestUid = await guestStorage.getSavedGuestUid();
+      
+      if (storedGuestUid != null) {
+        // Try to retrieve existing guest user from Firestore
+        try {
+          final userDoc = await _remoteDataSource.getUserDocument(storedGuestUid);
+          
+          if (userDoc.exists) {
+            // Guest exists in Firestore, sign in anonymously and return stored user
+            await _remoteDataSource.signInAnonymously();
+            
+            // Update last login timestamp
+            await _remoteDataSource.updateUserDocument(storedGuestUid, {
+              'lastLoginAt': DateTime.now(),
+            });
+            
+            return UserModel.fromFirestore(userDoc);
+          }
+        } catch (e) {
+          // Stored UID not found in Firestore, create new guest below
+        }
+      }
+      
+      // No stored guest or not found in Firestore - create new guest
       final userCredential = await _remoteDataSource.signInAnonymously();
       final user = userCredential.user;
 
@@ -58,6 +86,8 @@ class AuthRepositoryImpl implements IAuthRepository {
       final userDoc = await _remoteDataSource.getUserDocument(user.uid);
 
       if (userDoc.exists) {
+        // Save UID to local storage for next time
+        await guestStorage.saveGuestUid(user.uid);
         return UserModel.fromFirestore(userDoc);
       }
 
@@ -69,6 +99,9 @@ class AuthRepositoryImpl implements IAuthRepository {
       );
 
       await _remoteDataSource.setUserDocument(user.uid, newUser.toMap());
+      
+      // Save new guest UID to local storage
+      await guestStorage.saveGuestUid(user.uid, deviceId: deviceId);
 
       return newUser;
     } catch (e) {
