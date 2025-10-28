@@ -216,3 +216,19 @@ int? generateNumber()
   final int? randomPhone = hasPhone ? (08000000000 + randNumber.nextInt(999999999)) : null;
   return randomPhone;
 }
+
+// Independent function to get the current date formatted as "DD Month YYYY"
+String getCurrentDateString() 
+{
+  final now = DateTime.now();
+  // Simplified list of month abbreviations for formatting
+  const List<String> monthNames = 
+  [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+  final day = now.day.toString().padLeft(2, '0');
+  final month = monthNames[now.month - 1];
+  final year = now.year.toString();
+  return '$day $month $year';
+}

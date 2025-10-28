@@ -9,7 +9,7 @@ extension ColorOpacity on Color
   Color withValues({double? alpha}) 
   {
     if (alpha == null) return this;
-    return this.withAlpha((255 * alpha).round().clamp(0, 255));
+    return withAlpha((255 * alpha).round().clamp(0, 255));
   }
 }
 

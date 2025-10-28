@@ -48,20 +48,22 @@ class _HistoryPageState extends State<DetailOrdersPage>
       // 1. Load all data from the dummy data list
       _allHistory = dummyHistoryList;
       // 2. Immediately apply filters to the full data set
-      _applyFilters();
+      _applyFilters(_filterOptions);
     });
   }
 
-  void _applyFilters() 
+  void _applyFilters(OrdersHistoryFilterOptions options) 
   {
     setState(() 
     {
-      // 1. Filter the entire history list using the filter service logic
+      // 1. Use the options for filtering options
+      _filterOptions = options;
+      // 2. Filter the entire history list using the filter service logic
       _filteredHistory = OrdersHistoryFilterService.filterHistory(
         _allHistory,
         _filterOptions,
       );
-      // 2. Reset pagination state
+      // 3. Reset pagination state
       _currentPage = 0;
       _hasMore = _filteredHistory.length > _itemsPerPage;
     });
@@ -70,7 +72,7 @@ class _HistoryPageState extends State<DetailOrdersPage>
   // Gets the current paginated slice for display
   List<OrdersHistory> _getPaginatedHistory() 
   {
-    final startIndex = 0;
+    final startIndex = _currentPage * _itemsPerPage;
     final endIndex = (_currentPage + 1) * _itemsPerPage;
 
     if (endIndex >= _filteredHistory.length) 
@@ -79,7 +81,7 @@ class _HistoryPageState extends State<DetailOrdersPage>
       return _filteredHistory;
     }
 
-    return _filteredHistory.sublist(startIndex, endIndex);
+    return _filteredHistory.sublist(startIndex, endIndex.clamp(0, _filteredHistory.length));
   }
 
   void _loadMore() 
@@ -114,7 +116,7 @@ class _HistoryPageState extends State<DetailOrdersPage>
             onFilterChanged: (newOptions) 
             {
               setState(() => _filterOptions = newOptions);
-              _applyFilters();
+              _applyFilters(_filterOptions);
             },
           ),
 
@@ -152,11 +154,11 @@ class _HistoryPageState extends State<DetailOrdersPage>
   PreferredSizeWidget _buildHeader() 
   {
     return AppBar(
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: true, // Need back button, because this is a separate page with no dedicated navigation button
       backgroundColor: Colors.white,
       elevation: 0,
       title: Text(
-        'Pager History',
+        'Detail Aktivitas Terkini',
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w800,
           color: AppColor.black,
@@ -169,7 +171,7 @@ class _HistoryPageState extends State<DetailOrdersPage>
           onPressed: () 
           {
             setState(() => _filterOptions = OrdersHistoryFilterOptions()); // Reset to default options (TimeFilter.today)
-            _applyFilters();
+            _applyFilters(_filterOptions);
           },
           tooltip: 'Reset Filter',
         ),
@@ -253,7 +255,7 @@ class _HistoryPageState extends State<DetailOrdersPage>
             onPressed: () 
             {
               setState(() => _filterOptions = OrdersHistoryFilterOptions()); // Reset to default options (TimeFilter.today)
-              _applyFilters();
+              _applyFilters(_filterOptions);
             },
             icon: const Icon(Icons.refresh),
             label: const Text('Reset Filter'),
@@ -361,6 +363,29 @@ class _HistoryPageState extends State<DetailOrdersPage>
                         SizedBox(height: 4.h),
                         Text(
                           history.queueNumber,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Status Pesanan',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          history.status,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

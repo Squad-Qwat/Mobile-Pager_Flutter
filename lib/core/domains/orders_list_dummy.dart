@@ -1,10 +1,13 @@
 import 'package:mobile_pager_flutter/core/domains/orders_list.dart';
 
-/// Raw data for recent activities
+// New variable for current date
+final String _currentDate = getCurrentDateString();
+
+// Raw data for recent activities (previously using 19 Oct 2023 hard-coded)
 final List<Map<String, dynamic>> _recentActivitiesRawData = [
   {
     'id': 'EC-230201DDA',
-    'time': '07:00, 19 Oct 2023',
+    'time': '07:00, $_currentDate',
     'pagerNum': 'PG-2228',
     'orderType': 'Take Away',
     'tableNum': 9,
@@ -13,7 +16,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDB',
-    'time': '07:30, 19 Oct 2023',
+    'time': '07:30, $_currentDate',
     'pagerNum': 'PG-2229',
     'orderType': 'Dine In',
     'tableNum': 10,
@@ -22,7 +25,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDC',
-    'time': '08:00, 19 Oct 2023',
+    'time': '08:00, $_currentDate',
     'pagerNum': 'PG-2230',
     'orderType': 'Take Away',
     'tableNum': 11,
@@ -31,7 +34,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDD',
-    'time': '08:20, 19 Oct 2023',
+    'time': '08:20, $_currentDate',
     'pagerNum': 'PG-2231',
     'orderType': 'Dine In',
     'tableNum': 12,
@@ -40,7 +43,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDE',
-    'time': '09:30, 19 Oct 2023',
+    'time': '09:30, $_currentDate',
     'pagerNum': 'PG-2232',
     'orderType': 'Dine In',
     'tableNum': 13,
@@ -49,7 +52,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDF',
-    'time': '10:40, 19 Oct 2023',
+    'time': '10:40, $_currentDate',
     'pagerNum': 'PG-2233',
     'orderType': 'Take Away',
     'tableNum': 14,
@@ -58,7 +61,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDG',
-    'time': '11:56, 19 Oct 2023',
+    'time': '11:56, $_currentDate',
     'pagerNum': 'PG-2234',
     'orderType': 'Dine In',
     'tableNum': 20,
@@ -67,7 +70,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DDH',
-    'time': '12:30, 19 Oct 2023',
+    'time': '12:30, $_currentDate',
     'pagerNum': 'PG-2235',
     'orderType': 'Take Away',
     'tableNum': 15,
@@ -75,7 +78,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
   },
   {
     'id': 'EC-230201DEA',
-    'time': '13:40, 19 Oct 2023',
+    'time': '13:40, $_currentDate',
     'pagerNum': 'PG-2236',
     'orderType': 'Cancelled',
     'tableNum': 16,
@@ -90,11 +93,28 @@ final List<Orders> recentActivitiesData = _recentActivitiesRawData.map(_mapToOrd
 /// Helper function to map raw data to the [Orders] model
 Orders _mapToOrders(Map<String, dynamic> data) 
 {
-  final DateTime createdTime = DateTime(
-  2023, 10, 19, 
-  int.parse(data['time'].split(',')[0].trim().split(':')[0]), 
-  int.parse(data['time'].split(',')[0].trim().split(':')[1])
-  );
+  final DateTime sekarang = DateTime.now();
+
+  final dynamic bagianWaktu = data['time'].split(',')[0].trim().split(':');
+  final int jam = int.parse(bagianWaktu[0]);
+  final int menit = int.parse(bagianWaktu[1]);
+
+  //final int totalDummyMinutes = jam * 60 + menit;
+  //const int latestDummyMinutes = 13 * 60 + 40;
+
+  //final int minutesDifferenceFromLatest = latestDummyMinutes - totalDummyMinutes;
+  //final baseTime = DateTime.now().subtract(const Duration(minutes: 5));
+  final DateTime createdTime = DateTime(sekarang.year, sekarang.month, sekarang.day, jam, menit);
+  //final DateTime createdTime = baseTime.subtract(Duration(minutes: minutesDifferenceFromLatest));
+
+  /*
+    Before:
+    final DateTime createdTime = DateTime(
+    2023, 10, 19, 
+    int.parse(data['time'].split(',')[0].trim().split(':')[0]), 
+    int.parse(data['time'].split(',')[0].trim().split(':')[1])
+    );
+  */
 
   final List<String> remainingParts = (data['remainingTime'] as String).split(':');
   final int minutes = int.parse(remainingParts[0]) * 60 + int.parse(remainingParts[1]);

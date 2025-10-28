@@ -25,13 +25,27 @@ class OrdersHistory
   /// Factory to create a History summary from a full Orders object
   factory OrdersHistory.fromOrder(Orders order) 
   {
+    final oldTime = order.createdAt;
+    final now = DateTime.now();
+    
+    // Create a new DateTime object using Today's date but the time components
+    // from the original order, ensuring all orders are seen as "Today"
+    final recentCreatedAt = DateTime(
+      now.year, 
+      now.month, 
+      now.day, 
+      oldTime.hour, 
+      oldTime.minute, 
+      oldTime.second
+    );
+
     return OrdersHistory(
       orderId: order.orderId,
       merchantId: order.merchantId,
       // We map the Order's Pager/Queue number to the History's queueNumber
       // Using Pager number if available, else the formatted queue number
       queueNumber: order.customer.tableNumber != null ? 'PG-${order.customer.tableNumber}' : order.getFormattedQueueNumber(),
-      createdAt: order.createdAt,
+      createdAt: recentCreatedAt,
       status: order.status,
       // Map the customer name to the 'businessName' field to work
       // with the HistoryFilterService's search logic

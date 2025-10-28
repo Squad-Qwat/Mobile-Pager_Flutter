@@ -7,6 +7,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:mobile_pager_flutter/core/domains/orders_list.dart';
 import 'package:flutter/foundation.dart'; // untuk kDebugMode dan debugPrint()
 
 
@@ -18,6 +19,8 @@ class HomePage extends StatefulWidget
   State<HomePage> createState() => _HomePageState();
 }
 
+final String _currentDate = getCurrentDateString();
+
 class _HomePageState extends State<HomePage> 
 {
   final List<Map<String, dynamic>> storeStatisticData = [
@@ -28,7 +31,7 @@ class _HomePageState extends State<HomePage>
   final List<Map<String, dynamic>> recentActivitiesData = [
     {
       'id': 'EC-230201DDA',
-      'time': '07:00, 19 Oct 2023',
+      'time': '07:00, $_currentDate',
       'pagerNum': 'PG-2228',
       'orderType': 'Take Away',
       'tableNum': 09,
@@ -37,7 +40,7 @@ class _HomePageState extends State<HomePage>
     },
     {
       'id': 'EC-230201DDB',
-      'time': '07:30, 19 Oct 2023',
+      'time': '07:30, $_currentDate',
       'pagerNum': 'PG-2229',
       'orderType': 'Dine In',
       'tableNum': 10,
