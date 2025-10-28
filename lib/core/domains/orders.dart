@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Model untuk menampung data lengkap order di DetailHistoryPage
-class Orders 
-{
+class Orders {
   final String orderId;
   final int queueNumber;
 
@@ -66,18 +65,18 @@ class Orders
   });
 
   /// Factory constructor dari Firestore document
-  factory Orders.fromFirestore(DocumentSnapshot doc) 
-  {
+  factory Orders.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Orders._fromMap(data, doc.id);
   }
 
   /// Factory constructor dari Map
-  factory Orders.fromMap(Map<String, dynamic> data, String docId) {return Orders._fromMap(data, docId);}
+  factory Orders.fromMap(Map<String, dynamic> data, String docId) {
+    return Orders._fromMap(data, docId);
+  }
 
   /// Private helper untuk parsing data
-  static Orders _fromMap(Map<String, dynamic> data, String docId) 
-  {
+  static Orders _fromMap(Map<String, dynamic> data, String docId) {
     return Orders(
       orderId: docId,
       queueNumber: data['queueNumber'] ?? 0,
@@ -85,16 +84,34 @@ class Orders
       customerId: data['customerId'] ?? '',
       customerType: data['customerType'] ?? 'guest',
       customer: CustomerInfo.fromMap(data['customer'] ?? {}),
-      scanLocation: data['scanLocation'] != null ? ScanLocation.fromMap(data['scanLocation']) : null,
-      items: data['items'] != null ? (data['items'] as List).map((item) => OrderItem.fromMap(item)).toList() : null,
+      scanLocation: data['scanLocation'] != null
+          ? ScanLocation.fromMap(data['scanLocation'])
+          : null,
+      items: data['items'] != null
+          ? (data['items'] as List)
+                .map((item) => OrderItem.fromMap(item))
+                .toList()
+          : null,
       status: data['status'] ?? 'waiting',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      processingAt: data['processingAt'] != null ? (data['processingAt'] as Timestamp).toDate() : null,
-      readyAt: data['readyAt'] != null ? (data['readyAt'] as Timestamp).toDate() : null,
-      pickedUpAt: data['pickedUpAt'] != null ? (data['pickedUpAt'] as Timestamp).toDate() : null,
-      finishedAt: data['finishedAt'] != null ? (data['finishedAt'] as Timestamp).toDate() : null,
-      expiredAt: data['expiredAt'] != null ? (data['expiredAt'] as Timestamp).toDate() : null,
-      expiresAt: data['expiresAt'] != null ? (data['expiresAt'] as Timestamp).toDate() : null,
+      processingAt: data['processingAt'] != null
+          ? (data['processingAt'] as Timestamp).toDate()
+          : null,
+      readyAt: data['readyAt'] != null
+          ? (data['readyAt'] as Timestamp).toDate()
+          : null,
+      pickedUpAt: data['pickedUpAt'] != null
+          ? (data['pickedUpAt'] as Timestamp).toDate()
+          : null,
+      finishedAt: data['finishedAt'] != null
+          ? (data['finishedAt'] as Timestamp).toDate()
+          : null,
+      expiredAt: data['expiredAt'] != null
+          ? (data['expiredAt'] as Timestamp).toDate()
+          : null,
+      expiresAt: data['expiresAt'] != null
+          ? (data['expiresAt'] as Timestamp).toDate()
+          : null,
       ringing: RingingInfo.fromMap(data['ringing'] ?? {}),
       notes: data['notes'],
       cancelReason: data['cancelReason'],
@@ -103,10 +120,8 @@ class Orders
   }
 
   /// Convert ke Map untuk Firestore
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'orderId': orderId,
       'queueNumber': queueNumber,
       'merchantId': merchantId,
@@ -117,7 +132,9 @@ class Orders
       'items': items?.map((item) => item.toMap()).toList(),
       'status': status,
       'createdAt': Timestamp.fromDate(createdAt),
-      'processingAt': processingAt != null ? Timestamp.fromDate(processingAt!) : null,
+      'processingAt': processingAt != null
+          ? Timestamp.fromDate(processingAt!)
+          : null,
       'readyAt': readyAt != null ? Timestamp.fromDate(readyAt!) : null,
       'pickedUpAt': pickedUpAt != null ? Timestamp.fromDate(pickedUpAt!) : null,
       'finishedAt': finishedAt != null ? Timestamp.fromDate(finishedAt!) : null,
@@ -131,18 +148,15 @@ class Orders
   }
 
   /// Get formatted queue number (sama seperti History)
-  String getFormattedQueueNumber() 
-  {
+  String getFormattedQueueNumber() {
     String letter = String.fromCharCode(65 + (queueNumber ~/ 100));
     String number = (queueNumber % 100).toString().padLeft(2, '0');
     return 'Kursi: $letter-$number';
   }
 
   /// Get status text bahasa Indonesia
-  String getStatusText() 
-  {
-    switch (status) 
-    {
+  String getStatusText() {
+    switch (status) {
       case 'waiting':
         return 'Menunggu';
       case 'processing':
@@ -163,8 +177,7 @@ class Orders
   }
 
   /// Get formatted date
-  String getFormattedDate() 
-  {
+  String getFormattedDate() {
     final months = [
       'Januari',
       'Februari',
@@ -183,51 +196,59 @@ class Orders
   }
 
   /// Get formatted time
-  String getFormattedTime(DateTime? dateTime) 
-  {
-    if (dateTime == null){return '-';}
+  String getFormattedTime(DateTime? dateTime) {
+    if (dateTime == null) return '-';
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   /// Calculate duration between two timestamps
-  String getDuration(DateTime? start, DateTime? end) 
-  {
-    if (start == null || end == null){ return '-';}
+  String getDuration(DateTime? start, DateTime? end) {
+    if (start == null || end == null) return '-';
 
     final duration = end.difference(start);
-    if (duration.inHours > 0) {return '${duration.inHours}j ${duration.inMinutes % 60}m';}
+    if (duration.inHours > 0) {
+      return '${duration.inHours}j ${duration.inMinutes % 60}m';
+    }
     return '${duration.inMinutes}m';
   }
 
   /// Get waiting time (createdAt to readyAt)
-  String getWaitingTime() {return getDuration(createdAt, readyAt);}
+  String getWaitingTime() {
+    return getDuration(createdAt, readyAt);
+  }
 
   /// Get remaining expiry time
-  String getRemainingTime() 
-  {
-    if (expiresAt == null || status != 'ready') {return '-';}
+  String getRemainingTime() {
+    if (expiresAt == null || status != 'ready') return '-';
 
     final now = DateTime.now();
-    if (now.isAfter(expiresAt!)) {return 'Kedaluwarsa';}
+    if (now.isAfter(expiresAt!)) return 'Kedaluwarsa';
 
     final remaining = expiresAt!.difference(now);
-    if (remaining.inHours > 0) {return '${remaining.inHours}j ${remaining.inMinutes % 60}m';}
+    if (remaining.inHours > 0) {
+      return '${remaining.inHours}j ${remaining.inMinutes % 60}m';
+    }
     return '${remaining.inMinutes}m';
   }
 
   /// Check if order is active
-  bool get isActive {return !['finished', 'expired', 'cancelled'].contains(status);}
+  bool get isActive {
+    return !['finished', 'expired', 'cancelled'].contains(status);
+  }
 
   /// Check if order can be cancelled
-  bool get canBeCancelled {return ['waiting', 'processing'].contains(status);}
+  bool get canBeCancelled {
+    return ['waiting', 'processing'].contains(status);
+  }
 
   @override
-  String toString() {return 'Orders(orderId: $orderId, queueNumber: $queueNumber, status: $status)';}
+  String toString() {
+    return 'Orders(orderId: $orderId, queueNumber: $queueNumber, status: $status)';
+  }
 }
 
 /// Model untuk customer info
-class CustomerInfo 
-{
+class CustomerInfo {
   final String? name;
   final String? phone;
   final String? email;
@@ -235,8 +256,7 @@ class CustomerInfo
 
   CustomerInfo({this.name, this.phone, this.email, this.tableNumber});
 
-  factory CustomerInfo.fromMap(Map<String, dynamic> data) 
-  {
+  factory CustomerInfo.fromMap(Map<String, dynamic> data) {
     return CustomerInfo(
       name: data['name'],
       phone: data['phone'],
@@ -245,10 +265,8 @@ class CustomerInfo
     );
   }
 
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'name': name,
       'phone': phone,
       'email': email,
@@ -258,17 +276,20 @@ class CustomerInfo
 }
 
 /// Model untuk scan location
-class ScanLocation 
-{
+class ScanLocation {
   final double latitude;
   final double longitude;
   final DateTime timestamp;
   final double distanceFromMerchant;
 
-  ScanLocation({required this.latitude, required this.longitude, required this.timestamp, required this.distanceFromMerchant});
+  ScanLocation({
+    required this.latitude,
+    required this.longitude,
+    required this.timestamp,
+    required this.distanceFromMerchant,
+  });
 
-  factory ScanLocation.fromMap(Map<String, dynamic> data) 
-  {
+  factory ScanLocation.fromMap(Map<String, dynamic> data) {
     return ScanLocation(
       latitude: data['latitude'] ?? 0.0,
       longitude: data['longitude'] ?? 0.0,
@@ -277,10 +298,8 @@ class ScanLocation
     );
   }
 
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'latitude': latitude,
       'longitude': longitude,
       'timestamp': Timestamp.fromDate(timestamp),
@@ -288,24 +307,23 @@ class ScanLocation
     };
   }
 
-  String getFormattedDistance() 
-  {
-    if (distanceFromMerchant < 1000) {return '${distanceFromMerchant.toStringAsFixed(0)} m';}
+  String getFormattedDistance() {
+    if (distanceFromMerchant < 1000) {
+      return '${distanceFromMerchant.toStringAsFixed(0)} m';
+    }
     return '${(distanceFromMerchant / 1000).toStringAsFixed(1)} km';
   }
 }
 
 /// Model untuk order items (future feature)
-class OrderItem 
-{
+class OrderItem {
   final String name;
   final int quantity;
   final String? notes;
 
   OrderItem({required this.name, required this.quantity, this.notes});
 
-  factory OrderItem.fromMap(Map<String, dynamic> data) 
-  {
+  factory OrderItem.fromMap(Map<String, dynamic> data) {
     return OrderItem(
       name: data['name'] ?? '',
       quantity: data['quantity'] ?? 1,
@@ -313,12 +331,13 @@ class OrderItem
     );
   }
 
-  Map<String, dynamic> toMap() {return {'name': name, 'quantity': quantity, 'notes': notes};}
+  Map<String, dynamic> toMap() {
+    return {'name': name, 'quantity': quantity, 'notes': notes};
+  }
 }
 
 /// Model untuk ringing info
-class RingingInfo 
-{
+class RingingInfo {
   final int attempts;
   final DateTime? lastRingAt;
   final DateTime? nextRingAt;
@@ -335,36 +354,42 @@ class RingingInfo
     this.ringEndsAt,
   });
 
-  factory RingingInfo.fromMap(Map<String, dynamic> data) 
-  {
+  factory RingingInfo.fromMap(Map<String, dynamic> data) {
     return RingingInfo(
       attempts: data['attempts'] ?? 0,
-      lastRingAt: data['lastRingAt'] != null ? (data['lastRingAt'] as Timestamp).toDate() : null,
-      nextRingAt: data['nextRingAt'] != null ? (data['nextRingAt'] as Timestamp).toDate() : null,
+      lastRingAt: data['lastRingAt'] != null
+          ? (data['lastRingAt'] as Timestamp).toDate()
+          : null,
+      nextRingAt: data['nextRingAt'] != null
+          ? (data['nextRingAt'] as Timestamp).toDate()
+          : null,
       isRinging: data['isRinging'] ?? false,
-      ringStartedAt: data['ringStartedAt'] != null ? (data['ringStartedAt'] as Timestamp).toDate() : null,
-      ringEndsAt: data['ringEndsAt'] != null ? (data['ringEndsAt'] as Timestamp).toDate() : null,
+      ringStartedAt: data['ringStartedAt'] != null
+          ? (data['ringStartedAt'] as Timestamp).toDate()
+          : null,
+      ringEndsAt: data['ringEndsAt'] != null
+          ? (data['ringEndsAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'attempts': attempts,
       'lastRingAt': lastRingAt != null ? Timestamp.fromDate(lastRingAt!) : null,
       'nextRingAt': nextRingAt != null ? Timestamp.fromDate(nextRingAt!) : null,
       'isRinging': isRinging,
-      'ringStartedAt': ringStartedAt != null? Timestamp.fromDate(ringStartedAt!) : null,
+      'ringStartedAt': ringStartedAt != null
+          ? Timestamp.fromDate(ringStartedAt!)
+          : null,
       'ringEndsAt': ringEndsAt != null ? Timestamp.fromDate(ringEndsAt!) : null,
     };
   }
 
-  String getRingingStatus() 
-  {
-    if (attempts >= 3) {return 'Maksimal panggilan tercapai';}
-    if (isRinging) {return 'Sedang berdering';}
-    if (lastRingAt != null) {return 'Dipanggil ${attempts}x';}
+  String getRingingStatus() {
+    if (attempts >= 3) return 'Maksimal panggilan tercapai';
+    if (isRinging) return 'Sedang berdering';
+    if (lastRingAt != null) return 'Dipanggil ${attempts}x';
     return 'Belum dipanggil';
   }
 }

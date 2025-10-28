@@ -1,33 +1,148 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_pager_flutter/core/domains/orders.dart';
-import 'package:mobile_pager_flutter/core/domains/orders_history_dummy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
+import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
+import 'package:intl/intl.dart';
 
-class DetailHistoryPage extends StatefulWidget 
-{
-  final String orderId;
+class DetailHistoryPage extends ConsumerWidget {
+  final String pagerId;
 
-  const DetailHistoryPage({Key? key, required this.orderId}) : super(key: key);
+  const DetailHistoryPage({Key? key, required this.pagerId}) : super(key: key);
 
-  @override
-  State<DetailHistoryPage> createState() => _DetailHistoryPageState();
-}
+  Future<void> _showNotesBottomSheet(BuildContext context, WidgetRef ref, PagerModel pager, bool isMerchant) async {
+    if (!isMerchant) return; // Only merchant can edit
 
-class _DetailHistoryPageState extends State<DetailHistoryPage> 
-{
-  Orders? _order;
+    final TextEditingController notesController = TextEditingController(
+      text: pager.notes ?? '',
+    );
 
-  @override
-  void initState() 
-  {
-    super.initState();
-    _loadOrderDetail();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Catatan Pager',
+                  style: GoogleFonts.inter(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: notesController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: 'Tulis catatan di sini...',
+                hintStyle: GoogleFonts.inter(
+                  color: Colors.grey.shade400,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColor.primary, width: 2),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: double.infinity,
+              height: 48.h,
+              child: ElevatedButton(
+                onPressed: () async {
+                  try {
+                    final repository = ref.read(pagerRepositoryProvider);
+                    await repository.updatePagerNotes(
+                      pagerId: pager.pagerId,
+                      notes: notesController.text,
+                    );
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Catatan berhasil disimpan',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Gagal menyimpan catatan: ${e.toString()}',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Simpan',
+                  style: GoogleFonts.inter(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
+      ),
+    );
   }
 
-  void _loadOrderDetail() {setState(() {_order = DummyDataService.getDummyOrderDetail(widget.orderId);});}
-
   @override
-  Widget build(BuildContext context) 
-  {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pagerAsync = ref.watch(pagerDetailProvider(pagerId));
+    final user = ref.watch(authNotifierProvider.select((state) => state.user));
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -46,184 +161,123 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
           ),
         ),
       ),
-      body: _order == null ? const Center(child: Text('Order tidak ditemukan')): SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            _buildHeaderCard(_order!),
-            const SizedBox(height: 12),
-            _buildInfoCard(
-              title: 'Informasi Order',
+      body: pagerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                'Terjadi kesalahan',
+                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        data: (pager) {
+          if (pager == null) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Data tidak ditemukan',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            child: Column(
               children: [
-                _buildInfoRow(
-                  'Order ID', 
-                  _order!.orderId
+                _buildHeaderCard(pager),
+                const SizedBox(height: 12),
+                _buildInfoCard(
+                  title: 'Informasi Pager',
+                  children: [
+                    _buildInfoRow('Display ID', pager.displayId),
+                    _buildInfoRow(
+                      'Nomor Antrian',
+                      pager.queueNumber.toString(),
+                    ),
+                    _buildInfoRow('Status', _getStatusText(pager.status)),
+                    _buildInfoRow('Tanggal', _formatDate(pager.createdAt)),
+                    _buildInfoRow('Waktu Dibuat', _formatTime(pager.createdAt)),
+                  ],
                 ),
-                _buildInfoRow(
-                  'Nomor Antrian',
-                  _order!.getFormattedQueueNumber()
-                ),
-                _buildInfoRow(
-                  'Status', 
-                  _order!.getStatusText()
-                ),
-                _buildInfoRow(
-                  'Tanggal Order',
-                  _order!.getFormattedDate()
-                ),
-                _buildInfoRow(
-                  'Waktu Order',
-                  _order!.getFormattedTime(_order!.createdAt)
-                ),
+                const SizedBox(height: 12),
+                // Show merchant info for customer
+                if (user != null && !user.isMerchant)
+                  _buildMerchantInfoCard(ref, pager),
+                const SizedBox(height: 12),
+                if (user != null)
+                  _buildNotesCard(context, ref, pager, user.isMerchant),
+                const SizedBox(height: 12),
+                _buildTimelineCard(pager),
+                const SizedBox(height: 12),
+                if (pager.scannedBy != null)
+                  _buildInfoCard(
+                    title: 'Informasi Customer',
+                    children: [
+                      _buildInfoRow(
+                        'Nama',
+                        pager.scannedBy!['name'] ?? 'Guest',
+                      ),
+                      _buildInfoRow('Tipe', pager.customerType ?? '-'),
+                    ],
+                  ),
+                const SizedBox(height: 12),
+                if (pager.ringingCount > 0)
+                  _buildInfoCard(
+                    title: 'Informasi Panggilan',
+                    children: [
+                      _buildInfoRow(
+                        'Jumlah Panggilan',
+                        '${pager.ringingCount}x',
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 32),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildTimelineCard(_order!),
-            const SizedBox(height: 12),
-            if (_order!.customer.name != null ||_order!.customer.phone != null)...[
-              _buildInfoCard(
-                title: 'Informasi Pelanggan',
-                children: <Widget>[
-                  if (_order!.customer.name != null)...[_buildInfoRow(
-                    'Nama', 
-                    _order!.customer.name!)
-                  ],
-                  if (_order!.customer.phone != null)...[_buildInfoRow(
-                    'No. Telepon', 
-                    _order!.customer.phone!)
-                  ],
-                  if (_order!.customer.tableNumber != null)...[_buildInfoRow(
-                    'Nomor Meja',
-                    _order!.customer.tableNumber!)
-                  ],
-                ],
-              ),
-              const SizedBox(height: 12)
-            ],
-            if (_order!.scanLocation != null)...[
-              _buildInfoCard(
-                title: 'Informasi Lokasi',
-                children: <Widget>[
-                  _buildInfoRow(
-                    'Jarak dari Merchant',
-                    _order!.scanLocation!.getFormattedDistance()
-                  ),
-                  _buildInfoRow(
-                      'Waktu Scan',
-                      _order!.getFormattedTime(
-                        _order!.scanLocation!.timestamp,
-                      ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12)
-            ],
-            if (_order!.ringing.attempts > 0)...[
-              _buildInfoCard(
-                title: 'Informasi Panggilan',
-                children: <Widget>[
-                  _buildInfoRow(
-                    'Jumlah Panggilan',
-                    '${_order!.ringing.attempts}x',
-                  ),
-                  if (_order!.ringing.lastRingAt != null)...[
-                    _buildInfoRow(
-                      'Panggilan Terakhir',
-                      _order!.getFormattedTime(
-                         _order!.ringing.lastRingAt,
-                      ),
-                    )
-                  ],
-                  _buildInfoRow(
-                    'Status Panggilan',
-                    _order!.ringing.getRingingStatus(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12)
-            ],
-            // Notes (if any)
-            if (_order!.notes != null && _order!.notes!.isNotEmpty)...[
-              _buildInfoCard(
-                title: 'Catatan',
-                children: <Widget>[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _order!.notes!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12)
-            ],
-            // Cancel Reason (if cancelled)
-            if (_order!.cancelReason != null &&_order!.cancelReason!.isNotEmpty)...[
-              _buildInfoCard(
-                title: 'Alasan Pembatalan',
-                children: <Widget>[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _order!.cancelReason!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.red,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24)
-            ],
-            _buildActionButtons(_order!),
-            const SizedBox(height: 32),
-          ],
-        )),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildHeaderCard(Orders order) 
-  {
+  Widget _buildHeaderCard(PagerModel pager) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _getStatusColor(order.status),
-        boxShadow: <BoxShadow>[
+        color: _getStatusColor(pager.status),
+        boxShadow: [
           BoxShadow(
-            // Pengganti withOpacity() yang sudah usang menurut flutter
-            color: _getStatusColor(order.status).withValues(alpha: 0.3),
+            color: _getStatusColor(pager.status).withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        children: <Widget>[
-          Icon(
-            _getStatusIcon(order.status), 
-            size: 64,
-            color: Colors.white
-          ),
+        children: [
+          Icon(_getStatusIcon(pager.status), size: 64, color: Colors.white),
           const SizedBox(height: 16),
           Text(
-            order.getStatusText(),
+            _getStatusText(pager.status),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -232,65 +286,30 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
           ),
           const SizedBox(height: 8),
           Text(
-            order.getFormattedQueueNumber(),
+            pager.displayId,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
-          if (order.status == 'ready' && order.expiresAt != null)...[
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  // Pengganti withOpacity() yang sudah usang menurut flutter
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children:<Widget>[
-                    const Icon(
-                      Icons.timer, 
-                      color: Colors.white, 
-                      size: 18
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Sisa waktu: ${order.getRemainingTime()}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ]
         ],
       ),
     );
   }
 
-  Widget _buildInfoCard({required String title, required List<Widget> children,}) 
-  {
+  Widget _buildNotesCard(BuildContext context, WidgetRef ref, PagerModel pager, bool isMerchant) {
+    final hasNotes = pager.notes != null && pager.notes!.isNotEmpty;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: <BoxShadow>[
+        boxShadow: [
           BoxShadow(
-            // pengganti withOpacity() yang sudah usang menurut flutter
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -298,7 +317,94 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Catatan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              if (isMerchant)
+                InkWell(
+                  onTap: () => _showNotesBottomSheet(context, ref, pager, isMerchant),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: Colors.orange.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Edit',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: hasNotes ? Colors.orange.shade50 : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              hasNotes ? pager.notes! : 'Belum ada catatan',
+              style: TextStyle(
+                fontSize: 14,
+                color: hasNotes ? Colors.grey.shade800 : Colors.grey.shade400,
+                height: 1.5,
+                fontStyle: hasNotes ? FontStyle.normal : FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
             title,
             style: const TextStyle(
@@ -314,13 +420,12 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
     );
   }
 
-  Widget _buildInfoRow(String label, String value) 
-  {
+  Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+        children: [
           Expanded(
             flex: 2,
             child: Text(
@@ -350,17 +455,16 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
     );
   }
 
-  Widget _buildTimelineCard(Orders order) 
-  {
+  Widget _buildTimelineCard(PagerModel pager) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: <BoxShadow>[
+        boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -368,9 +472,9 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+        children: [
           const Text(
-            'Timeline Order',
+            'Timeline Pager',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -379,31 +483,19 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
           ),
           const SizedBox(height: 20),
           _buildTimelineItem(
-            title: 'Order Dibuat',
-            time: order.getFormattedTime(order.createdAt),
+            title: 'Pager Dibuat',
+            time: _formatTime(pager.createdAt),
             isCompleted: true,
             isFirst: true,
           ),
           _buildTimelineItem(
-            title: 'Sedang Diproses',
-            time: order.getFormattedTime(order.processingAt),
-            isCompleted: order.processingAt != null,
-          ),
-          _buildTimelineItem(
-            title: 'Siap Diambil',
-            time: order.getFormattedTime(order.readyAt),
-            isCompleted: order.readyAt != null,
-            subtitle: order.readyAt != null ? 'Waktu tunggu: ${order.getWaitingTime()}' : null,
-          ),
-          _buildTimelineItem(
-            title: 'Sudah Diambil',
-            time: order.getFormattedTime(order.pickedUpAt),
-            isCompleted: order.pickedUpAt != null,
-          ),
-          _buildTimelineItem(
-            title: 'Selesai',
-            time: order.getFormattedTime(order.finishedAt),
-            isCompleted: order.finishedAt != null,
+            title: _getStatusText(pager.status),
+            time: pager.activatedAt != null
+                ? _formatTime(pager.activatedAt!)
+                : '-',
+            isCompleted:
+                pager.status == PagerStatus.finished ||
+                pager.status == PagerStatus.expired,
             isLast: true,
           ),
         ],
@@ -418,13 +510,12 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
     String? subtitle,
     bool isFirst = false,
     bool isLast = false,
-  }) 
-  {
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
+      children: [
         Column(
-          children: <Widget>[
+          children: [
             Container(
               width: 24,
               height: 24,
@@ -436,19 +527,16 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
                   width: 2,
                 ),
               ),
-              child: isCompleted ? const Icon(
-                Icons.check, 
-                size: 16, 
-                color: Colors.white
-              ) : null,
+              child: isCompleted
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
             ),
-            if (!isLast)...[
+            if (!isLast)
               Container(
                 width: 2,
                 height: 40,
-                color: isCompleted ? Colors.green : Colors.grey[300]
-              )
-            ],
+                color: isCompleted ? Colors.green : Colors.grey[300],
+              ),
           ],
         ),
         const SizedBox(width: 16),
@@ -457,7 +545,7 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
             padding: const EdgeInsets.only(bottom: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
+              children: [
                 Text(
                   title,
                   style: TextStyle(
@@ -469,12 +557,9 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
                 const SizedBox(height: 4),
                 Text(
                   time,
-                  style: TextStyle(
-                    fontSize: 12, 
-                    color: Colors.grey[600]
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
-                if (subtitle != null)...[
+                if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
@@ -486,7 +571,6 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
                       ),
                     ),
                   ),
-                ],
               ],
             ),
           ),
@@ -495,211 +579,181 @@ class _DetailHistoryPageState extends State<DetailHistoryPage>
     );
   }
 
-  Widget _buildActionButtons(Orders order) 
-  {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: <Widget>[
-          if (order.status == 'ready')...[
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => _confirmPickup(order),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+  Widget _buildMerchantInfoCard(WidgetRef ref, PagerModel pager) {
+    final merchantSettingsAsync = ref.watch(
+      merchantSettingsFutureProvider(pager.merchantId),
+    );
+
+    return merchantSettingsAsync.when(
+      data: (merchantSettings) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColor.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Iconsax.shop,
+                      size: 24,
+                      color: AppColor.primary,
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Konfirmasi Sudah Diambil',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Merchant',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          merchantSettings.merchantName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Iconsax.shop,
+                size: 24,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Loading...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-          if (order.canBeCancelled) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: OutlinedButton(
-                onPressed: () => _cancelOrder(order),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Batalkan Order',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-            ),
-          ],
-          if (order.status == 'finished') ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => _orderAgain(order),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),),
-                ),
-                child: const Text(
-                  'Pesan Lagi',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
+      error: (error, stack) => const SizedBox.shrink(),
     );
   }
 
-  Color _getStatusColor(String status) 
-  {
-    switch (status) 
-    {
-      case 'waiting':
+  // Helper methods
+  String _getStatusText(PagerStatus status) {
+    switch (status) {
+      case PagerStatus.waiting:
+        return 'Menunggu';
+      case PagerStatus.ready:
+        return 'Siap';
+      case PagerStatus.ringing:
+        return 'Berdering';
+      case PagerStatus.finished:
+        return 'Selesai';
+      case PagerStatus.expired:
+        return 'Kadaluarsa';
+      default:
+        return 'Tidak Diketahui';
+    }
+  }
+
+  Color _getStatusColor(PagerStatus status) {
+    switch (status) {
+      case PagerStatus.waiting:
         return Colors.orange;
-      case 'processing':
-        return Colors.blue;
-      case 'ready':
+      case PagerStatus.ready:
         return Colors.green;
-      case 'picked_up':
-        return Colors.lightGreen;
-      case 'finished':
+      case PagerStatus.ringing:
+        return Colors.blue;
+      case PagerStatus.finished:
         return Colors.grey;
-      case 'expired':
-        return Colors.red;
-      case 'cancelled':
+      case PagerStatus.expired:
         return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  IconData _getStatusIcon(String status) 
-  {
-    switch (status) 
-    {
-      case 'waiting':
+  IconData _getStatusIcon(PagerStatus status) {
+    switch (status) {
+      case PagerStatus.waiting:
         return Icons.hourglass_empty;
-      case 'processing':
-        return Icons.restaurant;
-      case 'ready':
+      case PagerStatus.ready:
         return Icons.notifications_active;
-      case 'picked_up':
-        return Icons.check_circle;
-      case 'finished':
+      case PagerStatus.ringing:
+        return Icons.ring_volume;
+      case PagerStatus.finished:
         return Icons.done_all;
-      case 'expired':
+      case PagerStatus.expired:
         return Icons.timer_off;
-      case 'cancelled':
-        return Icons.cancel;
       default:
         return Icons.info;
     }
   }
 
-  Future<void> _confirmPickup(Orders order) async 
-  {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi'),
-        content: const Text('Apakah order sudah diambil?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, Sudah Diambil'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) 
-    {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order berhasil dikonfirmasi (DUMMY MODE)'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+  String _formatDate(DateTime dateTime) {
+    return DateFormat('dd MMMM yyyy').format(dateTime);
   }
 
-  Future<void> _cancelOrder(Orders order) async 
-  {
-    final TextEditingController reasonController = TextEditingController();
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Batalkan Order'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Text('Apakah kamu yakin ingin membatalkan order ini?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Alasan pembatalan (opsional)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Tidak'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Ya, Batalkan'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) 
-    {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order berhasil dibatalkan (DUMMY MODE)'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
+  String _formatTime(DateTime dateTime) {
+    return DateFormat('HH:mm:ss').format(dateTime);
   }
-
-  Future<void> _orderAgain(Orders order) async 
-  {ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur pesan lagi akan segera hadir!')));}
 }

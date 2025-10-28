@@ -1,15 +1,13 @@
 import 'package:mobile_pager_flutter/core/domains/orders.dart';
 import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
 
-class DummyDataService 
-{
+class DummyDataService {
   static const String currentUserId = 'USER-001';
 
-  static List<History> getDummyHistory() 
-  {
+  static List<History> getDummyHistory() {
     final now = DateTime.now();
 
-    return <History>[
+    return [
       History(
         orderId: 'ORD-001',
         merchantId: 'MERCH-001',
@@ -67,12 +65,10 @@ class DummyDataService
     ];
   }
 
-  static Orders? getDummyOrderDetail(String orderId) 
-  {
+  static Orders? getDummyOrderDetail(String orderId) {
     final now = DateTime.now();
 
-    final dummyOrders = 
-    {
+    final dummyOrders = {
       'ORD-001': Orders(
         orderId: 'ORD-001',
         queueNumber: 12,
@@ -91,35 +87,18 @@ class DummyDataService
           timestamp: now.subtract(const Duration(hours: 2)),
           distanceFromMerchant: 250,
         ),
-        items: <OrderItem>[
-          OrderItem(
-            name: 'Kopi Susu', 
-            quantity: 1, 
-            notes: 'Less sugar'
-          ),
-          OrderItem(
-            name: 'Croissant', 
-            quantity: 2, 
-            notes: null
-          ),
+        items: [
+          OrderItem(name: 'Kopi Susu', quantity: 1, notes: 'Less sugar'),
+          OrderItem(name: 'Croissant', quantity: 2, notes: null),
         ],
         status: 'ready',
         createdAt: now.subtract(const Duration(hours: 2)),
-        processingAt: now.subtract(const Duration(
-          hours: 2, 
-          minutes: -5
-        )),
-        readyAt: now.subtract(const Duration(
-          hours: 1, 
-          minutes: 30
-        )),
+        processingAt: now.subtract(const Duration(hours: 2, minutes: -5)),
+        readyAt: now.subtract(const Duration(hours: 1, minutes: 30)),
         pickedUpAt: null,
         finishedAt: null,
         expiredAt: null,
-        expiresAt: now.add(const Duration(
-          hours: 1, 
-          minutes: 30
-        )),
+        expiresAt: now.add(const Duration(hours: 1, minutes: 30)),
         ringing: RingingInfo(
           attempts: 2,
           lastRingAt: now.subtract(const Duration(minutes: 10)),
@@ -152,32 +131,19 @@ class DummyDataService
         ),
         status: 'finished',
         createdAt: now.subtract(const Duration(days: 1)),
-        processingAt: now.subtract(const Duration(
-          days: 1, 
-          hours: -1
-        )),
-        readyAt: now.subtract(const Duration(
-          days: 1, 
-          hours: -2
-        )),
-        pickedUpAt: now.subtract(const Duration(
-          days: 1, 
-          hours: -2, 
-          minutes: -10
-        )),
-        finishedAt: now.subtract(const Duration(
-          days: 1, 
-          hours: -2, 
-          minutes: -10
-        )),
+        processingAt: now.subtract(const Duration(days: 1, hours: -1)),
+        readyAt: now.subtract(const Duration(days: 1, hours: -2)),
+        pickedUpAt: now.subtract(
+          const Duration(days: 1, hours: -2, minutes: -10),
+        ),
+        finishedAt: now.subtract(
+          const Duration(days: 1, hours: -2, minutes: -10),
+        ),
         expiredAt: null,
         expiresAt: null,
         ringing: RingingInfo(
           attempts: 1,
-          lastRingAt: now.subtract(const Duration(
-            days: 1, 
-            hours: -2
-          )),
+          lastRingAt: now.subtract(const Duration(days: 1, hours: -2)),
           nextRingAt: null,
           isRinging: false,
           ringStartedAt: null,
@@ -185,11 +151,9 @@ class DummyDataService
         ),
         notes: null,
         cancelReason: null,
-        updatedAt: now.subtract(const Duration(
-          days: 1, 
-          hours: -2, 
-          minutes: -10
-        )),
+        updatedAt: now.subtract(
+          const Duration(days: 1, hours: -2, minutes: -10),
+        ),
       ),
 
       'ORD-003': Orders(
@@ -198,10 +162,7 @@ class DummyDataService
         merchantId: 'MERCH-001',
         customerId: currentUserId,
         customerType: 'guest',
-        customer: CustomerInfo(
-          name: 'Guest User', 
-          phone: null
-        ),
+        customer: CustomerInfo(name: 'Guest User', phone: null),
         scanLocation: ScanLocation(
           latitude: -6.900977,
           longitude: 107.618481,
@@ -210,10 +171,7 @@ class DummyDataService
         ),
         status: 'processing',
         createdAt: now.subtract(const Duration(days: 2)),
-        processingAt: now.subtract(const Duration(
-          days: 2, 
-          hours: -1
-        )),
+        processingAt: now.subtract(const Duration(days: 2, hours: -1)),
         readyAt: null,
         pickedUpAt: null,
         finishedAt: null,
@@ -229,10 +187,7 @@ class DummyDataService
         ),
         notes: null,
         cancelReason: null,
-        updatedAt: now.subtract(const Duration(
-          days: 2, 
-          hours: -1
-        )),
+        updatedAt: now.subtract(const Duration(days: 2, hours: -1)),
       ),
 
       'ORD-004': Orders(
@@ -265,10 +220,7 @@ class DummyDataService
         ),
         notes: null,
         cancelReason: 'Stok habis',
-        updatedAt: now.subtract(const Duration(
-          days: 3, 
-          hours: -1
-        )),
+        updatedAt: now.subtract(const Duration(days: 3, hours: -1)),
       ),
 
       'ORD-005': Orders(
@@ -277,10 +229,7 @@ class DummyDataService
         merchantId: 'MERCH-002',
         customerId: currentUserId,
         customerType: 'registered',
-        customer: CustomerInfo(
-          name: 'John Doe', 
-          phone: '+6281234567890'
-        ),
+        customer: CustomerInfo(name: 'John Doe', phone: '+6281234567890'),
         scanLocation: ScanLocation(
           latitude: -6.900977,
           longitude: 107.618481,
@@ -289,30 +238,15 @@ class DummyDataService
         ),
         status: 'expired',
         createdAt: now.subtract(const Duration(days: 4)),
-        processingAt: now.subtract(const Duration(
-          days: 4, 
-          hours: -1
-        )),
-        readyAt: now.subtract(const Duration(
-          days: 4, 
-          hours: -2
-        )),
+        processingAt: now.subtract(const Duration(days: 4, hours: -1)),
+        readyAt: now.subtract(const Duration(days: 4, hours: -2)),
         pickedUpAt: null,
         finishedAt: null,
-        expiredAt: now.subtract(const Duration(
-          days: 4, 
-          hours: -5
-        )),
-        expiresAt: now.subtract(const Duration(
-          days: 4, 
-          hours: -5
-        )),
+        expiredAt: now.subtract(const Duration(days: 4, hours: -5)),
+        expiresAt: now.subtract(const Duration(days: 4, hours: -5)),
         ringing: RingingInfo(
           attempts: 3,
-          lastRingAt: now.subtract(const Duration(
-            days: 4, 
-            hours: -3
-          )),
+          lastRingAt: now.subtract(const Duration(days: 4, hours: -3)),
           nextRingAt: null,
           isRinging: false,
           ringStartedAt: null,
@@ -320,10 +254,7 @@ class DummyDataService
         ),
         notes: null,
         cancelReason: null,
-        updatedAt: now.subtract(const Duration(
-          days: 4, 
-          hours: -5
-        )),
+        updatedAt: now.subtract(const Duration(days: 4, hours: -5)),
       ),
 
       'ORD-006': Orders(
@@ -369,14 +300,25 @@ class DummyDataService
   }
 
   /// Filter dummy history by status
-  static List<History> filterHistory(List<History> historyList, String filter) 
-  {
-    switch (filter) 
-    {
+  static List<History> filterHistory(List<History> historyList, String filter) {
+    switch (filter) {
       case 'active':
-        return historyList.where((h) => ['waiting', 'processing', 'ready', 'picked_up',].contains(h.status)).toList();
+        return historyList
+            .where(
+              (h) => [
+                'waiting',
+                'processing',
+                'ready',
+                'picked_up',
+              ].contains(h.status),
+            )
+            .toList();
       case 'finished':
-        return historyList.where((h) => ['finished', 'expired', 'cancelled'].contains(h.status)).toList();
+        return historyList
+            .where(
+              (h) => ['finished', 'expired', 'cancelled'].contains(h.status),
+            )
+            .toList();
       default:
         return historyList;
     }

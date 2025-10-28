@@ -1,0 +1,61 @@
+import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/models/customer_stats_model.dart';
+
+abstract class IPagerRepository {
+  /// Create a temporary pager for merchant
+  Future<String> createTemporaryPager({
+    required String merchantId,
+    String? label,
+    Map<String, dynamic>? metadata,
+  });
+
+  /// Watch temporary pagers for a merchant (real-time stream)
+  Stream<List<PagerModel>> watchTemporaryPagers(String merchantId);
+
+  /// Watch active pagers for a merchant (real-time stream)
+  Stream<List<PagerModel>> watchActivePagers(String merchantId);
+
+  /// Activate a pager by moving it from temporary to active collection
+  Future<void> activatePager({
+    required String pagerId,
+    required String customerId,
+    required String customerType,
+    required Map<String, dynamic> customerInfo,
+  });
+
+  /// Get a single pager by ID from either collection
+  Future<PagerModel?> getPagerById(String pagerId);
+
+  /// Update pager status (ready, finished, expired)
+  Future<void> updatePagerStatus({
+    required String pagerId,
+    required PagerStatus status,
+  });
+
+  /// Update pager notes
+  Future<void> updatePagerNotes({
+    required String pagerId,
+    required String notes,
+  });
+
+  /// Delete a temporary pager
+  Future<void> deleteTemporaryPager(String pagerId);
+
+  /// Get customer's active pagers
+  Stream<List<PagerModel>> getCustomerActivePagers(String customerId);
+
+  /// Get history pagers for merchant (finished, expired, cancelled)
+  Stream<List<PagerModel>> getMerchantHistoryPagers(String merchantId);
+
+  /// Get history pagers for customer (finished, expired, cancelled)
+  Stream<List<PagerModel>> getCustomerHistoryPagers(String customerId);
+
+  /// Get list of customers with statistics for a merchant (non-guest users only)
+  Future<List<CustomerStatsModel>> getCustomerStatsList(String merchantId);
+
+  /// Get detailed pager history for a specific customer of a merchant
+  Future<List<PagerModel>> getCustomerPagerHistory({
+    required String merchantId,
+    required String customerId,
+  });
+}

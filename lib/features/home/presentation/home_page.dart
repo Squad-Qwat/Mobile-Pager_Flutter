@@ -1,398 +1,206 @@
 import 'dart:io'; // untuk stdout.write
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
+import 'package:mobile_pager_flutter/core/presentation/widget/pager_ticket_card.dart';
+import 'package:mobile_pager_flutter/core/providers/navigation_provider.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
-import 'package:mobile_pager_flutter/core/domains/orders_list.dart';
-import 'package:flutter/foundation.dart'; // untuk kDebugMode dan debugPrint()
+import 'package:mobile_pager_flutter/features/analytics/presentation/widgets/analytics_grid.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/notifications/presentation/providers/notification_providers.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 
-
-class HomePage extends StatefulWidget 
-{
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider);
+    final user = authState.user;
 
-final String _currentDate = getCurrentDateString();
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildHeader(context, ref),
+        body: const Center(child: Text('Please login')),
+      );
+    }
 
-class _HomePageState extends State<HomePage> 
-{
-  final List<Map<String, dynamic>> storeStatisticData = [
-    {'number': 60, 'number2': null, 'statisticCount': '23'},
-    {'number': 15, 'number2': 20, 'statisticCount': '40'},
-  ];
+    final activePagersAsync = user.isMerchant
+        ? ref.watch(activePagersStreamProvider(user.uid))
+        : ref.watch(customerPagersStreamProvider(user.uid));
 
-  final List<Map<String, dynamic>> recentActivitiesData = [
-    {
-      'id': 'EC-230201DDA',
-      'time': '07:00, $_currentDate',
-      'pagerNum': 'PG-2228',
-      'orderType': 'Take Away',
-      'tableNum': 09,
-      'name': 'Fauzan',
-      'remainingTime': '00:40',
-    },
-    {
-      'id': 'EC-230201DDB',
-      'time': '07:30, $_currentDate',
-      'pagerNum': 'PG-2229',
-      'orderType': 'Dine In',
-      'tableNum': 10,
-      'name': 'Fauzan',
-      'remainingTime': '02:00',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) 
-  {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildHeader(),
+      appBar: _buildHeader(context, ref),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              SizedBox(height: 20),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Welcome,',
-                      style: GoogleFonts.inter(
-                        fontSize: 36.sp,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      'Fauzan!',
-                      style: GoogleFonts.inter(
-                        fontSize: 36.sp,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
+        child: activePagersAsync.when(
+          data: (pagers) => _buildContent(context, ref, user, pagers),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Error loading pagers',
+                  style: GoogleFonts.inter(fontSize: 16, color: Colors.red),
                 ),
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                height: 170.h,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.only(left: AppPadding.p16),
-                  children: <Widget>[
-                    Container(
-                      width: 330.w,
-                      margin: EdgeInsets.only(right: AppPadding.p16),
-                      padding: EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'Antrian aktif hari ini',
-                              textAlign: TextAlign.start,
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              '10',
-                              textAlign: TextAlign.end,
-                              style: GoogleFonts.inter(
-                                fontSize: 52.sp,
-                                color: AppColor.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'Antrian',
-                              textAlign: TextAlign.end,
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 330.w,
-                      margin: EdgeInsets.only(right: AppPadding.p16),
-                      padding: EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'Antrian aktif hari ini',
-                              textAlign: TextAlign.start,
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              '10',
-                              textAlign: TextAlign.end,
-                              style: GoogleFonts.inter(
-                                fontSize: 52.sp,
-                                color: AppColor.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'Antrian',
-                              textAlign: TextAlign.end,
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-
-              SizedBox(height: 36),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text(
-                          'Aktivitas Terkini',
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        RichText(text: TextSpan(
-                          text: "Lihat semua",
-                          style: GoogleFonts.inter(
-                            color: AppColor.primary, 
-                            fontWeight: FontWeight.w700,
-                          ),
-                          recognizer: TapGestureRecognizer()..onTap = () => Navigator.pushNamed(
-                            context, 
-                            AppRoutes.orderDetails
-                          ),
-                        ))
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                itemCount: recentActivitiesData.length,
-                itemBuilder: (context, index) {
-                  final activity = recentActivitiesData[index];
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 12),
-                    padding: EdgeInsets.symmetric(vertical: AppPadding.p12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              activity['id'] ?? 'idError',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              activity['time'] ?? 'timeError',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Nomor Pager',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  activity['pagerNum'] ?? '-',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Jenis pesanan',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14, 
-                                    color: Colors.grey.shade600,
-                                  )
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  activity['orderType'] ?? 'None',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16, 
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                )
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Nomor meja',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14, 
-                                    color: Colors.grey.shade600
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  '${activity['tableNum'] ?? -1}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16, 
-                                    fontWeight: FontWeight.w700
-                                  ),
-                                )
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Nama',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  activity['name'] ?? 'Guest',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 12),
-                        Divider(
-                          color: Colors.grey.shade300, 
-                          height: 1
-                        ),
-                        SizedBox(height: 12),
-                        Row(
-                          children: <Widget>[
-                            Icon(
-                              Iconsax.clock,
-                              size: 18,
-                              color: AppColor.primary,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Sisa waktu: ',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            Text(
-                              activity['remainingTime'],
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              SizedBox(height: 20),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildHeader() 
-  {
+  Widget _buildContent(BuildContext context, WidgetRef ref, user, List pagers) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Trigger refresh by invalidating the provider
+        ref.invalidate(user.isMerchant
+            ? activePagersStreamProvider(user.uid)
+            : customerPagersStreamProvider(user.uid));
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          SizedBox(height: 24.h),
+          // Analytics Grid (only for merchants)
+          if (user.isMerchant)
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.analytics_outlined,
+                        size: 20.sp,
+                        color: AppColor.primary,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Statistik',
+                        style: GoogleFonts.inter(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                AnalyticsGrid(merchantId: user.uid),
+                SizedBox(height: 24.h),
+              ],
+            ),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_activity,
+                          size: 20.sp,
+                          color: AppColor.primary,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Aktivitas Terkini',
+                          style: GoogleFonts.inter(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Only show "Lihat Semua" for merchants
+                  if (user.isMerchant)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                      child: GestureDetector(
+                        onTap: () {
+                          // Switch ke tab Active Pagers (index 1) di bottom navigation
+                          ref.read(navigationIndexProvider.notifier).state = 1;
+                        },
+                        child: Text(
+                          'Lihat Semua',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            color: AppColor.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          pagers.isEmpty
+              ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                  child: Center(
+                    child: Text(
+                      'No active pagers yet',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                  itemCount: pagers.length,
+                  itemBuilder: (context, index) {
+                    return PagerTicketCard(
+                      pager: pagers[index],
+                      isMerchant: user.isMerchant,
+                    );
+                  },
+                ),
+          SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildHeader(BuildContext context, WidgetRef ref) {
+    // make initial for user name (contains 2)
+    final user = ref.watch(authNotifierProvider.select((state) => state.user));
+    String initial = '';
+    if (user != null && user.displayName != null) {
+      List<String> nameParts = user.displayName!.split(' ');
+      if (nameParts.length >= 2) {
+        initial = nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+      } else if (nameParts.isNotEmpty) {
+        initial = nameParts[0][0].toUpperCase();
+      }
+    }
+
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
@@ -404,25 +212,19 @@ class _HomePageState extends State<HomePage>
           color: AppColor.primary,
         ),
       ),
-      actions: <Widget>[
-        IconButton(
-          onPressed: () => (kDebugMode) ? debugPrint('Hello World') : stdout.write('Hello World'),
-          icon: Icon(Icons.add),
-        ),
-        IconButton(
-          onPressed: () => (kDebugMode) ? debugPrint('Hello World') : stdout.write('Hello World'),
-          icon: Icon(Icons.notifications),
-        ),
+      actions: [
+        // Notification icon with badge
+        _buildNotificationBadge(ref, user),
+        SizedBox(width: 8.w),
         GestureDetector(
-          onTap: () => Navigator.pushNamed(
-            context, 
-            AppRoutes.profile
-          ),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.profile);
+          },
           child: CircleAvatar(
             radius: 14.w,
             backgroundColor: AppColor.primary,
             child: Text(
-              'FC',
+              initial,
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -432,6 +234,65 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNotificationBadge(WidgetRef ref, user) {
+    if (user == null) {
+      return IconButton(
+        onPressed: () {},
+        icon: Icon(Icons.notifications),
+      );
+    }
+
+    final unreadCountAsync = ref.watch(unreadNotificationCountProvider(user.uid));
+
+    return unreadCountAsync.when(
+      data: (count) => Stack(
+        children: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(ref.context, AppRoutes.notifications);
+            },
+            icon: Icon(Icons.notifications),
+          ),
+          if (count > 0)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  count > 99 ? '99+' : count.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+      loading: () => IconButton(
+        onPressed: () {},
+        icon: Icon(Icons.notifications),
+      ),
+      error: (_, __) => IconButton(
+        onPressed: () {
+          Navigator.pushNamed(ref.context, AppRoutes.notifications);
+        },
+        icon: Icon(Icons.notifications),
+      ),
     );
   }
 }

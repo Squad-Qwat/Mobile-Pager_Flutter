@@ -5,26 +5,35 @@ import 'package:mobile_pager_flutter/features/authentication/data/repositories/a
 import 'package:mobile_pager_flutter/features/authentication/data/datasources/auth_remote_datasource_impl.dart';
 import 'package:mobile_pager_flutter/features/authentication/domain/auth_notifier.dart';
 
-final authRemoteDataSourceProvider = Provider((ref) {return AuthRemoteDataSourceImpl();});
+final authRemoteDataSourceProvider = Provider((ref) {
+  return AuthRemoteDataSourceImpl();
+});
 
-final authRepositoryProvider = Provider<IAuthRepository>((ref) 
-{
+final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final dataSource = ref.watch(authRemoteDataSourceProvider);
   return AuthRepositoryImpl(dataSource);
 });
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) 
-{
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
+  ref,
+) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository);
 });
 
-final userStreamProvider = StreamProvider.autoDispose<UserModel?>((ref) 
-{
+final userStreamProvider = StreamProvider.autoDispose<UserModel?>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final currentUser = authRepository.currentUser;
 
-  if (currentUser == null) {return Stream.value(null);}
+  if (currentUser == null) {
+    return Stream.value(null);
+  }
 
   return authRepository.streamUserData(currentUser.uid);
+});
+
+/// Provider to fetch user data by userId (useful for fetching merchant info)
+final userByIdProvider = FutureProvider.autoDispose.family<UserModel?, String>((ref, userId) async {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return authRepository.getUserData(userId);
 });

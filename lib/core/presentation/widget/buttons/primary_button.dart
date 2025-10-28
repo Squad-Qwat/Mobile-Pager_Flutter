@@ -69,7 +69,7 @@ class PrimaryButton extends StatelessWidget
                   ],
                   Text(
                     text,
-                    style: GoogleFonts.dmSans(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: textColor ?? Colors.white,

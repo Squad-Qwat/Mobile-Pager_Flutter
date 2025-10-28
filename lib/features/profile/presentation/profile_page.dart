@@ -7,16 +7,20 @@ import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_bu
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
 
-class ProfilePage extends ConsumerWidget 
-{
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) 
-  {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
+
+    // Watch merchant settings if user is merchant
+    final merchantSettingsAsync = user?.isMerchant == true
+        ? ref.watch(merchantSettingsStreamProvider(user!.uid))
+        : null;
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -34,12 +38,12 @@ class ProfilePage extends ConsumerWidget
       ),
       body: SingleChildScrollView(
         child: Column(
-          children: <Widget>[
+          children: [
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(AppPadding.p24),
               child: Column(
-                children: <Widget>[
+                children: [
                   Container(
                     width: 100,
                     height: 100,
@@ -47,25 +51,49 @@ class ProfilePage extends ConsumerWidget
                       shape: BoxShape.circle,
                       color: AppColor.grey200,
                       border: Border.all(color: AppColor.grey300, width: 2),
-                      image: user?.photoURL != null ? DecorationImage(
-                        image: NetworkImage(user!.photoURL!),
-                        fit: BoxFit.cover
-                      ) : null,
+                      image: user?.photoURL != null
+                          ? DecorationImage(
+                              image: NetworkImage(user!.photoURL!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                    child: user?.photoURL == null ? Icon(
-                      Iconsax.user, 
-                      size: 50, 
-                      color: AppColor.grey600
-                    ) : null,
+                    child: user?.photoURL == null
+                        ? Icon(Iconsax.user, size: 50, color: AppColor.grey600)
+                        : null,
                   ),
                   SizedBox(height: AppPadding.p16),
-                  Text(
-                    user?.displayName ?? 'Guest User',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.textPrimary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user?.displayName ?? 'Guest User',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColor.textPrimary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => _showEditNameDialog(context, ref, user?.displayName ?? ''),
+                        child: Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColor.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.edit_2,
+                            size: 16,
+                            color: AppColor.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: AppPadding.p8),
                   Text(
@@ -75,7 +103,7 @@ class ProfilePage extends ConsumerWidget
                       color: AppColor.textSecondary,
                     ),
                   ),
-                  if (user?.role != null)...[
+                  if (user?.role != null)
                     Container(
                       margin: EdgeInsets.only(top: AppPadding.p12),
                       padding: EdgeInsets.symmetric(
@@ -83,11 +111,14 @@ class ProfilePage extends ConsumerWidget
                         vertical: AppPadding.p8,
                       ),
                       decoration: BoxDecoration(
-                        // Pengganti withOpacity() karena usang menurut flutter
-                        color: user!.isMerchant ? AppColor.primary.withValues(alpha: 0.1) : AppColor.grey200,
+                        color: user!.isMerchant
+                            ? AppColor.primary.withOpacity(0.1)
+                            : AppColor.grey200,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: user.isMerchant? AppColor.primary : AppColor.grey400,
+                          color: user.isMerchant
+                              ? AppColor.primary
+                              : AppColor.grey400,
                           width: 1,
                         ),
                       ),
@@ -96,15 +127,93 @@ class ProfilePage extends ConsumerWidget
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: user.isMerchant ? AppColor.primary : AppColor.textSecondary,
+                          color: user.isMerchant
+                              ? AppColor.primary
+                              : AppColor.textSecondary,
                         ),
                       ),
                     ),
-                  ],
+                  // Merchant name display
+                  if (user?.isMerchant == true && merchantSettingsAsync != null)
+                    merchantSettingsAsync.when(
+                      data: (settings) {
+                        if (settings.merchantName.isNotEmpty) {
+                          return Container(
+                            margin: EdgeInsets.only(top: AppPadding.p12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppPadding.p16,
+                              vertical: AppPadding.p12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColor.grey100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Nama Merchant',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppColor.textSecondary,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  settings.merchantName,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return SizedBox.shrink();
+                      },
+                      loading: () => SizedBox.shrink(),
+                      error: (_, __) => SizedBox.shrink(),
+                    ),
                 ],
               ),
             ),
             SizedBox(height: AppPadding.p24),
+            // Menu Section
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColor.grey300, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    // Merchant Settings (only for merchants)
+                    if (user?.isMerchant == true)
+                      _buildMenuItem(
+                        icon: Iconsax.setting_2,
+                        title: 'Pengaturan Pager',
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.merchantSettings);
+                        },
+                      ),
+                    if (user?.isMerchant == true)
+                      Divider(height: 1, color: AppColor.grey300),
+                    // About App
+                    _buildMenuItem(
+                      icon: Iconsax.info_circle,
+                      title: 'Tentang Aplikasi',
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.about);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppPadding.p16),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
               child: PrimaryButton(
@@ -121,14 +230,13 @@ class ProfilePage extends ConsumerWidget
     );
   }
 
-  /*
-  Widget _buildMenuItem({required IconData icon, required String title, required VoidCallback onTap}) 
-  {
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
-      leading: Icon(
-        icon, 
-        color: AppColor.textSecondary
-      ),
+      leading: Icon(icon, color: AppColor.textSecondary),
       title: Text(
         title,
         style: GoogleFonts.inter(
@@ -141,10 +249,114 @@ class ProfilePage extends ConsumerWidget
       onTap: onTap,
     );
   }
-  */
 
-  Future<void> _handleLogout(BuildContext context, WidgetRef ref) async 
-  {
+  Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) async {
+    final TextEditingController nameController = TextEditingController(text: currentName);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Edit Nama',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: AppColor.textPrimary,
+          ),
+        ),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Masukkan nama Anda',
+            hintStyle: GoogleFonts.inter(color: AppColor.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColor.grey400),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColor.primary, width: 2),
+            ),
+          ),
+          style: GoogleFonts.inter(color: AppColor.textPrimary),
+        ),
+        backgroundColor: AppColor.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                color: AppColor.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Nama tidak boleh kosong',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                Navigator.of(context).pop();
+                await ref.read(authNotifierProvider.notifier).updateDisplayName(newName);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Nama berhasil diubah',
+                        style: GoogleFonts.inter(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Gagal mengubah nama: $e',
+                        style: GoogleFonts.inter(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Simpan',
+              style: GoogleFonts.inter(
+                color: AppColor.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    nameController.dispose();
+  }
+
+  Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -161,7 +373,7 @@ class ProfilePage extends ConsumerWidget
         ),
         backgroundColor: AppColor.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        actions: <Widget>[
+        actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
@@ -186,20 +398,16 @@ class ProfilePage extends ConsumerWidget
       ),
     );
 
-    if (confirmed == true) 
-    {
-      try 
-      {
+    if (confirmed == true) {
+      try {
         await ref.read(authNotifierProvider.notifier).signOut();
-        if (context.mounted) {Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.authentication, 
-          (route) => false
-        );}
-      } 
-      catch (e) 
-      {
-        if (context.mounted) 
-        {
+        if (context.mounted) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.authentication, (route) => false);
+        }
+      } catch (e) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(

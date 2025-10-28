@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "964457949557-a6b5sdotrvr5ppplpp48d0030ksc7s65.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.cammo",
-            "certificate_hash": "e95f56d8bdceaaa38e13ed3e788b27df62c91584"
-          }
-        },
-        {
           "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -151,7 +151,9 @@ class _TextInputFieldState extends State<TextInputField>
               ),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: widget.hintStyle ?? GoogleFonts.inter(
+            hintStyle:
+                widget.hintStyle ??
+                GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   color: AppColor.textSecondary,

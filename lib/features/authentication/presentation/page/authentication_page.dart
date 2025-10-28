@@ -8,30 +8,31 @@ import 'package:mobile_pager_flutter/features/authentication/presentation/provid
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
-class AuthenticationPage extends ConsumerWidget 
-{
+class AuthenticationPage extends ConsumerWidget {
   const AuthenticationPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) 
-  {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
 
-    ref.listen<AuthState>(authNotifierProvider, (previous, next) 
-    {
-      if (next.isAuthenticated && next.user != null) 
-      {
-        if (next.user!.isMerchant) {_navigateToMerchantFlow(context, ref);} 
-        else {Navigator.pushReplacementNamed(context, AppRoutes.home);}
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (next.isAuthenticated && next.user != null) {
+        if (next.user!.isMerchant) {
+          _navigateToMerchantFlow(context, ref);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
       }
 
-      if (next.errorMessage != null) 
-      {
+      if (next.errorMessage != null) {
         final errorMsg = next.errorMessage!;
         Color bgColor = Colors.red;
 
-        if (errorMsg.contains('dibatalkan') || errorMsg.contains('cancelled')) {bgColor = Colors.orange;} 
-        else if (errorMsg.contains('sudah terdaftar sebagai')) {bgColor = Colors.deepOrange;}
+        if (errorMsg.contains('dibatalkan') || errorMsg.contains('cancelled')) {
+          bgColor = Colors.orange;
+        } else if (errorMsg.contains('sudah terdaftar sebagai')) {
+          bgColor = Colors.deepOrange;
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -61,22 +62,13 @@ class AuthenticationPage extends ConsumerWidget
                 const SizedBox(height: 16),
                 _buildSubtitle(),
                 const SizedBox(height: 48),
-                _buildGoogleSignInButton(
-                  context, 
-                  ref, 
-                  authState.isLoading),
+                _buildGoogleSignInButton(context, ref, authState.isLoading),
                 const SizedBox(height: 16),
                 _buildDivider(),
                 const SizedBox(height: 16),
-                _buildGuestSignInButton(
-                  context, 
-                  ref, 
-                  authState.isLoading),
+                _buildGuestSignInButton(context, ref, authState.isLoading),
                 const SizedBox(height: 24),
-                _buildMerchantLink(
-                  context, 
-                  ref, 
-                  authState.isLoading),
+                _buildMerchantLink(context, ref, authState.isLoading),
                 const SizedBox(height: 24),
                 _buildTermsAndPrivacy(),
               ],
@@ -113,8 +105,11 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  Widget _buildGoogleSignInButton(BuildContext context, WidgetRef ref, bool isLoading) 
-  {
+  Widget _buildGoogleSignInButton(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return Container(
       width: double.infinity,
       height: 56,
@@ -129,18 +124,16 @@ class AuthenticationPage extends ConsumerWidget
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isLoading ? null : () => _handleGoogleSignIn(
-            context, 
-            ref, 
-            role: 'customer'
-          ),
+          onTap: isLoading
+              ? null
+              : () => _handleGoogleSignIn(context, ref, role: 'customer'),
           borderRadius: BorderRadius.circular(28),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                if (isLoading) ...[
+              children: [
+                if (isLoading)
                   SizedBox(
                     width: 24,
                     height: 24,
@@ -151,11 +144,8 @@ class AuthenticationPage extends ConsumerWidget
                       ),
                     ),
                   )
-                ] 
-                else ...[Icon(
-                  Iconsax.google_1, 
-                  size: 28, color: AppColor.primary
-                )],
+                else
+                  Icon(Iconsax.google_1, size: 28, color: AppColor.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Sign in with Google',
@@ -199,8 +189,11 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  Widget _buildGuestSignInButton(BuildContext context, WidgetRef ref, bool isLoading) 
-  {
+  Widget _buildGuestSignInButton(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return PrimaryButton(
       text: 'Continue as Guest',
       icon: Iconsax.user,
@@ -211,8 +204,11 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  Widget _buildMerchantLink(BuildContext context, WidgetRef ref, bool isLoading) 
-  {
+  Widget _buildMerchantLink(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return InkWell(
       onTap: isLoading ? null : () => _showMerchantDialog(context, ref),
       child: Padding(
@@ -230,8 +226,7 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  Widget _buildTermsAndPrivacy() 
-  {
+  Widget _buildTermsAndPrivacy() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: RichText(
@@ -267,8 +262,7 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  void _showMerchantDialog(BuildContext context, WidgetRef ref)
-  {
+  void _showMerchantDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -283,12 +277,8 @@ class AuthenticationPage extends ConsumerWidget
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              Iconsax.shop, 
-              size: 48, 
-              color: AppColor.primary
-            ),
+          children: [
+            Icon(Iconsax.shop, size: 48, color: AppColor.primary),
             const SizedBox(height: 16),
             Text(
               'Merchants must sign in with Google to access business features and manage orders.',
@@ -304,8 +294,7 @@ class AuthenticationPage extends ConsumerWidget
               child: PrimaryButton(
                 text: 'Sign in with Google',
                 icon: Iconsax.google_1,
-                onPressed: () 
-                {
+                onPressed: () {
                   Navigator.pop(context);
                   _handleGoogleSignIn(context, ref, role: 'merchant');
                 },
@@ -319,34 +308,33 @@ class AuthenticationPage extends ConsumerWidget
     );
   }
 
-  Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref, {required String role}) async 
-  {
-    try {await ref.read(authNotifierProvider.notifier).signInWithGoogle(role: role);} 
-    catch (e) {throw Exception('Google sign-in failed: $e');}
-  }
-
-  Future<void> _handleGuestSignIn(BuildContext context, WidgetRef ref) async {try {await ref.read(authNotifierProvider.notifier)
-  .signInAsGuest();} 
-  catch (e) {throw Exception('Sign-in failed: $e');}
-  }
-
-  Future<void> _navigateToMerchantFlow(BuildContext context, WidgetRef ref) async 
-  {
-    final isProfileComplete = await ref.read(authNotifierProvider.notifier).checkMerchantProfile();
-    if (!context.mounted){return;}
-
-    if (isProfileComplete) {Navigator.pushReplacementNamed(context, AppRoutes.home);} 
-    else {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please complete your merchant profile',
-            style: GoogleFonts.inter(color: Colors.white),
-          ),
-          backgroundColor: AppColor.primary,
-        ),
-      );
+  Future<void> _handleGoogleSignIn(
+    BuildContext context,
+    WidgetRef ref, {
+    required String role,
+  }) async {
+    try {
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signInWithGoogle(role: role);
+    } catch (e) {
+      throw Exception('Google sign-in failed: $e');
     }
+  }
+
+  Future<void> _handleGuestSignIn(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authNotifierProvider.notifier).signInAsGuest();
+    } catch (e) {}
+  }
+
+  Future<void> _navigateToMerchantFlow(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    if (!context.mounted) return;
+
+    // Navigate to home directly - merchant settings use default values if not configured
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 }

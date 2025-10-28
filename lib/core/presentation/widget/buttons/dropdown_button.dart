@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomDropdownButton extends StatelessWidget 
-{
+class CustomDropdownButton extends StatelessWidget {
   final Map<String, String> options; // <value: text>
   final String? selectedValue;
   final Function(String?) onChanged;
@@ -26,8 +25,7 @@ class CustomDropdownButton extends StatelessWidget
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) 
-  {
+  Widget build(BuildContext context) {
     return Container(
       width: width,
       padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -44,21 +42,17 @@ class CustomDropdownButton extends StatelessWidget
             style: TextStyle(color: Colors.grey.shade600),
           ),
           isExpanded: true,
-          icon: Icon(
-            Icons.arrow_drop_down, 
-            color: textColor ?? Colors.black87
-          ),
+          icon: Icon(Icons.arrow_drop_down, color: textColor ?? Colors.black87),
           style: TextStyle(
             color: textColor ?? Colors.black87,
             fontSize: 16,
           ),
-          items: options.entries.map((entry) 
-          {
+          items: options.entries.map((entry) {
             return DropdownMenuItem<String>(
               value: entry.key,
               child: Text(entry.value),
             );
-          }).toList(growable: true),
+          }).toList(),
           onChanged: onChanged,
         ),
       ),

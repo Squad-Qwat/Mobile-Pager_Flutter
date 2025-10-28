@@ -19,8 +19,7 @@ class History {
     this.merchantPhotoURL,
   });
 
-  factory History.fromFirestore(DocumentSnapshot doc) 
-  {
+  factory History.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
     return History(
@@ -34,8 +33,7 @@ class History {
     );
   }
 
-  factory History.fromMap(Map<String, dynamic> data, String docId) 
-  {
+  factory History.fromMap(Map<String, dynamic> data, String docId) {
     return History(
       orderId: docId,
       merchantId: data['merchantId'] ?? '',
@@ -47,10 +45,8 @@ class History {
     );
   }
 
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'orderId': orderId,
       'merchantId': merchantId,
       'queueNumber': queueNumber,
@@ -62,9 +58,9 @@ class History {
   }
 
   static String _formatQueueNumber(dynamic queueNum) {
-    if (queueNum == null){return 'Kursi: -';}
+    if (queueNum == null) return 'Kursi: -';
 
-    if (queueNum is String){return queueNum;}
+    if (queueNum is String) return queueNum;
 
     int num = queueNum as int;
     String letter = String.fromCharCode(65 + (num ~/ 100));
@@ -72,10 +68,8 @@ class History {
     return 'Kursi: $letter-$number';
   }
 
-  String getStatusColor() 
-  {
-    switch (status) 
-    {
+  String getStatusColor() {
+    switch (status) {
       case 'waiting':
         return '#FFA500'; // Orange
       case 'processing':
@@ -95,10 +89,8 @@ class History {
     }
   }
 
-  String getStatusText() 
-  {
-    switch (status) 
-    {
+  String getStatusText() {
+    switch (status) {
       case 'waiting':
         return 'Menunggu';
       case 'processing':
@@ -118,8 +110,7 @@ class History {
     }
   }
 
-  String getFormattedDate() 
-  {
+  String getFormattedDate() {
     final months = [
       'Januari',
       'Februari',
@@ -138,8 +129,12 @@ class History {
     return '${createdAt.day} ${months[createdAt.month - 1]} ${createdAt.year}';
   }
 
-  bool get isActive {return !['finished', 'expired', 'cancelled'].contains(status);}
+  bool get isActive {
+    return !['finished', 'expired', 'cancelled'].contains(status);
+  }
 
   @override
-  String toString() {return 'History(orderId: $orderId, queueNumber: $queueNumber, status: $status, date: ${getFormattedDate()})';}
+  String toString() {
+    return 'History(orderId: $orderId, queueNumber: $queueNumber, status: $status, date: ${getFormattedDate()})';
+  }
 }

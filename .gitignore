@@ -34,8 +34,17 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# format only, no need to be publish
-/lib/core/dateformat/
+# exclude folder linux, macos, and windows
+linux/
+macos/
+windows/
+
+# exclude ai
+ai_discussion.md
+
+# Claude Code files
+.claude/
+.claude-worktrees/
 
 # Symbolication related
 app.*.symbols

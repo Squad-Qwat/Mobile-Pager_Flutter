@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class UserModel 
-{
+class UserModel {
   final String uid;
   final String role;
   final String? email;
@@ -31,14 +30,12 @@ class UserModel
     this.expiresAt,
   });
 
-  factory UserModel.fromFirestore(DocumentSnapshot doc) 
-  {
+  factory UserModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return UserModel.fromMap(data, doc.id);
   }
 
-  factory UserModel.fromMap(Map<String, dynamic> data, String docId) 
-  {
+  factory UserModel.fromMap(Map<String, dynamic> data, String docId) {
     return UserModel(
       uid: docId,
       role: data['role'] ?? 'customer',
@@ -46,19 +43,23 @@ class UserModel
       displayName: data['displayName'],
       photoURL: data['photoURL'],
       authProvider: data['authProvider'] ?? 'google',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      lastLoginAt: (data['lastLoginAt'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      lastLoginAt: data['lastLoginAt'] != null
+          ? (data['lastLoginAt'] as Timestamp).toDate()
+          : DateTime.now(),
       isGuest: data['isGuest'],
       guestId: data['guestId'],
       deviceId: data['deviceId'],
-      expiresAt: data['expiresAt'] != null ? (data['expiresAt'] as Timestamp).toDate() : null,
+      expiresAt: data['expiresAt'] != null
+          ? (data['expiresAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
-  Map<String, dynamic> toMap() 
-  {
-    return 
-    {
+  Map<String, dynamic> toMap() {
+    return {
       'uid': uid,
       'role': role,
       'email': email,
@@ -74,8 +75,11 @@ class UserModel
     };
   }
 
-  factory UserModel.createGuest({required String uid, required String guestId, required String deviceId}) 
-  {
+  factory UserModel.createGuest({
+    required String uid,
+    required String guestId,
+    required String deviceId,
+  }) {
     final now = DateTime.now();
     final expiryDate = now.add(const Duration(days: 30));
 
@@ -98,8 +102,7 @@ class UserModel
     required String email,
     String? displayName,
     String? photoURL,
-  }) 
-  {
+  }) {
     final now = DateTime.now();
 
     return UserModel(
@@ -127,8 +130,7 @@ class UserModel
     String? guestId,
     String? deviceId,
     DateTime? expiresAt,
-  }) 
-  {
+  }) {
     return UserModel(
       uid: uid ?? this.uid,
       role: role ?? this.role,
@@ -151,12 +153,13 @@ class UserModel
 
   bool get isGuestUser => role == 'guest' && (isGuest ?? false);
 
-  bool get isExpired 
-  {
-    if (!isGuestUser || expiresAt == null){return false;}
+  bool get isExpired {
+    if (!isGuestUser || expiresAt == null) return false;
     return DateTime.now().isAfter(expiresAt!);
   }
 
   @override
-  String toString() {return 'UserModel(uid: $uid, role: $role, email: $email, isGuest: $isGuest)';}
+  String toString() {
+    return 'UserModel(uid: $uid, role: $role, email: $email, isGuest: $isGuest)';
+  }
 }
