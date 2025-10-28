@@ -36,7 +36,8 @@ class _QrDetailPageState extends State<QrDetailPage>
   final _queueService = QueueStateService();
 
   @override
-  void initState() {
+  void initState() 
+  {
     super.initState();
 
     // Use widget.qrData instead of hardcoded string
