@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
-class AuthenticationPage extends StatelessWidget {
+class AuthenticationPage extends StatelessWidget 
+{
   const AuthenticationPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return Scaffold(
       backgroundColor: AppColor.background,
       body: SafeArea(
@@ -38,10 +41,11 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeText() {
+  Widget _buildWelcomeText() 
+  {
     return Text(
-      'Welcome to Moger',
-      style: GoogleFonts.dmSans(
+      'Welcome to Cammo',
+      style: GoogleFonts.inter(
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: AppColor.textPrimary,
@@ -50,10 +54,11 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle() 
+  {
     return Text(
       'Sign in to continue and manage your requests',
-      style: GoogleFonts.dmSans(
+      style: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColor.textSecondary,
@@ -62,7 +67,8 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGoogleSignInButton(BuildContext context) {
+  Widget _buildGoogleSignInButton(BuildContext context) 
+  {
     return Container(
       width: double.infinity,
       height: 56,
@@ -76,6 +82,7 @@ class AuthenticationPage extends StatelessWidget {
         child: InkWell(
           onTap: () {
             _handleGoogleSignIn(context);
+            Navigator.pushNamed(context, AppRoutes.home);
           },
           borderRadius: BorderRadius.circular(28),
           child: Padding(
@@ -83,22 +90,11 @@ class AuthenticationPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/google_logo.png',
-                  width: 24,
-                  height: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Iconsax.google_1,
-                      size: 28,
-                      color: AppColor.primary,
-                    );
-                  },
-                ),
+                Icon(Iconsax.google_1, size: 28, color: AppColor.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Sign in with Google',
-                  style: GoogleFonts.dmSans(
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColor.textPrimary,
@@ -112,7 +108,8 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider() 
+  {
     return Row(
       children: [
         const Expanded(child: Divider(color: AppColor.divider, thickness: 1)),
@@ -120,7 +117,7 @@ class AuthenticationPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'OR',
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColor.textSecondary,
@@ -132,7 +129,8 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomerSignInButton(BuildContext context) {
+  Widget _buildCustomerSignInButton(BuildContext context) 
+  {
     return PrimaryButton(
       text: 'Sign in as Customer',
       icon: Iconsax.user,
@@ -145,13 +143,14 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTermsAndPrivacy() {
+  Widget _buildTermsAndPrivacy() 
+  {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w400,
             color: AppColor.textSecondary,
@@ -160,7 +159,7 @@ class AuthenticationPage extends StatelessWidget {
             const TextSpan(text: 'By continuing, you agree to our '),
             TextSpan(
               text: 'Terms of Service',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColor.primary,
@@ -169,7 +168,7 @@ class AuthenticationPage extends StatelessWidget {
             const TextSpan(text: ' and '),
             TextSpan(
               text: 'Privacy Policy',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColor.primary,
@@ -181,19 +180,21 @@ class AuthenticationPage extends StatelessWidget {
     );
   }
 
-  void _handleGoogleSignIn(BuildContext context) {
+  void _handleGoogleSignIn(BuildContext context) 
+  {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Google Sign In clicked', style: GoogleFonts.dmSans()),
+        content: Text('Google Sign In clicked', style: GoogleFonts.inter()),
         backgroundColor: AppColor.primary,
       ),
     );
   }
 
-  void _handleCustomerSignIn(BuildContext context) {
+  void _handleCustomerSignIn(BuildContext context)
+  {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Customer Sign In clicked', style: GoogleFonts.dmSans()),
+        content: Text('Customer Sign In clicked', style: GoogleFonts.inter()),
         backgroundColor: AppColor.primary,
       ),
     );

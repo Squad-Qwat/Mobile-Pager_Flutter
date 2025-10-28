@@ -4,15 +4,18 @@ import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart'; 
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
-class QRViewPage extends StatelessWidget {
+class QRViewPage extends StatelessWidget 
+{
   const QRViewPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           'QR Pager',
           style: GoogleFonts.dmSans(
@@ -24,7 +27,7 @@ class QRViewPage extends StatelessWidget {
         elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(AppPadding.p16),
+        padding: EdgeInsets.all(AppPadding.p16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -37,7 +40,7 @@ class QRViewPage extends StatelessWidget {
               ),
               color: AppColor.surface,
               child: Padding(
-                padding: const EdgeInsets.all(AppPadding.p16),
+                padding: EdgeInsets.all(AppPadding.p16),
                 child: Column(
                   children: [
                     Text(
@@ -48,7 +51,7 @@ class QRViewPage extends StatelessWidget {
                         color: AppColor.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: AppPadding.p16),
+                    SizedBox(height: AppPadding.p16),
                     PrimaryButton(
                       text: "Buat QR Pager",
                       icon: Iconsax.add_square_copy,
@@ -60,7 +63,7 @@ class QRViewPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppPadding.p24),
+            SizedBox(height: AppPadding.p24),
 
             // Card to show a list of active QRs and link to the Detail Page
             Card(
@@ -71,7 +74,7 @@ class QRViewPage extends StatelessWidget {
               ),
               color: AppColor.surface,
               child: Padding(
-                padding: const EdgeInsets.all(AppPadding.p16),
+                padding: EdgeInsets.all(AppPadding.p16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -83,7 +86,7 @@ class QRViewPage extends StatelessWidget {
                         color: AppColor.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: AppPadding.p16),
+                    SizedBox(height: AppPadding.p16),
                     // Example item linking to the detail page
                     PrimaryButton(
                       text: "Lihat Contoh QR (Counter 1)",

@@ -48,7 +48,7 @@ class _QrDetailPageState extends State<QrDetailPage>
       appBar: AppBar(
         title: Text(
           'Detail Antrian',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             color: AppColor.textPrimary,
           ),
@@ -72,7 +72,7 @@ class _QrDetailPageState extends State<QrDetailPage>
             children: [
               Text(
                 restaurantName,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: AppColor.textPrimary,
@@ -83,7 +83,7 @@ class _QrDetailPageState extends State<QrDetailPage>
 
               Text(
                 "Scan untuk Join Antrian",
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                   color: AppColor.textSecondary,
@@ -144,7 +144,7 @@ class _QrDetailPageState extends State<QrDetailPage>
                           const SizedBox(height: AppPadding.p8),
                           Text(
                             "Gagal memuat QR",
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.inter(
                                 color: AppColor.textSecondary),
                           ),
                         ],
@@ -288,7 +288,7 @@ class _QrDetailPageState extends State<QrDetailPage>
             children: [
               Text(
                 title,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 14,
                   color: AppColor.textSecondary,
                   fontWeight: FontWeight.w500,
@@ -297,7 +297,7 @@ class _QrDetailPageState extends State<QrDetailPage>
               const SizedBox(height: 4),
               Text(
                 value,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: valueColor ?? AppColor.textPrimary,
@@ -328,7 +328,7 @@ class _QrDetailPageState extends State<QrDetailPage>
             children: [
               Text(
                 title,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColor.textPrimary,
@@ -337,7 +337,7 @@ class _QrDetailPageState extends State<QrDetailPage>
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   color: AppColor.textSecondary,
                 ),

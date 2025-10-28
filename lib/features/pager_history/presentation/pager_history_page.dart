@@ -1,19 +1,22 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
+import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
-class PagerHistortPage extends StatelessWidget {
+class PagerHistortPage extends StatelessWidget 
+{
   const PagerHistortPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
-          'Inbox',
-          style: GoogleFonts.dmSans(
+          'History Pager',
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: AppColor.textPrimary,
           ),
@@ -22,9 +25,11 @@ class PagerHistortPage extends StatelessWidget {
         elevation: 0,
       ),
       body: Center(
-        child: Text(
-          'Inbox Page',
-          style: GoogleFonts.dmSans(fontSize: 18, color: AppColor.textPrimary),
+        child: PrimaryButton(
+          text: "Cek Detail",
+          onPressed: () {
+            Navigator.of(context).pushNamed(AppRoutes.detailPagerHistory);
+          },
         ),
       ),
     );

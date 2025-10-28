@@ -1,41 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
+import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
+import 'package:mobile_pager_flutter/features/QRView/presentation/page/qr_view_page.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() {runApp(const MyApp());}
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget 
+{
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mobile Pager',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: AppColor.primary,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColor.primary,
-          primary: AppColor.primary,
-        ),
-        scaffoldBackgroundColor: AppColor.background,
-      ),
-      // Change to MainNavigation to see the new home page
-      home: const MainNavigation(),
-      // Uncomment to see authentication page
-      // home: const AuthenticationPage(),
-      // Uncomment to see demo page
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  Widget build(BuildContext context) 
+  {
+    return ScreenUtilInit(
+      designSize: const Size(412, 915),
+      minTextAdapt: true,
+
+      builder: (context, child) 
+      {
+        return MaterialApp(
+          title: 'Mobile Pager',
+          debugShowCheckedModeBanner: false,
+          initialRoute: AppRoutes.authentication,
+          routes: {
+            AppRoutes.home: (context) => const MainNavigation(),
+            AppRoutes.qrView: (context) => const QRViewPage(),
+            AppRoutes.addPager: (context) => const AddPagerPage(),
+            AppRoutes.authentication: (context) => const AuthenticationPage(),
+            AppRoutes.detailPagerHistory: (context) =>
+                const DetailHistoryPage(),
+          },
+          theme: ThemeData(
+            useMaterial3: true,
+            primaryColor: AppColor.primary,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColor.primary,
+              primary: AppColor.primary,
+            ),
+            scaffoldBackgroundColor: AppColor.background,
+          ),
+        );
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatefulWidget 
+{
   const MyHomePage({super.key, required this.title});
 
   final String title;
@@ -44,17 +62,15 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> 
+{
   int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  void _incrementCounter() {setState(() {_counter++;});}
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
