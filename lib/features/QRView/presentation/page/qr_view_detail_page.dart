@@ -83,7 +83,7 @@ class _QrDetailPageState extends State<QrDetailPage>
         subject: "Queue QR Code"
       );
       */
-      stdout.write("Share dialog launched.");
+      stdout.write("Berhasil membagikan QR.");
     } catch (e) {stderr.write("$e");}
   }
 
