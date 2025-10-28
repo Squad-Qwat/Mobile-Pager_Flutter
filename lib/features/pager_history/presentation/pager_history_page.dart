@@ -8,6 +8,7 @@ import 'package:mobile_pager_flutter/features/pager_history/domain/extended_dumm
 import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/filter_widget.dart';
 import 'history_filter_service.dart';
+import 'package:mobile_pager_flutter/core/service/queue_state_service.dart';
 
 class HistoryPage extends StatefulWidget 
 {
@@ -78,44 +79,50 @@ class _HistoryPageState extends State<HistoryPage>
   @override
   Widget build(BuildContext context) 
   {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: _buildHeader(),
-      body: Column(
-        children: <Widget>[
-          // Filter Widget
-          HistoryFilterWidget(
-            currentOptions: _filterOptions,
-            onFilterChanged: (newOptions) 
-            {
-              setState(() {_filterOptions = newOptions;});
-              _applyFilters();
-            },
-          ),
-
-          // Results Count
-          _buildResultsInfo(),
-
-          // History List
-          Expanded(
-            child: _filteredHistory.isEmpty ? _buildEmptyState() : RefreshIndicator(
-              onRefresh: _refreshHistory,
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppPadding.p16,
-                  vertical: 8.h,
-                ),
-                itemCount: _getPaginatedHistory().length + (_hasMore ? 1 : 0),
-                itemBuilder: (context, index) 
+    return ValueListenableBuilder(
+      valueListenable: QueueStateService().isFullScreen,
+      builder: (context, isFullScreen, child) 
+      {
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: isFullScreen ? null : _buildHeader(),
+          body: Column(
+            children: <Widget>[
+              // Filter Widget
+              HistoryFilterWidget(
+                currentOptions: _filterOptions,
+                onFilterChanged: (newOptions) 
                 {
-                  if (index == _getPaginatedHistory().length) {return _buildLoadMoreButton();}
-                  return _buildHistoryItem(_getPaginatedHistory()[index]);
+                  setState(() {_filterOptions = newOptions;});
+                  _applyFilters();
                 },
               ),
-            ),
+        
+              // Results Count
+              _buildResultsInfo(),
+        
+              // History List
+              Expanded(
+                child: _filteredHistory.isEmpty ? _buildEmptyState() : RefreshIndicator(
+                  onRefresh: _refreshHistory,
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppPadding.p16,
+                      vertical: 8.h,
+                    ),
+                    itemCount: _getPaginatedHistory().length + (_hasMore ? 1 : 0),
+                    itemBuilder: (context, index) 
+                    {
+                      if (index == _getPaginatedHistory().length) {return _buildLoadMoreButton();}
+                      return _buildHistoryItem(_getPaginatedHistory()[index]);
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
 

@@ -9,6 +9,7 @@ import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart'; // Merevisi implementasi QR saat ini
 import 'package:path_provider/path_provider.dart'; // Merevisi implementasi unduh QR
 import 'package:share_plus/share_plus.dart'; // Merevisi implementasi bagi QR
+import 'package:mobile_pager_flutter/core/service/queue_state_service.dart';
 
 class QrDetailPage extends StatefulWidget 
 {
@@ -20,18 +21,16 @@ class QrDetailPage extends StatefulWidget
 
 class _QrDetailPageState extends State<QrDetailPage> 
 {
-  bool _isQueueActive = true;
-  bool _isFullScreen = false;
 
   @protected
   late QrImage qrImage;
   final String qrData = "My QR";
+  final _queueService = QueueStateService();
 
   void poppingButtons(){if (Navigator.canPop(context)) {Navigator.pop(context);}}
 
-  // Karena belum integrasi ke fungsi lain, sementara ini dulu
-  void verifyQueueActivation(bool newValue){setState(() {_isQueueActive = newValue;});}
-  void verifyFullScreenActivation(bool newValue){setState(() {_isFullScreen = newValue;});}
+  void verifyQueueActivation(bool newValue) {_queueService.setQueueActive(newValue);}
+  void verifyFullScreenActivation(bool newValue) {_queueService.setFullScreen(newValue);}
 
   // Belum ada implementasi yang bagus
   void printQR(){stdout.write("QR has been printed");}
@@ -297,8 +296,8 @@ class _QrDetailPageState extends State<QrDetailPage>
                       _buildToggleRow(
                         icon: Iconsax.activity_copy,
                         title: "Antrian Aktif",
-                        subtitle: "Matikan sementara jika penuh",
-                        value: _isQueueActive,
+                        subtitle: _queueService.isQueueActive.value ? "Antrian sedang berjalan" : "Antrian ditutup sementara",
+                        value: _queueService.isQueueActive.value,
                         onChanged: verifyQueueActivation
                       ),
                       const Divider(
@@ -308,8 +307,8 @@ class _QrDetailPageState extends State<QrDetailPage>
                       _buildToggleRow(
                         icon: Iconsax.maximize_copy,
                         title: "Full Screen Mode",
-                        subtitle: "Untuk display di TV/tablet",
-                        value: _isFullScreen,
+                        subtitle: _queueService.isFullScreen.value ? "Mode tampilan penuh aktif" : "Untuk display di TV/tablet",
+                        value: _queueService.isFullScreen.value,
                         onChanged: verifyFullScreenActivation
                       ),
                     ],

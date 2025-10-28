@@ -5,6 +5,7 @@ import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter/foundation.dart'; // Untuk kDebugMode dan debugPrint()
+import 'package:mobile_pager_flutter/core/service/queue_state_service.dart';
 
 class PagerScanPage extends StatefulWidget 
 {
@@ -39,6 +40,12 @@ class _PagerScanPageState extends State<PagerScanPage>
 
   void _onDetect(BarcodeCapture capture) 
   {
+    if (!QueueStateService().isQueueActive.value)
+    {
+      if (kDebugMode) { debugPrint("Queue is inactive. Scan ignored."); }
+      return; 
+    }
+    
     if (!isScanning) {return;}
 
     final List<Barcode> barcodes = capture.barcodes;
@@ -66,42 +73,77 @@ class _PagerScanPageState extends State<PagerScanPage>
   @override
   Widget build(BuildContext context) 
   {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildHeader(),
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            SizedBox(height: 20),
-            Padding(padding: EdgeInsets.symmetric(horizontal: AppPadding.p16)),
-            SizedBox(height: 24),
-
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.grey.shade100,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: [
-                        MobileScanner(
-                          controller: cameraController,
-                          onDetect: _onDetect,
+    return ValueListenableBuilder<bool>(
+      valueListenable: QueueStateService().isQueueActive,
+      builder: (context, isQueueActive, child) 
+      {
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: _buildHeader(),
+          body: SafeArea(
+            child: Column(
+              children: <Widget>[
+                SizedBox(height: 20),
+                Padding(padding: EdgeInsets.symmetric(horizontal: AppPadding.p16)),
+                SizedBox(height: 24),
+        
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.grey.shade100,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Stack(
+                          children: [
+                            MobileScanner(
+                              controller: cameraController,
+                              onDetect: _onDetect,
+                            ),
+                            if(!isQueueActive)...[
+                              Container(
+                                color: Colors.black.withValues(alpha: 0.8),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Icon(Icons.block, color: Colors.red, size: 50),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        "Antrian Sedang Ditutup",
+                                        style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold
+                                        ),
+                                      ),
+                                      Text(
+                                        "Tidak dapat memindai saat ini",
+                                        style: GoogleFonts.inter(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            ]
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+                SizedBox(height: AppPadding.p24),
+              ],
             ),
-            SizedBox(height: AppPadding.p24),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 

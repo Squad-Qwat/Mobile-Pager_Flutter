@@ -6,6 +6,7 @@ import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:mobile_pager_flutter/core/service/queue_state_service.dart';
 
 class QRViewPage extends StatefulWidget 
 {
@@ -104,6 +105,28 @@ class _QRViewPageState extends State<QRViewPage>
                           fontWeight: FontWeight.bold,
                           color: AppColor.textPrimary,
                         ),
+                      ),
+                      SizedBox(height: AppPadding.p16),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: QueueStateService().isQueueActive,
+                        builder: (context, isActive, _) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: isActive ? Colors.green : Colors.red),
+                            ),
+                            child: Text(
+                              isActive ? 'System Active' : 'System Paused',
+                              style: TextStyle(
+                                fontSize: 10, 
+                                color: isActive ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(height: AppPadding.p16),
                       Padding(
