@@ -9,7 +9,8 @@ import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:flutter/foundation.dart'; // untuk kDebugMode dan debugPrint()
 
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatefulWidget 
+{
   const HomePage({super.key});
 
   @override
@@ -24,6 +25,60 @@ class _HomePageState extends State<HomePage>
   ];
 
   final List<Map<String, dynamic>> recentActivitiesData = [
+    {
+      'id': 'EC-230201DDA',
+      'time': '07:00, 19 Oct 2023',
+      'pagerNum': 'PG-2228',
+      'orderType': 'Take Away',
+      'tableNum': 09,
+      'name': 'Fauzan',
+      'remainingTime': '00:40',
+    },
+    {
+      'id': 'EC-230201DDB',
+      'time': '07:30, 19 Oct 2023',
+      'pagerNum': 'PG-2229',
+      'orderType': 'Dine In',
+      'tableNum': 10,
+      'name': 'Fauzan',
+      'remainingTime': '02:00',
+    },
+    {
+      'id': 'EC-230201DDC',
+      'time': '08:00, 19 Oct 2023',
+      'pagerNum': 'PG-2230',
+      'orderType': 'Take Away',
+      'tableNum': 11,
+      'name': 'Reza',
+      'remainingTime': '05:00',
+    },
+    {
+      'id': 'EC-230201DDD',
+      'time': '08:20, 19 Oct 2023',
+      'pagerNum': 'PG-2231',
+      'orderType': 'Dine In',
+      'tableNum': 12,
+      'name': 'Nizar',
+      'remainingTime': '07:00',
+    },
+    {
+      'id': 'EC-230201DDE',
+      'time': '09:30, 19 Oct 2023',
+      'pagerNum': 'PG-2232',
+      'orderType': 'Dine In',
+      'tableNum': 13,
+      'name': 'Fauzan',
+      'remainingTime': '08:00',
+    },
+    {
+      'id': 'EC-230201DDF',
+      'time': '10:40, 19 Oct 2023',
+      'pagerNum': 'PG-2233',
+      'orderType': 'Take Away',
+      'tableNum': 14,
+      'name': 'Rahma',
+      'remainingTime': '10:00',
+    },
     {
       'id': 'EC-230201DDG',
       'time': '11:56, 19 Oct 2023',
@@ -40,6 +95,15 @@ class _HomePageState extends State<HomePage>
       'orderType': 'Take Away',
       'tableNum': 15,
       'remainingTime': '15:00',
+    },
+    {
+      'id': 'EC-230201DEA',
+      'time': '13:40, 19 Oct 2023',
+      'pagerNum': 'PG-2236',
+      'orderType': 'Dine In',
+      'tableNum': 16,
+      'name': 'Affan',
+      'remainingTime': '25:00',
     },
   ];
 
@@ -236,14 +300,14 @@ class _HomePageState extends State<HomePage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Text(
-                              activity['id'],
+                              activity['id'] ?? 'idError',
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
-                              activity['time'],
+                              activity['time'] ?? 'timeError',
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,
@@ -267,12 +331,52 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  activity['pagerNum'],
+                                  activity['pagerNum'] ?? '-',
                                   style: GoogleFonts.inter(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Jenis pesanan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14, 
+                                    color: Colors.grey.shade600,
+                                  )
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  activity['orderType'] ?? 'None',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16, 
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                )
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Nomor meja',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14, 
+                                    color: Colors.grey.shade600
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  activity['tableNum'],
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16, 
+                                    fontWeight: FontWeight.w700
+                                  ),
+                                )
                               ],
                             ),
                             Column(
