@@ -34,17 +34,63 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  # The following adds the Google fonts to your application.
+  # Use with the GoogleFonts class for Android style fonts.
   google_fonts: ^6.3.2
+  # The following adds the Iconsax to your application.
+  # Use with the IconSax class for variety of icons.
   iconsax_flutter: ^1.0.1
+  # The following adds the Camera to your application.
+  # Use with the Camera class to detect QR.
   camera: ^0.11.2+1
+  # The following adds the screen utility to your application.
+  # Use with the ScreenUtil class to create responsive UI.
   flutter_screenutil: ^5.9.3
+  
+  # The following adds the firebase NoSQL database to your application.
+  # Use with the FireBase class to handle traffic and to connect with firebase.
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+
+  # The following adds the Google sign-in to your application.
+  # Use to handle responsive Google Sign-in.
+  google_sign_in: ^6.2.1
+
+  # The following adds the riverpod to your application.
+  # Use with the Provider and ConsumerWidget class for working with ansychronous code.
+  flutter_riverpod: ^2.4.0
+  riverpod_annotation: ^2.3.0
+
+  # The following adds the QR code to your application.
+  # Use with the PrettyQrCode class for QR.
   pretty_qr_code: ^3.5.0
+
+  # The following adds mobile scanner to your application.
+  # Use with the MobileScanner class for iOS style icons.
+  mobile_scanner: ^7.1.3
+
+  # The following adds retrieving device information which runs your application.
+  # Use with the DeviceInfoPlugin class for reading Android, iOS, and web.
+  device_info_plus: ^9.1.1
+
+  # The following adds the sharing content in your application.
+  # Use with the SharePlus class to use platform Share UI.
   share_plus: ^12.0.1
+
+  # The following adds the access file path to your application.
+  # Use for reading and writing to device file system.
   path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  
+  # The following generates riverpod based on the annotation above.
+  riverpod_generator: ^2.3.0
+  
+  # The following adds boilerplate code to your application.
+  build_runner: ^2.4.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

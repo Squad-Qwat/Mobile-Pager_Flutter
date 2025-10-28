@@ -82,7 +82,8 @@ class _QrDetailPageState extends State<QrDetailPage>
       );
       */
       stdout.write("Berhasil membagikan QR.");
-    } catch (e) {stderr.write("$e");}
+    } 
+    catch (e) {stderr.write("$e");}
   }
 
   // Mengunduh dan menyimpan file QR
@@ -161,7 +162,7 @@ class _QrDetailPageState extends State<QrDetailPage>
         ),
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left_copy,
-              color: AppColor.textPrimary),
+          color: AppColor.textPrimary),
           onPressed: poppingButtons
         ),
         centerTitle: true,
@@ -175,7 +176,7 @@ class _QrDetailPageState extends State<QrDetailPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Text(
                 restaurantName,
                 style: GoogleFonts.inter(
@@ -204,8 +205,10 @@ class _QrDetailPageState extends State<QrDetailPage>
                   color: AppColor.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: AppColor.border, width: 1.5),
-                  boxShadow: [
+                    color: AppColor.border, 
+                    width: 1.5
+                  ),
+                  boxShadow: <BoxShadow>[
                     BoxShadow(
                       color: AppColor.shadow,
                       spreadRadius: 2,
@@ -232,15 +235,13 @@ class _QrDetailPageState extends State<QrDetailPage>
               Card(
                 elevation: 2,
                 shadowColor: AppColor.shadow,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 color: AppColor.surface,
                 child: Padding(
                   padding: const EdgeInsets.all(AppPadding.p24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       _buildInfoRow(
                         icon: Iconsax.user_tick_copy,
                         title: "Jumlah antrian saat ini:",
@@ -292,7 +293,7 @@ class _QrDetailPageState extends State<QrDetailPage>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   child: Column(
-                    children: [
+                    children: <Widget>[
                       _buildToggleRow(
                         icon: Iconsax.activity_copy,
                         title: "Antrian Aktif",
@@ -344,22 +345,21 @@ class _QrDetailPageState extends State<QrDetailPage>
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    Color? valueColor,
-  }) 
+  Widget _buildInfoRow({required IconData icon, required String title, required String value, Color? valueColor}) 
   {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: AppColor.grey700),
+      children: <Widget>[
+        Icon(
+          icon, 
+          size: 20, 
+          color: AppColor.grey700
+        ),
         const SizedBox(width: AppPadding.p16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 title,
                 style: GoogleFonts.inter(
@@ -393,13 +393,13 @@ class _QrDetailPageState extends State<QrDetailPage>
   }) 
   {
     return Row(
-      children: [
+      children: <Widget>[
         Icon(icon, size: 22, color: AppColor.grey700),
         const SizedBox(width: AppPadding.p16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 title,
                 style: GoogleFonts.inter(

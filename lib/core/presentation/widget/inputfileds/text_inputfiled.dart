@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
-class TextInputField extends StatefulWidget {
+class TextInputField extends StatefulWidget 
+{
   final TextEditingController? controller;
   final String? label;
   final String? hint;
@@ -79,35 +80,32 @@ class TextInputField extends StatefulWidget {
   State<TextInputField> createState() => _TextInputFieldState();
 }
 
-class _TextInputFieldState extends State<TextInputField> {
+class _TextInputFieldState extends State<TextInputField> 
+{
   late FocusNode _focusNode;
   bool _isFocused = false;
 
   @override
-  void initState() {
+  void initState() 
+  {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_onFocusChange);
   }
 
   @override
-  void dispose() {
-    if (widget.focusNode == null) {
-      _focusNode.dispose();
-    } else {
-      _focusNode.removeListener(_onFocusChange);
-    }
+  void dispose() 
+  {
+    if (widget.focusNode == null) {_focusNode.dispose();} 
+    else {_focusNode.removeListener(_onFocusChange);}
     super.dispose();
   }
 
-  void _onFocusChange() {
-    setState(() {
-      _isFocused = _focusNode.hasFocus;
-    });
-  }
+  void _onFocusChange() {setState(() {_isFocused = _focusNode.hasFocus;});}
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
 
     return Column(
@@ -119,7 +117,7 @@ class _TextInputFieldState extends State<TextInputField> {
             widget.label!,
             style:
                 widget.labelStyle ??
-                GoogleFonts.dmSans(
+                GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColor.textPrimary,
@@ -146,68 +144,49 @@ class _TextInputFieldState extends State<TextInputField> {
           autovalidateMode: widget.autovalidateMode,
           style:
               widget.textStyle ??
-              GoogleFonts.dmSans(
+              GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
-                color: widget.enabled
-                    ? AppColor.textPrimary
-                    : AppColor.textDisabled,
+                color: widget.enabled? AppColor.textPrimary : AppColor.textDisabled,
               ),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle:
-                widget.hintStyle ??
-                GoogleFonts.dmSans(
+            hintStyle: widget.hintStyle ?? GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   color: AppColor.textSecondary,
-                ),
+            ),
             helperText: widget.helperText,
-            helperStyle: GoogleFonts.dmSans(
+            helperStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.textSecondary,
             ),
             errorText: widget.errorText,
-            errorStyle: GoogleFonts.dmSans(
+            errorStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.error,
             ),
-            prefixIcon: widget.prefixIcon != null
-                ? Icon(
-                    widget.prefixIcon,
-                    color: hasError
-                        ? AppColor.error
-                        : _isFocused
-                        ? AppColor.primary
-                        : AppColor.textSecondary,
-                    size: 20,
-                  )
-                : null,
-            suffixIcon: widget.suffixIcon != null
-                ? IconButton(
-                    icon: Icon(
-                      widget.suffixIcon,
-                      color: hasError
-                          ? AppColor.error
-                          : _isFocused
-                          ? AppColor.primary
-                          : AppColor.textSecondary,
-                      size: 20,
-                    ),
-                    onPressed: widget.onSuffixIconPressed,
-                  )
-                : null,
+            prefixIcon: widget.prefixIcon != null ? Icon(
+              widget.prefixIcon,
+              color: hasError ? AppColor.error : _isFocused ? AppColor.primary : AppColor.textSecondary,
+              size: 20,
+            ) : null,
+            suffixIcon: widget.suffixIcon != null ? IconButton(
+              icon: Icon(
+                widget.suffixIcon,
+                color: hasError ? AppColor.error : _isFocused ? AppColor.primary: AppColor.textSecondary,
+                size: 20,
+              ),
+              onPressed: widget.onSuffixIconPressed,
+            ) : null,
             filled: true,
-            fillColor:
-                widget.fillColor ??
-                (widget.enabled ? AppColor.surface : AppColor.grey100),
+            fillColor:widget.fillColor ?? (widget.enabled ? AppColor.surface : AppColor.grey100),
             contentPadding:
-                widget.contentPadding ??
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             counterText: widget.showCharacterCounter ? null : '',
-            counterStyle: GoogleFonts.dmSans(
+            counterStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColor.textSecondary,
@@ -242,7 +221,10 @@ class _TextInputFieldState extends State<TextInputField> {
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(widget.borderRadius ?? 12),
-              borderSide: BorderSide(color: AppColor.grey300, width: 1.5),
+              borderSide: BorderSide(
+                color: AppColor.grey300, 
+                width: 1.5
+              ),
             ),
           ),
         ),

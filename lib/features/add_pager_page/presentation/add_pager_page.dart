@@ -30,9 +30,15 @@ class AddPagerPage extends StatelessWidget
         padding: EdgeInsets.all(AppPadding.p16),
         decoration: BoxDecoration(
           color: AppColor.white,
-          border: Border(top: BorderSide(color: AppColor.grey300, width: 1)),
+          border: Border(top: BorderSide(
+            color: AppColor.grey300, 
+            width: 1
+          )),
         ),
-        child: PrimaryButton(text: "Create Pager", onPressed: () {}),
+        child: PrimaryButton(
+          text: "Create Pager", 
+          onPressed: () {}
+        ),
       ),
       body: Container(
         height: 460,
@@ -47,7 +53,7 @@ class AddPagerPage extends StatelessWidget
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               TextInputField(
                 hint: 'Enter seat number (Optional)',
                 label: 'Seat Number',
@@ -68,7 +74,10 @@ class AddPagerPage extends StatelessWidget
                 decoration: BoxDecoration(
                   color: AppColor.grey200,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColor.grey300, width: 1),
+                  border: Border.all(
+                    color: AppColor.grey300, 
+                    width: 1
+                  ),
                 ),
                 child: Center(
                   child: Icon(
