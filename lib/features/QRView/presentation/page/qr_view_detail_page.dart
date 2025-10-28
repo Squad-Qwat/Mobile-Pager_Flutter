@@ -27,8 +27,6 @@ class _QrDetailPageState extends State<QrDetailPage>
   late QrImage qrImage;
   final String qrData = "My QR";
 
-
-
   void poppingButtons(){if (Navigator.canPop(context)) {Navigator.pop(context);}}
 
   // Karena belum integrasi ke fungsi lain, sementara ini dulu
