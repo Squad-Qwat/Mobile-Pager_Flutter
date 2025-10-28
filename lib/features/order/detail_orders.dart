@@ -1,0 +1,483 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+// Core Theme Imports
+import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+// Domain/Data Imports
+import 'package:mobile_pager_flutter/features/order/domain/orders.dart';
+import 'package:mobile_pager_flutter/features/order/domain/detail_orders_history.dart';
+// Feature Imports
+import 'package:mobile_pager_flutter/features/order/library/orders_filter_widget.dart';
+import 'package:mobile_pager_flutter/features/order/library/orders_filter_service.dart';
+
+class DetailOrdersPage extends StatefulWidget 
+{
+  const DetailOrdersPage({Key? key}) : super(key: key);
+
+  @override
+  State<DetailOrdersPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<DetailOrdersPage> 
+{
+  // --- State Variables ---
+  List<OrdersHistory> _allHistory = [];
+  List<OrdersHistory> _filteredHistory = [];
+  // Initialize with 'Hari Ini' to match the context
+  OrdersHistoryFilterOptions _filterOptions = OrdersHistoryFilterOptions(timeFilter: TimeFilter.today);
+
+  // --- Pagination Variables ---
+  static const int _itemsPerPage = 10;
+  int _currentPage = 0;
+  bool _hasMore = true;
+
+  @override
+  void initState() 
+  {
+    super.initState();
+    // Start data loading when the widget is created
+    _loadHistory();
+  }
+
+  // --- Data & Filtering Logic ---
+
+  void _loadHistory() 
+  {
+    setState(() 
+    {
+      // 1. Load all data from the dummy data list
+      _allHistory = dummyHistoryList;
+      // 2. Immediately apply filters to the full data set
+      _applyFilters();
+    });
+  }
+
+  void _applyFilters() 
+  {
+    setState(() 
+    {
+      // 1. Filter the entire history list using the filter service logic
+      _filteredHistory = OrdersHistoryFilterService.filterHistory(
+        _allHistory,
+        _filterOptions,
+      );
+      // 2. Reset pagination state
+      _currentPage = 0;
+      _hasMore = _filteredHistory.length > _itemsPerPage;
+    });
+  }
+
+  // Gets the current paginated slice for display
+  List<OrdersHistory> _getPaginatedHistory() 
+  {
+    final startIndex = 0;
+    final endIndex = (_currentPage + 1) * _itemsPerPage;
+
+    if (endIndex >= _filteredHistory.length) 
+    {
+      _hasMore = false;
+      return _filteredHistory;
+    }
+
+    return _filteredHistory.sublist(startIndex, endIndex);
+  }
+
+  void _loadMore() 
+  {
+    if (_hasMore && _filteredHistory.length > (_currentPage + 1) * _itemsPerPage) {setState(() => _currentPage++);} 
+    else {setState(() => _hasMore = false);} // No more items, update _hasMore to hide the button
+  }
+
+  Future<void> _refreshHistory() async 
+  {
+    // Simulate delay for Pull-to-Refresh UX
+    await Future.delayed(const Duration(milliseconds: 500));
+    _loadHistory();
+  }
+  
+  // --- Widget Build Method ---
+
+  @override
+  Widget build(BuildContext context) 
+  {
+    // Get the current slice of data to display
+    final paginatedList = _getPaginatedHistory();
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: _buildHeader(),
+      body: Column(
+        children: <Widget>[
+          // Filter Widget (UI component from filter_widget.dart)
+          OrdersHistoryFilterWidget(
+            currentOptions: _filterOptions,
+            onFilterChanged: (newOptions) 
+            {
+              setState(() => _filterOptions = newOptions);
+              _applyFilters();
+            },
+          ),
+
+          // Results Count
+          _buildResultsInfo(),
+
+          // History List
+          Expanded(
+            child: _filteredHistory.isEmpty ? _buildEmptyState()  : RefreshIndicator(
+              onRefresh: _refreshHistory,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.w, // Replaced AppPadding.p16
+                  vertical: 8.h,
+                ),
+                // Add 1 to itemCount for the Load More button if needed
+                itemCount: paginatedList.length + (_hasMore ? 1 : 0),
+                itemBuilder: (context, index) 
+                {
+                  // Last item slot reserved for the "Load More" button
+                  if (index == paginatedList.length) {return _buildLoadMoreButton();}
+                  // Build the standard history item
+                  return _buildHistoryItem(paginatedList[index]);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- UI Component Methods ---
+
+  PreferredSizeWidget _buildHeader() 
+  {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      title: Text(
+        'Pager History',
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w800,
+          color: AppColor.black,
+        ),
+      ),
+      actions: <Widget>[
+        // Reset filter button
+        IconButton(
+          icon: Icon(Icons.refresh, color: AppColor.black),
+          onPressed: () 
+          {
+            setState(() => _filterOptions = OrdersHistoryFilterOptions()); // Reset to default options (TimeFilter.today)
+            _applyFilters();
+          },
+          tooltip: 'Reset Filter',
+        ),
+        SizedBox(width: 8.w),
+      ],
+    );
+  }
+
+  Widget _buildResultsInfo() 
+  {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 16.w, 
+        vertical: 8.h
+      ),
+      // Add a bottom border to separate from list
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(
+          color: Colors.grey[200]!, 
+          width: 1
+        )),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text(
+            '${_filteredHistory.length} order ditemukan',
+            style: GoogleFonts.inter(
+              fontSize: 13.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (_filteredHistory.isNotEmpty) ...[
+            // Uses logic from orders_filter_service.dart
+            Text(
+              OrdersHistoryFilterService.getTimeFilterLabel(_filterOptions),
+              style: GoogleFonts.inter(
+                fontSize: 12.sp,
+                color: AppColor.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() 
+  {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            Icons.search_off, 
+            size: 100.w, 
+            color: Colors.grey[300]
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Tidak Ada History',
+            style: GoogleFonts.inter(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Coba ubah filter pencarian',
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton.icon(
+            onPressed: () 
+            {
+              setState(() => _filterOptions = OrdersHistoryFilterOptions()); // Reset to default options (TimeFilter.today)
+              _applyFilters();
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reset Filter'),
+            style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreButton() 
+  {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _loadMore,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primary,
+            padding: EdgeInsets.symmetric(
+              horizontal: 32.w, 
+              vertical: 12.h
+            ),
+          ),
+          child: Text(
+            'Muat Lebih Banyak',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem(OrdersHistory history) 
+  {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            // Pengganti withOpacity() karena usang menurut flutter
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => Navigator.push(
+          context,
+          // Navigates to the detail page, requiring the orderId
+          MaterialPageRoute(builder: (context) => DetailOrdersHistoryPage(orderId: history.orderId)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Header: ID & Date/Time
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      history.orderId,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  // Uses function from orders.dart model
+                  Text(
+                    history.getFormattedDate(),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+
+              // Details: Nomor Pager & Nama
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  // Nomor Pager Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Nomor Pager',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          history.queueNumber,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Nama Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Nama',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          history.businessName ?? 'Guest',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+
+              // Divider
+              Divider(color: Colors.grey.shade300, height: 1),
+              SizedBox(height: 12.h),
+
+              // Footer: Status Badge & Detail Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w, 
+                      vertical: 6.h
+                    ),
+                    decoration: BoxDecoration(
+                      // Menggunakan fungsi _getStatusColor lokal and mengganti withOpacity() dengan withValues() karena usang
+                      color: _getStatusColor(history.status).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _getStatusColor(history.status).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      // Uses function from orders.dart model
+                      history.getStatusText(),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _getStatusColor(history.status),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'Lihat Detail',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColor.primary,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: AppColor.primary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Local helper function for status colors
+  Color _getStatusColor(String status) 
+  {
+    switch (status) 
+    {
+      case 'waiting':
+        return Colors.orange;
+      case 'processing':
+        return Colors.blue;
+      case 'ready':
+        return Colors.green;
+      case 'picked_up':
+        return Colors.lightGreen;
+      case 'finished':
+        return Colors.grey;
+      case 'expired':
+        return Colors.red;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+}

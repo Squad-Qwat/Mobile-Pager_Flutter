@@ -9,28 +9,31 @@ import 'package:mobile_pager_flutter/features/authentication/presentation/page/a
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
 import 'package:mobile_pager_flutter/features/QRView/presentation/page/qr_view_detail_page.dart';
 import 'package:mobile_pager_flutter/features/QRView/presentation/page/qr_view_page.dart';
+import 'package:mobile_pager_flutter/features/order/detail_orders.dart';
 import 'package:mobile_pager_flutter/features/profile/presentation/profile_page.dart';
 import 'package:mobile_pager_flutter/firebase_options.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
-void main() async {
+void main() async 
+{
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget 
+{
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) 
+  {
     return ScreenUtilInit(
       designSize: const Size(412, 915),
       minTextAdapt: true,
 
-      builder: (context, child) {
+      builder: (context, child) 
+      {
         return MaterialApp(
           title: 'Mobile Pager',
           debugShowCheckedModeBanner: false,
@@ -43,6 +46,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.detailPagerHistory: (context) => const DetailHistoryPage(orderId: "a"),
             AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
             AppRoutes.profile: (context) => const ProfilePage(),
+            AppRoutes.orderDetails: (context) => const DetailOrdersPage(),
           },
           theme: ThemeData(
             useMaterial3: true,

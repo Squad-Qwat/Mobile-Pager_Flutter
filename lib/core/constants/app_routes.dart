@@ -8,6 +8,7 @@ class AppRoutes
   static const String qrViewDetail = '/qr-view-detail';
   static const String detailPagerHistory = '/detail-pager-history';
   static const String profile = '/profile';
+  static const String orderDetails = '/orders-details';
 
   AppRoutes._();
 }
