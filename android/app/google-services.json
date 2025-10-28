@@ -1,68 +1,106 @@
 {
-    "project_info": {
-      "project_number": "964457949557",
-      "project_id": "cammo-pager",
-      "storage_bucket": "cammo-pager.firebasestorage.app"
-    },
-    "client": [
-      {
-        "client_info": {
-          "mobilesdk_app_id": "1:964457949557:android:42f0a1cf1ee635ab29cb3c",
-          "android_client_info": {
-            "package_name": "com.cammo"
-          }
-        },
-        "oauth_client": [
-          {
-            "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
-            "client_type": 3
-          }
-        ],
-        "api_key": [
-          {
-            "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
-          }
-        ],
-        "services": {
-          "appinvite_service": {
-            "other_platform_oauth_client": [
-              {
-                "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
-                "client_type": 3
-              }
-            ]
-          }
+  "project_info": {
+    "project_number": "964457949557",
+    "project_id": "cammo-pager",
+    "storage_bucket": "cammo-pager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964457949557:android:42f0a1cf1ee635ab29cb3c",
+        "android_client_info": {
+          "package_name": "com.cammo"
         }
       },
-      {
-        "client_info": {
-          "mobilesdk_app_id": "1:964457949557:android:acfb1c6909f88bef29cb3c",
-          "android_client_info": {
-            "package_name": "com.squadqwat.mobile_pager_flutter"
+      "oauth_client": [
+        {
+          "client_id": "964457949557-a6b5sdotrvr5ppplpp48d0030ksc7s65.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cammo",
+            "certificate_hash": "e95f56d8bdceaaa38e13ed3e788b27df62c91584"
           }
         },
-        "oauth_client": [
-          {
-            "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
-            "client_type": 3
-          }
-        ],
-        "api_key": [
-          {
-            "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
-          }
-        ],
-        "services": {
-          "appinvite_service": {
-            "other_platform_oauth_client": [
-              {
-                "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
-                "client_type": 3
+        {
+          "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "964457949557-kvf8jr3kb7btl8ckgfmkgt001prhrsit.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.squadqwat.mobilePagerFlutter"
               }
-            ]
-          }
+            }
+          ]
         }
       }
-    ],
-    "configuration_version": "1"
-  }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964457949557:android:acfb1c6909f88bef29cb3c",
+        "android_client_info": {
+          "package_name": "com.squadqwat.mobile_pager_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964457949557-gsdl8hh187uvtifjpr0j1tqrcmiam9ln.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squadqwat.mobile_pager_flutter",
+            "certificate_hash": "fb76c017a5f74e5a8b6a4790ccaecc44c4b35102"
+          }
+        },
+        {
+          "client_id": "964457949557-klk8ilbhh9qtnvqn8r9dfs2n33mf3peu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squadqwat.mobile_pager_flutter",
+            "certificate_hash": "70273c3108bbad04347200cff8615d0ae73b3e2e"
+          }
+        },
+        {
+          "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "964457949557-kvf8jr3kb7btl8ckgfmkgt001prhrsit.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.squadqwat.mobilePagerFlutter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

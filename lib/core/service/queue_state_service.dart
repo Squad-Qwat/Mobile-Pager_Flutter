@@ -5,9 +5,7 @@ class QueueStateService
   // Singleton pattern to ensure the same instance is used everywhere
   static final QueueStateService _instance = QueueStateService._internal();
   
-  factory QueueStateService() {
-    return _instance;
-  }
+  factory QueueStateService() {return _instance;}
   
   QueueStateService._internal();
 
