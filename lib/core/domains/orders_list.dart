@@ -1,3 +1,4 @@
+import 'dart:math'; // To generate random phone number with Random()
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile_pager_flutter/core/dateformat/date_format_base.dart';
 
@@ -20,7 +21,9 @@ class CustomerInfo
     );
   }
 
-  Map<String, dynamic> toMap() {return {'name': name, 'phone': phone, 'email': email, 'tableNumber': tableNumber};}
+  int? getPhoneNumber() => phone;
+
+  Map<String, dynamic> toMap() => {'name': name, 'phone': phone, 'email': email, 'tableNumber': tableNumber};
 }
 
 class RingingInfo 
@@ -51,7 +54,7 @@ class RingingInfo
     );
   }
 
-  Map<String, dynamic> toMap() {return {'attempts': attempts, 'isRinging': isRinging};}
+  Map<String, dynamic> toMap() => {'attempts': attempts, 'isRinging': isRinging};
 
   String getRingingStatus() 
   {
@@ -80,7 +83,7 @@ class ScanLocation
     );
   }
 
-  Map<String, dynamic> toMap() {return {'latitude': latitude, 'longitude': longitude};}
+  Map<String, dynamic> toMap() => {'latitude': latitude, 'longitude': longitude};
 
   String getFormattedDistance() 
   {
@@ -105,7 +108,7 @@ class OrderItem
     );
   }
 
-  Map<String, dynamic> toMap() {return {'name': name, 'quantity': quantity};}
+  Map<String, dynamic> toMap() => {'name': name, 'quantity': quantity};
 }
 
 class Orders 
@@ -203,4 +206,13 @@ class Orders
   }
 
   bool get canBeCancelled => status == 'processing' || status == 'ready';
+}
+
+// Independent function, to be called in another code.
+int? generateNumber()
+{
+  Random randNumber = Random();
+  final bool hasPhone = randNumber.nextDouble() > 0.6; // 40% chance of having a phone
+  final int? randomPhone = hasPhone ? (08000000000 + randNumber.nextInt(999999999)) : null;
+  return randomPhone;
 }

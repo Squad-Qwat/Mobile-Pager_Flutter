@@ -77,7 +77,7 @@ final List<Map<String, dynamic>> _recentActivitiesRawData = [
     'id': 'EC-230201DEA',
     'time': '13:40, 19 Oct 2023',
     'pagerNum': 'PG-2236',
-    'orderType': 'Cancelled', // Faking a cancelled status
+    'orderType': 'Cancelled',
     'tableNum': 16,
     'name': 'Affan',
     'remainingTime': '25:00',
@@ -104,13 +104,13 @@ Orders _mapToOrders(Map<String, dynamic> data)
   String status;
   if (data['orderType'] == 'Dine In') {status = 'ready';} 
   else if (data['orderType'] == 'Take Away') {status = 'processing';} 
-  else {status = 'cancelled';}
+  else if(data['orderType'] == 'Cancelled') {status = 'cancelled';}
+  else {status = 'invalid';}
   
   DateTime? ready = status == 'ready' ? createdTime.add(const Duration(minutes: 30)) : null;
   DateTime? pickedUp = status == 'finished' || status == 'picked_up' ? ready!.add(const Duration(minutes: 5)) : null;
   DateTime? finished = status == 'finished' ? pickedUp!.add(const Duration(minutes: 5)) : null;
-  // Will fix this logic later, so it's only at the id of those who cancelled order in the first place
-  String? cancelReason = data['id'] == 'EC-000' ? 'Pelanggan tidak jadi memesan' : null;
+  String? cancelReason = status == 'cancelled' ? 'Pelanggan tidak jadi memesan' : null;
 
   return Orders(
     orderId: data['id'] ?? 'EC-000',
@@ -121,8 +121,7 @@ Orders _mapToOrders(Map<String, dynamic> data)
     customer: CustomerInfo(
       name: data['name'] ?? 'Guest',
       tableNumber:  data['tableNum'] ?? 0,
-      // need to be fixed too, so it's independent of a specific name, more akin to every order (in this dummy) have phone number
-      phone: (data['name'] == 'Fauzan') ? 08123456789 : null,
+      phone: (generateNumber() == null) ? 00000000000 : generateNumber()
     ),
     status: status,
     createdAt: createdTime.subtract(const Duration(minutes: 30)),
