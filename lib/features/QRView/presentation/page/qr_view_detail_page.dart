@@ -38,11 +38,10 @@ class _QrDetailPageState extends State<QrDetailPage>
   // Belum ada implementasi yang bagus
   void printQR(){stdout.write("QR has been printed");}
 
-  
+  // Membagikan QR
   Future<void> shareQR() async
   {
     stdout.write("Menyiapkan QR untuk dibagikan...");
-
     try 
     {
       final qrImagesBytes = await qrImage.toImageAsBytes(
@@ -66,10 +65,10 @@ class _QrDetailPageState extends State<QrDetailPage>
 
       final tempDir = await getTemporaryDirectory();
       final path = '${tempDir.path}/queue_qr.png';
-      // 4. Write bytes to file
+      // Menulis byte ke file
       await File(path).writeAsBytes(qrImagesBytes.buffer.asUint8List());
       
-      // 5. Share the file using share_plus
+      // Membagikan file dengan share_plus
       await SharePlus.instance.share(ShareParams(
         files: [XFile(path)],
         text: "Scan this QR to join the queue!",
@@ -77,7 +76,7 @@ class _QrDetailPageState extends State<QrDetailPage>
       ));
 
       /*
-      Replacement for this, as this part is deprecated:
+      Pengganti fungsi ini, karena menurut flutter, fungsi ini usang:
       await Share.shareXFiles(
         [XFile(path)], 
         text: "Scan this QR to join the queue!", 
@@ -88,7 +87,7 @@ class _QrDetailPageState extends State<QrDetailPage>
     } catch (e) {stderr.write("$e");}
   }
 
-
+  // Mengunduh dan menyimpan file QR
   Future<void> downloadQR() async 
   {
     stdout.write("Menghasilkan byte gambar QR...");
