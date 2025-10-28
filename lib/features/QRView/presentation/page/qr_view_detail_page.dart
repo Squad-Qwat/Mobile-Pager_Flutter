@@ -1,20 +1,20 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 
-class QrViewPage extends StatefulWidget 
+class QrDetailPage extends StatefulWidget 
 {
-  const QrViewPage({super.key});
+  const QrDetailPage({super.key});
 
   @override
-  State<QrViewPage> createState() => _QrViewPageState();
+  State<QrDetailPage> createState() => _QrDetailPageState();
 }
 
-class _QrViewPageState extends State<QrViewPage> 
+class _QrDetailPageState extends State<QrDetailPage> 
 {
   bool _isQueueActive = true;
   bool _isFullScreen = false;
@@ -34,7 +34,7 @@ class _QrViewPageState extends State<QrViewPage>
   @override
   Widget build(BuildContext context) 
   {
-    // Contoh Data QR view
+    // Contoh Data QR View
     const String restaurantName = "Restoran Seafood Enak";
     const int currentQueue = 12;
     const int estimatedWaitTime = 28;
@@ -42,8 +42,7 @@ class _QrViewPageState extends State<QrViewPage>
     const String qrCategory = "Regular Queue (antrian biasa)";
 
     // Placeholder untuk gambar QR (Pakai link untuk sementara)
-    const String qrImageUrl =
-        "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=YourQueueDataHere";
+    const String qrImageUrl ="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=YourQueueDataHere";
 
     return Scaffold(
       appBar: AppBar(
@@ -57,7 +56,7 @@ class _QrViewPageState extends State<QrViewPage>
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left_copy,
               color: AppColor.textPrimary),
-          onPressed: poppingButtons,
+          onPressed: poppingButtons
         ),
         centerTitle: true,
         elevation: 1,
@@ -65,7 +64,7 @@ class _QrViewPageState extends State<QrViewPage>
       ),
       backgroundColor: AppColor.background,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+        padding: const EdgeInsets.all(AppPadding.p24),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -80,7 +79,7 @@ class _QrViewPageState extends State<QrViewPage>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppPadding.p12),
 
               Text(
                 "Scan untuk Join Antrian",
@@ -91,10 +90,10 @@ class _QrViewPageState extends State<QrViewPage>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppPadding.p24),
 
               Container(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(AppPadding.p12),
                 decoration: BoxDecoration(
                   color: AppColor.surface,
                   borderRadius: BorderRadius.circular(16),
@@ -116,8 +115,8 @@ class _QrViewPageState extends State<QrViewPage>
                   fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) 
                   {
-                    if (loadingProgress == null) return child;
-                    return Container(
+                    if (loadingProgress == null){return child;}
+                    return SizedBox(
                       width: 250,
                       height: 250,
                       child: Center(
@@ -131,7 +130,8 @@ class _QrViewPageState extends State<QrViewPage>
                       ),
                     );
                   },
-                  errorBuilder: (context, error, stackTrace) {
+                  errorBuilder: (context, error, stackTrace) 
+                  {
                     return Container(
                       width: 250,
                       height: 250,
@@ -141,7 +141,7 @@ class _QrViewPageState extends State<QrViewPage>
                         children: [
                           const Icon(Iconsax.danger_copy,
                               color: AppColor.error, size: 60),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppPadding.p8),
                           Text(
                             "Gagal memuat QR",
                             style: GoogleFonts.poppins(
@@ -153,7 +153,7 @@ class _QrViewPageState extends State<QrViewPage>
                   },
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppPadding.p32),
 
               Card(
                 elevation: 2,
@@ -163,7 +163,7 @@ class _QrViewPageState extends State<QrViewPage>
                 ),
                 color: AppColor.surface,
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(AppPadding.p24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -174,7 +174,7 @@ class _QrViewPageState extends State<QrViewPage>
                         valueColor: AppColor.info,
                       ),
                       const Divider(
-                          height: 24,
+                          height: AppPadding.p24,
                           thickness: 0.5,
                           color: AppColor.divider),
                       _buildInfoRow(
@@ -184,7 +184,7 @@ class _QrViewPageState extends State<QrViewPage>
                         valueColor: AppColor.warning,
                       ),
                       const Divider(
-                          height: 24,
+                          height: AppPadding.p24,
                           thickness: 0.5,
                           color: AppColor.divider),
                       _buildInfoRow(
@@ -193,7 +193,7 @@ class _QrViewPageState extends State<QrViewPage>
                         value: qrLabel,
                       ),
                       const Divider(
-                          height: 24,
+                          height: AppPadding.p24,
                           thickness: 0.5,
                           color: AppColor.divider),
                       _buildInfoRow(
@@ -205,7 +205,7 @@ class _QrViewPageState extends State<QrViewPage>
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppPadding.p24),
 
               Card(
                 elevation: 2,
@@ -227,7 +227,7 @@ class _QrViewPageState extends State<QrViewPage>
                         onChanged: verifyQueueActivation
                       ),
                       const Divider(
-                          height: 16,
+                          height: AppPadding.p16,
                           thickness: 0.5,
                           color: AppColor.divider),
                       _buildToggleRow(
@@ -241,7 +241,7 @@ class _QrViewPageState extends State<QrViewPage>
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppPadding.p32),
 
               PrimaryButton(
                 text: "Download QR",
@@ -249,14 +249,14 @@ class _QrViewPageState extends State<QrViewPage>
                 backgroundColor: AppColor.primary,
                 onPressed: downloadQR,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppPadding.p16),
               PrimaryButton(
                 text: "Print QR",
                 icon: Iconsax.printer_copy,
                 backgroundColor: AppColor.primaryDark,
                 onPressed: printQR,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppPadding.p16),
               PrimaryButton(
                 text: "Share Link",
                 icon: Iconsax.share_copy,
@@ -275,12 +275,13 @@ class _QrViewPageState extends State<QrViewPage>
     required String title,
     required String value,
     Color? valueColor,
-  }) {
+  }) 
+  {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 20, color: AppColor.grey700),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppPadding.p16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,11 +316,12 @@ class _QrViewPageState extends State<QrViewPage>
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-  }) {
+  }) 
+  {
     return Row(
       children: [
         Icon(icon, size: 22, color: AppColor.grey700),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppPadding.p16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +345,7 @@ class _QrViewPageState extends State<QrViewPage>
             ],
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppPadding.p16),
         Switch(
           value: value,
           onChanged: onChanged,
