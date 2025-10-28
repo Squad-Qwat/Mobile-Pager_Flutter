@@ -8,6 +8,7 @@ import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pa
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
 import 'package:mobile_pager_flutter/features/QRView/presentation/page/qr_view_page.dart';
+import 'package:mobile_pager_flutter/features/QRView/presentation/page/qr_view_detail_page.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
 void main() {runApp(const MyApp());}
@@ -34,8 +35,8 @@ class MyApp extends StatelessWidget
             AppRoutes.qrView: (context) => const QRViewPage(),
             AppRoutes.addPager: (context) => const AddPagerPage(),
             AppRoutes.authentication: (context) => const AuthenticationPage(),
-            AppRoutes.detailPagerHistory: (context) =>
-                const DetailHistoryPage(),
+            AppRoutes.detailPagerHistory: (context) => const DetailHistoryPage(),
+            AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
           },
           theme: ThemeData(
             useMaterial3: true,
