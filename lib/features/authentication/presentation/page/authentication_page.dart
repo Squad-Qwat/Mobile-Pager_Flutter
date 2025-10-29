@@ -40,7 +40,7 @@ class AuthenticationPage extends StatelessWidget {
 
   Widget _buildWelcomeText() {
     return Text(
-      'Welcome to Moger',
+      'Welcome to Cammo',
       style: GoogleFonts.inter(
         fontSize: 32,
         fontWeight: FontWeight.bold,

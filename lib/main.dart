@@ -5,6 +5,7 @@ import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_bu
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
@@ -20,19 +21,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mobile Pager',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.home,
+      initialRoute: AppRoutes.qrView,
       routes: {
         AppRoutes.home: (context) => const MainNavigation(),
         AppRoutes.qrView: (context) => const QRViewPage(),
         AppRoutes.addPager: (context) => const AddPagerPage(),
+        AppRoutes.authentication: (context) => const AuthenticationPage(),
       },
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: AppColor.primary,
-        textTheme: GoogleFonts.interTextTheme().apply(
-          bodyColor: AppColor.textPrimary,
-          displayColor: AppColor.textPrimary,
-        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColor.primary,
           primary: AppColor.primary,

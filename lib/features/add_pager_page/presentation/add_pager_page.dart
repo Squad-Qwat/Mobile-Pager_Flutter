@@ -14,6 +14,7 @@ class AddPagerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text(
           'Add Pager',
           style: GoogleFonts.inter(

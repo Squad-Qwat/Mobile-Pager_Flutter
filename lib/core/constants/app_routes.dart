@@ -3,6 +3,7 @@ class AppRoutes {
   static const String qrView = '/qr-view';
   static const String pagerHistory = '/pager-history';
   static const String addPager = '/add-pager';
+  static const String authentication = '/authentication';
 
   AppRoutes._();
 }
