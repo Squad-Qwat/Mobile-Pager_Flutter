@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,6 +6,13 @@ import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_bu
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+=======
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+>>>>>>> origin/dev_darrel
 
 class AddPagerPage extends StatelessWidget {
   const AddPagerPage({super.key});
