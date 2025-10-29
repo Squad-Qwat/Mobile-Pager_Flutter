@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
@@ -76,6 +77,7 @@ class AuthenticationPage extends StatelessWidget {
         child: InkWell(
           onTap: () {
             _handleGoogleSignIn(context);
+            Navigator.pushNamed(context, AppRoutes.home);
           },
           borderRadius: BorderRadius.circular(28),
           child: Padding(

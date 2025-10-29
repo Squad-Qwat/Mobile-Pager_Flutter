@@ -1,6 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
+import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
 class PagerHistortPage extends StatelessWidget {
@@ -21,9 +22,11 @@ class PagerHistortPage extends StatelessWidget {
         elevation: 0,
       ),
       body: Center(
-        child: Text(
-          'Inbox Page',
-          style: GoogleFonts.inter(fontSize: 18, color: AppColor.textPrimary),
+        child: PrimaryButton(
+          text: "Cek Detail",
+          onPressed: () {
+            Navigator.of(context).pushNamed(AppRoutes.addPager);
+          },
         ),
       ),
     );

@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mobile Pager',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.qrView,
+      initialRoute: AppRoutes.authentication,
       routes: {
         AppRoutes.home: (context) => const MainNavigation(),
         AppRoutes.qrView: (context) => const QRViewPage(),
