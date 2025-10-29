@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
@@ -8,7 +7,6 @@ import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
-import 'package:mobile_pager_flutter/features/pager_history/presentation/pager_history_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
