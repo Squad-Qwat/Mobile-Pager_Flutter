@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.addPager: (context) => const AddPagerPage(),
             AppRoutes.authentication: (context) => const AuthenticationPage(),
             AppRoutes.detailPagerHistory: (context) =>
-                const HistoryPage(),
+                const Hist(),
           },
           theme: ThemeData(
             useMaterial3: true,
