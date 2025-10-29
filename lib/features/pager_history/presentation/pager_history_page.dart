@@ -11,8 +11,9 @@ class PagerHistortPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
-          'Inbox',
+          'History Pager',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
             color: AppColor.textPrimary,
@@ -25,7 +26,7 @@ class PagerHistortPage extends StatelessWidget {
         child: PrimaryButton(
           text: "Cek Detail",
           onPressed: () {
-            Navigator.of(context).pushNamed(AppRoutes.addPager);
+            Navigator.of(context).pushNamed(AppRoutes.detailPagerHistory);
           },
         ),
       ),

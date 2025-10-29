@@ -85,18 +85,7 @@ class AuthenticationPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/google_logo.png',
-                  width: 24,
-                  height: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Iconsax.google_1,
-                      size: 28,
-                      color: AppColor.primary,
-                    );
-                  },
-                ),
+                Icon(Iconsax.google_1, size: 28, color: AppColor.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Sign in with Google',

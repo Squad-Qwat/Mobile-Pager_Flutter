@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
@@ -42,7 +41,7 @@ class AddPagerPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppPadding.p16),
+          padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,

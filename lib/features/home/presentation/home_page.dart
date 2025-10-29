@@ -25,6 +25,14 @@ class _HomePageState extends State<HomePage> {
       'tableNum': 20,
       'remainingTime': '20:00',
     },
+    {
+      'id': 'EC-230201DD0',
+      'time': '11:56, 19 Oct 2023',
+      'pagerNum': 'PG-2234',
+      'orderType': 'Dine In',
+      'tableNum': 20,
+      'remainingTime': '20:00',
+    },
   ];
 
   @override
@@ -39,7 +47,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20,),
+                SizedBox(height: 20),
                 Row(
                   spacing: 16,
                   children: [
@@ -98,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
 
-                SizedBox(height: 36,),
+                SizedBox(height: 36),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
 
-                SizedBox(height: 20,),
+                SizedBox(height: 20),
 
                 Container(
                   padding: EdgeInsets.all(12),
@@ -174,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                SizedBox(height: 12,),
+                SizedBox(height: 12),
 
                 Container(
                   padding: EdgeInsets.all(12),
@@ -228,13 +236,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                SizedBox(height: 36,),
+                SizedBox(height: 36),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Aktivitas Terkni',
+                      'Aktivitas Terkini',
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -250,7 +258,132 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
 
-                SizedBox(height: 20,)
+                SizedBox(height: 20),
+
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: recentActivitiesData.length,
+                  itemBuilder: (context, index) {
+                    final activity = recentActivitiesData[index];
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade100,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                activity['id'],
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                activity['time'],
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Nomor Pager',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    activity['pagerNum'],
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tipe Order',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    activity['orderType'],
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Nomor Meja',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    activity['tableNum'].toString(),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Iconsax.clock,
+                                size: 16,
+                                color: AppColor.primary,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Sisa Waktu: ${activity['remainingTime']}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppColor.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                SizedBox(height: 20),
               ],
             ),
           ),
@@ -261,6 +394,7 @@ class _HomePageState extends State<HomePage> {
 
   PreferredSizeWidget _buildHeader() {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
       actionsPadding: EdgeInsets.symmetric(horizontal: 16),
       title: Text(
@@ -270,7 +404,7 @@ class _HomePageState extends State<HomePage> {
       actions: [
         IconButton(
           onPressed: () => print('Hello World'),
-          icon: Icon(Icons.notifications),
+          icon: Icon(Icons.add),
         ),
         IconButton(
           onPressed: () => print('Hello World'),
