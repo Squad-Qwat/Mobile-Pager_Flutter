@@ -38,6 +38,7 @@ dependencies:
   iconsax_flutter: ^1.0.1
   camera: ^0.11.2+1
   flutter_screenutil: ^5.9.3
+  cloud_firestore: ^6.0.3
 
 dev_dependencies:
   flutter_test:
