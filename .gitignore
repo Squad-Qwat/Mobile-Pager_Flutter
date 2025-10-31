@@ -34,6 +34,11 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# exclude folder linux, macos, and windows
+linux/
+macos/
+windows/
+
 # Symbolication related
 app.*.symbols
 
