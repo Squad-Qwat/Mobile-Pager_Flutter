@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,9 +11,17 @@ import 'package:mobile_pager_flutter/features/authentication/presentation/page/a
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_detail_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
+import 'package:mobile_pager_flutter/firebase_options.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
-void main() {
+void main() async{
+
+    WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   runApp(ProviderScope(child: MyApp()));
 }
 

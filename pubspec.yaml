@@ -49,6 +49,8 @@ dependencies:
 
   pretty_qr_code: ^3.5.0
 
+  device_info_plus: ^9.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
