@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
-import 'package:mobile_pager_flutter/features/pager_history/domain/auth_notifier.dart';
+import 'package:mobile_pager_flutter/features/authentication/domain/auth_notifier.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
