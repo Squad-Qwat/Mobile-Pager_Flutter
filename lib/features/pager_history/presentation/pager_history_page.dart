@@ -1,118 +1,297 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/domains/orders_history_dummy.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
 
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({Key? key}) : super(key: key);
 
-  final List<Map<String, String>> historyData = const [
-    {'date': '28 Oktober 2025', 'seat': 'A-12', 'status': 'Selesai'},
-    {'date': '27 Oktober 2025', 'seat': 'B-05', 'status': 'Dibatalkan'},
-    {'date': '26 Oktober 2025', 'seat': 'C-21', 'status': 'Selesai'},
-    {'date': '25 Oktober 2025', 'seat': 'D-15', 'status': 'Selesai'},
-    {'date': '24 Oktober 2025', 'seat': 'E-03', 'status': 'Selesai'},
-    {'date': '23 Oktober 2025', 'seat': 'F-10', 'status': 'Selesai'},
-  ];
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  String _selectedFilter = 'all'; // all, active, finished
+  List<History> _historyList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  void _loadHistory() {
+    setState(() {
+      final allHistory = DummyDataService.getDummyHistory();
+      _historyList = DummyDataService.filterHistory(
+        allHistory,
+        _selectedFilter,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. APP BAR
-      appBar: AppBar(
-        title: Text(
-          'Detail History',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.bold,
-            color: AppColor.textPrimary,
-          ),
+      backgroundColor: Colors.white,
+      appBar: _buildHeader(),
+      body: _historyList.isEmpty
+          ? _buildEmptyState()
+          : RefreshIndicator(
+              onRefresh: _refreshHistory,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppPadding.p16,
+                  vertical: 8.h,
+                ),
+                itemCount: _historyList.length,
+                itemBuilder: (context, index) {
+                  return _buildHistoryItem(_historyList[index]);
+                },
+              ),
+            ),
+    );
+  }
+
+  PreferredSizeWidget _buildHeader() {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.white,
+      actionsPadding: EdgeInsets.symmetric(horizontal: 16),
+      title: Text(
+        'Pager History',
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w800,
+          color: AppColor.black,
         ),
-        backgroundColor: AppColor.white,
-        elevation: 0,
       ),
+      actions: [
+        PopupMenuButton<String>(
+          icon: Icon(Icons.filter_list, color: AppColor.black),
+          onSelected: (value) {
+            setState(() {
+              _selectedFilter = value;
+              _loadHistory();
+            });
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'all',
+              child: Text('Semua', style: GoogleFonts.inter()),
+            ),
+            PopupMenuItem(
+              value: 'active',
+              child: Text('Aktif', style: GoogleFonts.inter()),
+            ),
+            PopupMenuItem(
+              value: 'finished',
+              child: Text('Selesai', style: GoogleFonts.inter()),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
-      // 2. BODY - Daftar Riwayat
-      body: Container(
-        color: AppColor.white,
-        child: ListView.separated(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppPadding.p16,
-            vertical: AppPadding.p8,
+  Future<void> _refreshHistory() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    _loadHistory();
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history, size: 100.w, color: Colors.grey[300]),
+          SizedBox(height: 16.h),
+          Text(
+            'Belum Ada History',
+            style: GoogleFonts.inter(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
           ),
-          itemCount: historyData.length,
-          separatorBuilder: (context, index) =>
-              Divider(color: AppColor.grey300, height: AppPadding.p16),
-          itemBuilder: (context, index) {
-            final item = historyData[index];
+          SizedBox(height: 8.h),
+          Text(
+            'Order kamu akan muncul disini',
+            style: GoogleFonts.inter(fontSize: 14.sp, color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
 
-            return InkWell(
-              onTap: () {
-                print('Tap pada item riwayat: ${item['seat']}');
-              },
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: AppPadding.p8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+  Widget _buildHistoryItem(History history) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(vertical: AppPadding.p12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailHistoryPage(orderId: history.orderId),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: ID & Date/Time
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  history.orderId,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  history.getFormattedDate(),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+
+            // Details: Nomor Pager & Nama
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Nomor Pager Column
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // FOTO
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppColor.grey200,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.receipt_long,
-                          color: AppColor.grey600,
-                          size: 30,
-                        ),
+                    Text(
+                      'Nomor Pager',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
                       ),
                     ),
-
-                    SizedBox(width: AppPadding.p16),
-
-                    // DATA TANGGAL DAN NOMOR KURSI
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Tanggal
-                          Text(
-                            item['date']!,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppColor.grey600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Nomor Kursi
-                          Text(
-                            'Kursi: ${item['seat']!}',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColor.textPrimary,
-                            ),
-                          ),
-                        ],
+                    SizedBox(height: 4),
+                    Text(
+                      history.queueNumber,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: AppColor.grey400,
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+
+                // Nama Column
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nama',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      history.businessName ?? 'Guest',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+
+            // Divider
+            Divider(color: Colors.grey.shade300, height: 1),
+            SizedBox(height: 12),
+
+            // Footer: Status Badge & Detail Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(history.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: _getStatusColor(history.status).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    history.getStatusText(),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _getStatusColor(history.status),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'Lihat Detail',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.primary,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 18,
+                      color: AppColor.primary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'waiting':
+        return Colors.orange;
+      case 'processing':
+        return Colors.blue;
+      case 'ready':
+        return Colors.green;
+      case 'picked_up':
+        return Colors.lightGreen;
+      case 'finished':
+        return Colors.grey;
+      case 'expired':
+        return Colors.red;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

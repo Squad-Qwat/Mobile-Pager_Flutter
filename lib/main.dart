@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
@@ -12,7 +13,7 @@ import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.addPager: (context) => const AddPagerPage(),
             AppRoutes.authentication: (context) => const AuthenticationPage(),
             AppRoutes.detailPagerHistory: (context) =>
-                const DetailHistoryPage(),
+                const DetailHistoryPage(orderId: "a"),
             AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
           },
           theme: ThemeData(

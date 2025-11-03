@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "964457949557",
+    "project_id": "cammo-pager",
+    "storage_bucket": "cammo-pager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964457949557:android:42f0a1cf1ee635ab29cb3c",
+        "android_client_info": {
+          "package_name": "com.cammo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964457949557:android:acfb1c6909f88bef29cb3c",
+        "android_client_info": {
+          "package_name": "com.squadqwat.mobile_pager_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_TXwsp6M6EXllSJ2hBz0f5zl4lbsCldc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
