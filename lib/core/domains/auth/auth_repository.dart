@@ -2,9 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'dart:io';
-
 import 'package:mobile_pager_flutter/core/domains/users.dart';
+import 'dart:io';
 
 /// Repository untuk handle Firebase Authentication dan Firestore operations
 class AuthRepository {
@@ -29,15 +28,21 @@ class AuthRepository {
   /// Sign in with Google
   Future<UserModel> signInWithGoogle({required String role}) async {
     try {
-      // Trigger Google Sign In flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // Trigger Google Sign In flow with timeout
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => throw AuthCancelledException('Waktu login habis'),
+      );
+      
       if (googleUser == null) {
-        throw Exception('Google Sign In dibatalkan');
+        throw AuthCancelledException('Autentikasi dibatalkan');
       }
 
-      // Obtain auth details
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      // Obtain auth details with timeout
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Gagal mendapatkan kredensial'),
+      );
 
       // Create credential
       final credential = GoogleAuthProvider.credential(
@@ -45,24 +50,45 @@ class AuthRepository {
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase
-      final UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      // Sign in to Firebase with timeout
+      final UserCredential userCredential = await _firebaseAuth
+          .signInWithCredential(credential)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw Exception('Gagal sign in ke Firebase'),
+          );
 
       final User? firebaseUser = userCredential.user;
       if (firebaseUser == null) {
         throw Exception('Firebase user is null');
       }
 
-      // Check if user exists in Firestore
-      final userDoc =
-          await _firestore.collection('users').doc(firebaseUser.uid).get();
+      // Check if user exists in Firestore with timeout
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception('Gagal mengakses database'),
+          );
 
       UserModel userModel;
 
       if (userDoc.exists) {
-        // Update existing user
+        // Check if existing role matches requested role
         userModel = UserModel.fromFirestore(userDoc);
+        
+        if (userModel.role != role) {
+          // Sign out from Firebase Auth since we won't allow this
+          await _firebaseAuth.signOut();
+          throw RoleConflictException(
+            'Akun ini sudah terdaftar sebagai ${_getRoleText(userModel.role)}. '
+            'Gunakan akun Google lain atau hapus akun ${_getRoleText(userModel.role)} terlebih dahulu.'
+          );
+        }
+        
+        // Update last login
         await _updateLastLogin(firebaseUser.uid);
       } else {
         // Create new user
@@ -76,10 +102,18 @@ class AuthRepository {
         await _firestore
             .collection('users')
             .doc(firebaseUser.uid)
-            .set(userModel.toMap());
+            .set(userModel.toMap())
+            .timeout(
+              const Duration(seconds: 15),
+              onTimeout: () => throw Exception('Gagal menyimpan data user'),
+            );
       }
 
       return userModel;
+    } on AuthCancelledException {
+      rethrow;
+    } on RoleConflictException {
+      rethrow;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
@@ -255,4 +289,36 @@ class AuthRepository {
         return 'Error: ${e.message}';
     }
   }
+
+  /// Private: Get role text in Indonesian
+  String _getRoleText(String role) {
+    switch (role) {
+      case 'merchant':
+        return 'Merchant';
+      case 'customer':
+        return 'Customer';
+      case 'guest':
+        return 'Guest';
+      default:
+        return role;
+    }
+  }
+}
+
+/// Custom exception for cancelled authentication
+class AuthCancelledException implements Exception {
+  final String message;
+  AuthCancelledException(this.message);
+  
+  @override
+  String toString() => message;
+}
+
+/// Custom exception for role conflict
+class RoleConflictException implements Exception {
+  final String message;
+  RoleConflictException(this.message);
+  
+  @override
+  String toString() => message;
 }

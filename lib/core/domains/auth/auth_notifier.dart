@@ -83,7 +83,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
         isLoading: false,
       );
-    } catch (e) {
+    } on AuthCancelledException {
+      // Silent fail for cancellation - no error message
+      state = state.copyWith(isLoading: false);
+    }
+    catch (e) {
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),
