@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_pager_flutter/core/domains/orders_history_dummy.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/extendedDummy.dart';
 import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
+import 'package:mobile_pager_flutter/features/pager_history/presentation/filter_widget.dart';
+import 'history_filter_service.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
@@ -15,8 +17,14 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  String _selectedFilter = 'all'; // all, active, finished
-  List<History> _historyList = [];
+  List<History> _allHistory = [];
+  List<History> _filteredHistory = [];
+  HistoryFilterOptions _filterOptions = HistoryFilterOptions();
+
+  // Pagination
+  static const int _itemsPerPage = 10;
+  int _currentPage = 0;
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -26,34 +34,89 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void _loadHistory() {
     setState(() {
-      final allHistory = DummyDataService.getDummyHistory();
-      _historyList = DummyDataService.filterHistory(
-        allHistory,
-        _selectedFilter,
-      );
+      // Load all data
+      _allHistory = ExtendedDummyDataService.getExtendedDummyHistory();
+      
+      // Apply filters
+      _applyFilters();
     });
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredHistory = HistoryFilterService.filterHistory(
+        _allHistory,
+        _filterOptions,
+      );
+      _currentPage = 0;
+      _hasMore = _filteredHistory.length > _itemsPerPage;
+    });
+  }
+
+  List<History> _getPaginatedHistory() {
+    final startIndex = 0;
+    final endIndex = (_currentPage + 1) * _itemsPerPage;
+    
+    if (endIndex >= _filteredHistory.length) {
+      _hasMore = false;
+      return _filteredHistory;
+    }
+    
+    return _filteredHistory.sublist(startIndex, endIndex);
+  }
+
+  void _loadMore() {
+    if (_hasMore && _filteredHistory.length > (_currentPage + 1) * _itemsPerPage) {
+      setState(() {
+        _currentPage++;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: _buildHeader(),
-      body: _historyList.isEmpty
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: _refreshHistory,
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppPadding.p16,
-                  vertical: 8.h,
-                ),
-                itemCount: _historyList.length,
-                itemBuilder: (context, index) {
-                  return _buildHistoryItem(_historyList[index]);
-                },
-              ),
-            ),
+      body: Column(
+        children: [
+          // Filter Widget
+          HistoryFilterWidget(
+            currentOptions: _filterOptions,
+            onFilterChanged: (newOptions) {
+              setState(() {
+                _filterOptions = newOptions;
+              });
+              _applyFilters();
+            },
+          ),
+
+          // Results Count
+          _buildResultsInfo(),
+
+          // History List
+          Expanded(
+            child: _filteredHistory.isEmpty
+                ? _buildEmptyState()
+                : RefreshIndicator(
+                    onRefresh: _refreshHistory,
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppPadding.p16,
+                        vertical: 8.h,
+                      ),
+                      itemCount: _getPaginatedHistory().length + (_hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _getPaginatedHistory().length) {
+                          return _buildLoadMoreButton();
+                        }
+                        return _buildHistoryItem(_getPaginatedHistory()[index]);
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -61,7 +124,7 @@ class _HistoryPageState extends State<HistoryPage> {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
-      actionsPadding: EdgeInsets.symmetric(horizontal: 16),
+      elevation: 0,
       title: Text(
         'Pager History',
         style: GoogleFonts.inter(
@@ -70,30 +133,48 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
       ),
       actions: [
-        PopupMenuButton<String>(
-          icon: Icon(Icons.filter_list, color: AppColor.black),
-          onSelected: (value) {
+        // Reset filter button
+        IconButton(
+          icon: Icon(Icons.refresh, color: AppColor.black),
+          onPressed: () {
             setState(() {
-              _selectedFilter = value;
-              _loadHistory();
+              _filterOptions = HistoryFilterOptions();
             });
+            _applyFilters();
           },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'all',
-              child: Text('Semua', style: GoogleFonts.inter()),
-            ),
-            PopupMenuItem(
-              value: 'active',
-              child: Text('Aktif', style: GoogleFonts.inter()),
-            ),
-            PopupMenuItem(
-              value: 'finished',
-              child: Text('Selesai', style: GoogleFonts.inter()),
-            ),
-          ],
+          tooltip: 'Reset Filter',
         ),
+        SizedBox(width: 8.w),
       ],
+    );
+  }
+
+  Widget _buildResultsInfo() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '${_filteredHistory.length} order ditemukan',
+            style: GoogleFonts.inter(
+              fontSize: 13.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (_filteredHistory.isNotEmpty)
+            Text(
+              HistoryFilterService.getTimeFilterLabel(_filterOptions),
+              style: GoogleFonts.inter(
+                fontSize: 12.sp,
+                color: AppColor.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -107,10 +188,10 @@ class _HistoryPageState extends State<HistoryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history, size: 100.w, color: Colors.grey[300]),
+          Icon(Icons.search_off, size: 100.w, color: Colors.grey[300]),
           SizedBox(height: 16.h),
           Text(
-            'Belum Ada History',
+            'Tidak Ada History',
             style: GoogleFonts.inter(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
@@ -119,21 +200,67 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Order kamu akan muncul disini',
-            style: GoogleFonts.inter(fontSize: 14.sp, color: Colors.grey[500]),
+            'Coba ubah filter pencarian',
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              setState(() {
+                _filterOptions = HistoryFilterOptions();
+              });
+              _applyFilters();
+            },
+            icon: Icon(Icons.refresh),
+            label: Text('Reset Filter'),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildLoadMoreButton() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _loadMore,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primary,
+            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+          ),
+          child: Text(
+            'Muat Lebih Banyak',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHistoryItem(History history) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(vertical: AppPadding.p12),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -152,85 +279,92 @@ class _HistoryPageState extends State<HistoryPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  history.orderId,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Text(
+                    history.orderId,
+                    style: GoogleFonts.inter(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 Text(
                   history.getFormattedDate(),
                   style: GoogleFonts.inter(
-                    fontSize: 14,
+                    fontSize: 12.sp,
                     color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 12.h),
 
             // Details: Nomor Pager & Nama
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Nomor Pager Column
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Nomor Pager',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nomor Pager',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      history.queueNumber,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                      SizedBox(height: 4.h),
+                      Text(
+                        history.queueNumber,
+                        style: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 // Nama Column
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Nama',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nama',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      history.businessName ?? 'Guest',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                      SizedBox(height: 4.h),
+                      Text(
+                        history.businessName ?? 'Guest',
+                        style: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            SizedBox(height: 12.h),
 
             // Divider
             Divider(color: Colors.grey.shade300, height: 1),
-            SizedBox(height: 12),
+            SizedBox(height: 12.h),
 
             // Footer: Status Badge & Detail Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                   decoration: BoxDecoration(
                     color: _getStatusColor(history.status).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -242,7 +376,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: Text(
                     history.getStatusText(),
                     style: GoogleFonts.inter(
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
                       color: _getStatusColor(history.status),
                     ),
@@ -253,15 +387,15 @@ class _HistoryPageState extends State<HistoryPage> {
                     Text(
                       'Lihat Detail',
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
                         color: AppColor.primary,
                       ),
                     ),
-                    SizedBox(width: 4),
+                    SizedBox(width: 4.w),
                     Icon(
                       Icons.arrow_forward,
-                      size: 18,
+                      size: 16,
                       color: AppColor.primary,
                     ),
                   ],
