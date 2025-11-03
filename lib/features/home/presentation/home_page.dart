@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 
@@ -354,15 +355,20 @@ class _HomePageState extends State<HomePage> {
           onPressed: () => print('Hello World'),
           icon: Icon(Icons.notifications),
         ),
-        CircleAvatar(
-          radius: 14.w,
-          backgroundColor: AppColor.primary,
-          child: Text(
-            'FC',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 12.sp,
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.profile);
+          },
+          child: CircleAvatar(
+            radius: 14.w,
+            backgroundColor: AppColor.primary,
+            child: Text(
+              'FC',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12.sp,
+              ),
             ),
           ),
         ),

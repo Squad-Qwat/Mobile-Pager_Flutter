@@ -1,12 +1,9 @@
 import 'package:mobile_pager_flutter/core/domains/orders.dart';
 import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
 
-/// Service untuk generate dummy data tanpa Firebase
 class DummyDataService {
-  // Dummy current user ID
   static const String currentUserId = 'USER-001';
 
-  /// Get dummy history list
   static List<History> getDummyHistory() {
     final now = DateTime.now();
 
@@ -68,7 +65,6 @@ class DummyDataService {
     ];
   }
 
-  /// Get dummy order detail by ID
   static Orders? getDummyOrderDetail(String orderId) {
     final now = DateTime.now();
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
@@ -165,7 +166,7 @@ class _QRViewPageState extends State<QRViewPage> {
                 child: PrimaryButton(
                   text: 'Buat QR Instant',
                   onPressed: () {
-                    // Handle button press
+                    Navigator.pushNamed(context, AppRoutes.addPager);
                   },
                 ),
               ),

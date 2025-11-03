@@ -1,18 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Model untuk users collection di Firestore
-/// Supports merchant, customer, dan guest users
 class UserModel {
   final String uid;
-  final String role; // "merchant" | "customer" | "guest"
+  final String role;
   final String? email;
   final String? displayName;
   final String? photoURL;
-  final String authProvider; // "google" | "guest"
+  final String authProvider;
   final DateTime createdAt;
   final DateTime lastLoginAt;
 
-  // Guest-specific fields
   final bool? isGuest;
   final String? guestId;
   final String? deviceId;
@@ -33,13 +30,11 @@ class UserModel {
     this.expiresAt,
   });
 
-  /// Factory constructor dari Firestore document
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return UserModel.fromMap(data, doc.id);
   }
 
-  /// Factory constructor dari Map
   factory UserModel.fromMap(Map<String, dynamic> data, String docId) {
     return UserModel(
       uid: docId,
@@ -59,7 +54,6 @@ class UserModel {
     );
   }
 
-  /// Convert ke Map untuk Firestore
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -77,7 +71,6 @@ class UserModel {
     };
   }
 
-  /// Helper untuk membuat guest user
   factory UserModel.createGuest({
     required String uid,
     required String guestId,
@@ -99,7 +92,6 @@ class UserModel {
     );
   }
 
-  /// Helper untuk membuat registered user
   factory UserModel.createRegistered({
     required String uid,
     required String role,
@@ -121,7 +113,6 @@ class UserModel {
     );
   }
 
-  /// CopyWith method
   UserModel copyWith({
     String? uid,
     String? role,
@@ -152,16 +143,12 @@ class UserModel {
     );
   }
 
-  /// Check if user is merchant
   bool get isMerchant => role == 'merchant';
 
-  /// Check if user is customer
   bool get isCustomer => role == 'customer';
 
-  /// Check if user is guest
   bool get isGuestUser => role == 'guest' && (isGuest ?? false);
 
-  /// Check if guest account is expired
   bool get isExpired {
     if (!isGuestUser || expiresAt == null) return false;
     return DateTime.now().isAfter(expiresAt!);

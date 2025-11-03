@@ -5,7 +5,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
 import 'dart:io';
 
-/// Repository untuk handle Firebase Authentication dan Firestore operations
 class AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
@@ -15,42 +14,39 @@ class AuthRepository {
     FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn();
 
-  /// Stream of auth state changes
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
-  /// Get current Firebase user
   User? get currentUser => _firebaseAuth.currentUser;
 
-  /// Sign in with Google
   Future<UserModel> signInWithGoogle({required String role}) async {
     try {
-      // Trigger Google Sign In flow with timeout
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().timeout(
-        const Duration(seconds: 60),
-        onTimeout: () => throw AuthCancelledException('Waktu login habis'),
-      );
-      
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .signIn()
+          .timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => throw AuthCancelledException('Waktu login habis'),
+          );
+
       if (googleUser == null) {
         throw AuthCancelledException('Autentikasi dibatalkan');
       }
 
-      // Obtain auth details with timeout
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw Exception('Gagal mendapatkan kredensial'),
-      );
+      final GoogleSignInAuthentication googleAuth = await googleUser
+          .authentication
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw Exception('Gagal mendapatkan kredensial'),
+          );
 
-      // Create credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with timeout
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential)
           .timeout(
@@ -63,7 +59,6 @@ class AuthRepository {
         throw Exception('Firebase user is null');
       }
 
-      // Check if user exists in Firestore with timeout
       final userDoc = await _firestore
           .collection('users')
           .doc(firebaseUser.uid)
@@ -76,22 +71,18 @@ class AuthRepository {
       UserModel userModel;
 
       if (userDoc.exists) {
-        // Check if existing role matches requested role
         userModel = UserModel.fromFirestore(userDoc);
-        
+
         if (userModel.role != role) {
-          // Sign out from Firebase Auth since we won't allow this
           await _firebaseAuth.signOut();
           throw RoleConflictException(
             'Akun ini sudah terdaftar sebagai ${_getRoleText(userModel.role)}. '
-            'Gunakan akun Google lain atau hapus akun ${_getRoleText(userModel.role)} terlebih dahulu.'
+            'Gunakan akun Google lain atau hapus akun ${_getRoleText(userModel.role)} terlebih dahulu.',
           );
         }
-        
-        // Update last login
+
         await _updateLastLogin(firebaseUser.uid);
       } else {
-        // Create new user
         userModel = UserModel.createRegistered(
           uid: firebaseUser.uid,
           role: role,
@@ -121,32 +112,26 @@ class AuthRepository {
     }
   }
 
-  /// Sign in as guest (anonymous)
   Future<UserModel> signInAsGuest() async {
     try {
-      // Sign in anonymously
-      final UserCredential userCredential =
-          await _firebaseAuth.signInAnonymously();
+      final UserCredential userCredential = await _firebaseAuth
+          .signInAnonymously();
 
       final User? firebaseUser = userCredential.user;
       if (firebaseUser == null) {
         throw Exception('Firebase user is null');
       }
 
-      // Generate guest ID
       final guestId = 'GUEST-${DateTime.now().millisecondsSinceEpoch}';
 
-      // Get device ID
       final deviceId = await _getDeviceId();
 
-      // Create guest user model
       final userModel = UserModel.createGuest(
         uid: firebaseUser.uid,
         guestId: guestId,
         deviceId: deviceId,
       );
 
-      // Save to Firestore
       await _firestore
           .collection('users')
           .doc(firebaseUser.uid)
@@ -160,19 +145,14 @@ class AuthRepository {
     }
   }
 
-  /// Sign out
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _firebaseAuth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
     } catch (e) {
       throw Exception('Error signing out: $e');
     }
   }
 
-  /// Get user data from Firestore
   Future<UserModel?> getUserData(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -183,19 +163,13 @@ class AuthRepository {
     }
   }
 
-  /// Stream of user data from Firestore
   Stream<UserModel?> streamUserData(String uid) {
-    return _firestore
-        .collection('users')
-        .doc(uid)
-        .snapshots()
-        .map((snapshot) {
+    return _firestore.collection('users').doc(uid).snapshots().map((snapshot) {
       if (!snapshot.exists) return null;
       return UserModel.fromFirestore(snapshot);
     });
   }
 
-  /// Update user profile
   Future<void> updateUserProfile({
     required String uid,
     String? displayName,
@@ -213,41 +187,37 @@ class AuthRepository {
     }
   }
 
-  /// Delete user account
   Future<void> deleteAccount() async {
     try {
       final user = currentUser;
       if (user == null) throw Exception('No user signed in');
 
-      // Delete Firestore data
       await _firestore.collection('users').doc(user.uid).delete();
 
-      // Delete Firebase Auth account
       await user.delete();
     } catch (e) {
       throw Exception('Error deleting account: $e');
     }
   }
 
-  /// Check if user profile is complete (for merchant)
   Future<bool> isMerchantProfileComplete(String uid) async {
     try {
-      final merchantDoc =
-          await _firestore.collection('merchants').doc(uid).get();
+      final merchantDoc = await _firestore
+          .collection('merchants')
+          .doc(uid)
+          .get();
       return merchantDoc.exists;
     } catch (e) {
       return false;
     }
   }
 
-  /// Private: Update last login timestamp
   Future<void> _updateLastLogin(String uid) async {
     await _firestore.collection('users').doc(uid).update({
       'lastLoginAt': FieldValue.serverTimestamp(),
     });
   }
 
-  /// Private: Get device ID
   Future<String> _getDeviceId() async {
     try {
       final deviceInfo = DeviceInfoPlugin();
@@ -264,7 +234,6 @@ class AuthRepository {
     }
   }
 
-  /// Private: Handle Firebase Auth exceptions
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'account-exists-with-different-credential':
@@ -290,7 +259,6 @@ class AuthRepository {
     }
   }
 
-  /// Private: Get role text in Indonesian
   String _getRoleText(String role) {
     switch (role) {
       case 'merchant':
@@ -305,20 +273,18 @@ class AuthRepository {
   }
 }
 
-/// Custom exception for cancelled authentication
 class AuthCancelledException implements Exception {
   final String message;
   AuthCancelledException(this.message);
-  
+
   @override
   String toString() => message;
 }
 
-/// Custom exception for role conflict
 class RoleConflictException implements Exception {
   final String message;
   RoleConflictException(this.message);
-  
+
   @override
   String toString() => message;
 }

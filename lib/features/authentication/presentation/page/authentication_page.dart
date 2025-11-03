@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/features/authentication/domain/auth_notifier.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 
@@ -14,10 +15,8 @@ class AuthenticationPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
 
-    // Listen to auth state changes
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.isAuthenticated && next.user != null) {
-        // Navigate based on role
         if (next.user!.isMerchant) {
           _navigateToMerchantFlow(context, ref);
         } else {
@@ -25,18 +24,16 @@ class AuthenticationPage extends ConsumerWidget {
         }
       }
 
-      // Show error if any
       if (next.errorMessage != null) {
         final errorMsg = next.errorMessage!;
         Color bgColor = Colors.red;
-        
-        // Check error type for appropriate color
+
         if (errorMsg.contains('dibatalkan') || errorMsg.contains('cancelled')) {
           bgColor = Colors.orange;
         } else if (errorMsg.contains('sudah terdaftar sebagai')) {
           bgColor = Colors.deepOrange;
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -48,7 +45,6 @@ class AuthenticationPage extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        ref.read(authNotifierProvider.notifier).clearError();
       }
     });
 
@@ -108,7 +104,10 @@ class AuthenticationPage extends ConsumerWidget {
   }
 
   Widget _buildGoogleSignInButton(
-      BuildContext context, WidgetRef ref, bool isLoading) {
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return Container(
       width: double.infinity,
       height: 56,
@@ -120,7 +119,9 @@ class AuthenticationPage extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isLoading ? null : () => _handleGoogleSignIn(context, ref, role: 'customer'),
+          onTap: isLoading
+              ? null
+              : () => _handleGoogleSignIn(context, ref, role: 'customer'),
           borderRadius: BorderRadius.circular(28),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -133,7 +134,9 @@ class AuthenticationPage extends ConsumerWidget {
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColor.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColor.primary,
+                      ),
                     ),
                   )
                 else
@@ -176,7 +179,10 @@ class AuthenticationPage extends ConsumerWidget {
   }
 
   Widget _buildGuestSignInButton(
-      BuildContext context, WidgetRef ref, bool isLoading) {
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return PrimaryButton(
       text: 'Continue as Guest',
       icon: Iconsax.user,
@@ -188,7 +194,10 @@ class AuthenticationPage extends ConsumerWidget {
   }
 
   Widget _buildMerchantLink(
-      BuildContext context, WidgetRef ref, bool isLoading) {
+    BuildContext context,
+    WidgetRef ref,
+    bool isLoading,
+  ) {
     return InkWell(
       onTap: isLoading ? null : () => _showMerchantDialog(context, ref),
       child: Padding(
@@ -242,7 +251,6 @@ class AuthenticationPage extends ConsumerWidget {
     );
   }
 
-  // Dialog: Merchant information
   void _showMerchantDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
@@ -289,39 +297,39 @@ class AuthenticationPage extends ConsumerWidget {
     );
   }
 
-  // Handle Google Sign In
   Future<void> _handleGoogleSignIn(
     BuildContext context,
     WidgetRef ref, {
     required String role,
   }) async {
     try {
-      await ref.read(authNotifierProvider.notifier).signInWithGoogle(role: role);
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signInWithGoogle(role: role);
     } catch (e) {
-      // Error handled by listener
+      throw Exception('Google sign-in failed: $e');
     }
   }
 
-  // Handle Guest Sign In
   Future<void> _handleGuestSignIn(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(authNotifierProvider.notifier).signInAsGuest();
-    } catch (e) {
-      // Error handled by listener
-    }
+    } catch (e) {}
   }
 
-  // Navigate to merchant flow
-  Future<void> _navigateToMerchantFlow(BuildContext context, WidgetRef ref) async {
-    final isProfileComplete =
-        await ref.read(authNotifierProvider.notifier).checkMerchantProfile();
+  Future<void> _navigateToMerchantFlow(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final isProfileComplete = await ref
+        .read(authNotifierProvider.notifier)
+        .checkMerchantProfile();
 
     if (!context.mounted) return;
 
     if (isProfileComplete) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
-      // TODO: Navigate to merchant profile setup page
       Navigator.pushReplacementNamed(context, AppRoutes.home);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

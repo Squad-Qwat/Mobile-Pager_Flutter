@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
-import 'package:mobile_pager_flutter/features/authentication/domain/auth_repository.dart';
+import 'package:mobile_pager_flutter/features/authentication/domain/repositories/i_auth_repository.dart';
+import 'package:mobile_pager_flutter/features/authentication/data/datasources/auth_remote_datasource_impl.dart';
 
-/// Auth state class
 class AuthState {
   final UserModel? user;
   final bool isLoading;
@@ -31,22 +31,18 @@ class AuthState {
     );
   }
 
-  // Helper getters
   bool get isMerchant => user?.isMerchant ?? false;
   bool get isCustomer => user?.isCustomer ?? false;
   bool get isGuest => user?.isGuestUser ?? false;
 }
 
-/// Auth state notifier
 class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _authRepository;
+  final IAuthRepository _authRepository;
 
   AuthNotifier(this._authRepository) : super(const AuthState()) {
-    // Listen to auth state changes
     _authRepository.authStateChanges.listen(_onAuthStateChanged);
   }
 
-  /// Handle auth state changes from Firebase
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser == null) {
       state = const AuthState(isAuthenticated: false);
@@ -58,7 +54,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (userModel != null) {
         state = AuthState(user: userModel, isAuthenticated: true);
       } else {
-        // User exists in Firebase Auth but not in Firestore
         state = const AuthState(isAuthenticated: false);
       }
     } catch (e) {
@@ -69,7 +64,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Sign in with Google
   Future<void> signInWithGoogle({required String role}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -81,7 +75,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
       );
     } on AuthCancelledException {
-      // Silent fail for cancellation - no error message
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -89,7 +82,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Sign in as guest
   Future<void> signInAsGuest() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -106,7 +98,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Sign out
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
 
@@ -119,7 +110,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Update user profile
   Future<void> updateProfile({String? displayName, String? photoURL}) async {
     if (state.user == null) return;
 
@@ -130,7 +120,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         photoURL: photoURL,
       );
 
-      // Update local state
       state = state.copyWith(
         user: state.user!.copyWith(
           displayName: displayName ?? state.user!.displayName,
@@ -143,13 +132,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Check if merchant profile is complete
   Future<bool> checkMerchantProfile() async {
     if (state.user == null) return false;
     return await _authRepository.isMerchantProfileComplete(state.user!.uid);
   }
 
-  /// Delete account
   Future<void> deleteAccount() async {
     state = state.copyWith(isLoading: true);
 
@@ -162,32 +149,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Clear error message
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
 }
-
-/// Riverpod providers
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository();
-});
-
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
-  ref,
-) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(authRepository);
-});
-
-/// Stream provider for real-time user data
-final userStreamProvider = StreamProvider.autoDispose<UserModel?>((ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  final currentUser = authRepository.currentUser;
-
-  if (currentUser == null) {
-    return Stream.value(null);
-  }
-
-  return authRepository.streamUserData(currentUser.uid);
-});

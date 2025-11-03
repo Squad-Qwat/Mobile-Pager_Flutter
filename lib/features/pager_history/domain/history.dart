@@ -1,15 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Model untuk menampung data history di ListView
-/// Hanya berisi data ringkas yang dibutuhkan untuk tampilan list
 class History {
   final String orderId;
   final String merchantId;
-  final String queueNumber; // Format: "Kursi: A-12"
+  final String queueNumber;
   final DateTime createdAt;
-  final String
-  status; // waiting, processing, ready, picked_up, finished, expired, cancelled
-  final String? businessName; // Nama merchant
+  final String status;
+  final String? businessName;
   final String? merchantPhotoURL;
 
   History({
@@ -22,7 +19,6 @@ class History {
     this.merchantPhotoURL,
   });
 
-  /// Factory constructor untuk membuat History dari Firestore document
   factory History.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
@@ -32,14 +28,11 @@ class History {
       queueNumber: _formatQueueNumber(data['queueNumber']),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       status: data['status'] ?? 'waiting',
-      businessName:
-          data['merchantName'], // Optional: perlu join dengan merchants collection
-      merchantPhotoURL:
-          data['merchantPhotoURL'], // Optional: perlu join dengan merchants collection
+      businessName: data['merchantName'],
+      merchantPhotoURL: data['merchantPhotoURL'],
     );
   }
 
-  /// Factory constructor untuk membuat History dari Map
   factory History.fromMap(Map<String, dynamic> data, String docId) {
     return History(
       orderId: docId,
@@ -52,7 +45,6 @@ class History {
     );
   }
 
-  /// Convert History ke Map untuk Firestore
   Map<String, dynamic> toMap() {
     return {
       'orderId': orderId,
@@ -65,22 +57,17 @@ class History {
     };
   }
 
-  /// Helper method untuk format queue number
-  /// Contoh: 12 -> "Kursi: A-12"
   static String _formatQueueNumber(dynamic queueNum) {
     if (queueNum == null) return 'Kursi: -';
 
-    // Jika sudah dalam format string, return as is
     if (queueNum is String) return queueNum;
 
-    // Jika integer, format dengan prefix
     int num = queueNum as int;
-    String letter = String.fromCharCode(65 + (num ~/ 100)); // A, B, C, dst
+    String letter = String.fromCharCode(65 + (num ~/ 100));
     String number = (num % 100).toString().padLeft(2, '0');
     return 'Kursi: $letter-$number';
   }
 
-  /// Get status color untuk UI
   String getStatusColor() {
     switch (status) {
       case 'waiting':
@@ -102,7 +89,6 @@ class History {
     }
   }
 
-  /// Get status text bahasa Indonesia
   String getStatusText() {
     switch (status) {
       case 'waiting':
@@ -124,7 +110,6 @@ class History {
     }
   }
 
-  /// Get formatted date untuk display
   String getFormattedDate() {
     final months = [
       'Januari',
@@ -144,7 +129,6 @@ class History {
     return '${createdAt.day} ${months[createdAt.month - 1]} ${createdAt.year}';
   }
 
-  /// Check if order is active (not finished, expired, or cancelled)
   bool get isActive {
     return !['finished', 'expired', 'cancelled'].contains(status);
   }
