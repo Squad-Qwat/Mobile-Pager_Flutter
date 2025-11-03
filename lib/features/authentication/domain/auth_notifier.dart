@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_pager_flutter/features/pager_history/domain/auth_repository.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
+import 'package:mobile_pager_flutter/features/authentication/domain/auth_repository.dart';
 
 /// Auth state class
 class AuthState {
@@ -56,10 +56,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final userModel = await _authRepository.getUserData(firebaseUser.uid);
       if (userModel != null) {
-        state = AuthState(
-          user: userModel,
-          isAuthenticated: true,
-        );
+        state = AuthState(user: userModel, isAuthenticated: true);
       } else {
         // User exists in Firebase Auth but not in Firestore
         state = const AuthState(isAuthenticated: false);
@@ -86,12 +83,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } on AuthCancelledException {
       // Silent fail for cancellation - no error message
       state = state.copyWith(isLoading: false);
-    }
-    catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -108,10 +101,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -124,19 +114,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authRepository.signOut();
       state = const AuthState(isAuthenticated: false, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
 
   /// Update user profile
-  Future<void> updateProfile({
-    String? displayName,
-    String? photoURL,
-  }) async {
+  Future<void> updateProfile({String? displayName, String? photoURL}) async {
     if (state.user == null) return;
 
     try {
@@ -173,10 +157,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authRepository.deleteAccount();
       state = const AuthState(isAuthenticated: false, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -192,8 +173,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
-final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
+  ref,
+) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository);
 });
