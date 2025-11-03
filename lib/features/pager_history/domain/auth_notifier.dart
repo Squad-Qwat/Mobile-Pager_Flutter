@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_pager_flutter/core/domains/auth/auth_repository.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/auth_repository.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
 
 /// Auth state class
