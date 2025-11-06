@@ -1,5 +1,4 @@
 import 'dart:io'; // untuk stdout.write
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,7 +42,69 @@ class _HomePageState extends State<HomePage>
       'tableNum': 10,
       'name': 'Fauzan',
       'remainingTime': '02:00',
-    }
+    },
+    {
+      'id': 'EC-230201DDC',
+      'time': '08:00, 19 Oct 2023',
+      'pagerNum': 'PG-2230',
+      'orderType': 'Take Away',
+      'tableNum': 11,
+      'name': 'Reza',
+      'remainingTime': '05:00',
+    },
+    {
+      'id': 'EC-230201DDD',
+      'time': '08:20, 19 Oct 2023',
+      'pagerNum': 'PG-2231',
+      'orderType': 'Dine In',
+      'tableNum': 12,
+      'name': 'Nizar',
+      'remainingTime': '07:00',
+    },
+    {
+      'id': 'EC-230201DDE',
+      'time': '09:30, 19 Oct 2023',
+      'pagerNum': 'PG-2232',
+      'orderType': 'Dine In',
+      'tableNum': 13,
+      'name': 'Fauzan',
+      'remainingTime': '08:00',
+    },
+    {
+      'id': 'EC-230201DDF',
+      'time': '10:40, 19 Oct 2023',
+      'pagerNum': 'PG-2233',
+      'orderType': 'Take Away',
+      'tableNum': 14,
+      'name': 'Rahma',
+      'remainingTime': '10:00',
+    },
+    {
+      'id': 'EC-230201DDG',
+      'time': '11:56, 19 Oct 2023',
+      'pagerNum': 'PG-2234',
+      'orderType': 'Dine In',
+      'tableNum': 20,
+      'name': 'Fauzan',
+      'remainingTime': '20:00',
+    },
+    {
+      'id': 'EC-230201DDH',
+      'time': '12:30, 19 Oct 2023',
+      'pagerNum': 'PG-2235',
+      'orderType': 'Take Away',
+      'tableNum': 15,
+      'remainingTime': '15:00',
+    },
+    {
+      'id': 'EC-230201DEA',
+      'time': '13:40, 19 Oct 2023',
+      'pagerNum': 'PG-2236',
+      'orderType': 'Dine In',
+      'tableNum': 16,
+      'name': 'Affan',
+      'remainingTime': '25:00',
+    },
   ];
 
   @override
@@ -204,17 +265,14 @@ class _HomePageState extends State<HomePage>
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        RichText(text: TextSpan(
-                          text: "Lihat semua",
+                        Text(
+                          'Lihat Semua',
                           style: GoogleFonts.inter(
-                            color: AppColor.primary, 
+                            fontSize: 18,
+                            color: AppColor.primary,
                             fontWeight: FontWeight.w700,
                           ),
-                          recognizer: TapGestureRecognizer()..onTap = () => Navigator.pushNamed(
-                            context, 
-                            AppRoutes.orderList
-                          )
-                        ))
+                        ),
                       ],
                     ),
                   ],
@@ -313,7 +371,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '${activity['tableNum'] ?? -1}', // Error was here, forgot to format to string first
+                                  '${activity['tableNum'] ?? -1}',
                                   style: GoogleFonts.inter(
                                     fontSize: 16, 
                                     fontWeight: FontWeight.w700

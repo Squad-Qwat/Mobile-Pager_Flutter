@@ -82,10 +82,6 @@ dependencies:
   # Use for reading and writing to device file system.
   path_provider: ^2.1.5
 
-  # The following adds the Format date to your application.
-  # Use for formatting dates.
-  date_format: ^2.0.9  
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
