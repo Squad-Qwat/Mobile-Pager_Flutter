@@ -43,8 +43,12 @@ class UserModel {
       displayName: data['displayName'],
       photoURL: data['photoURL'],
       authProvider: data['authProvider'] ?? 'google',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      lastLoginAt: (data['lastLoginAt'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      lastLoginAt: data['lastLoginAt'] != null
+          ? (data['lastLoginAt'] as Timestamp).toDate()
+          : DateTime.now(),
       isGuest: data['isGuest'],
       guestId: data['guestId'],
       deviceId: data['deviceId'],

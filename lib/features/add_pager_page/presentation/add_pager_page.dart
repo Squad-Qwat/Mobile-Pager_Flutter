@@ -1,15 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/notifiers/pager_notifier.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 
-class AddPagerPage extends StatelessWidget {
+class AddPagerPage extends ConsumerStatefulWidget {
   const AddPagerPage({super.key});
 
   @override
+  ConsumerState<AddPagerPage> createState() => _AddPagerPageState();
+}
+
+class _AddPagerPageState extends ConsumerState<AddPagerPage> {
+  final TextEditingController _labelController = TextEditingController();
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+    final pagerState = ref.watch(pagerNotifierProvider);
+
+    ref.listen<PagerState>(pagerNotifierProvider, (previous, next) {
+      if (next.successMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.successMessage!),
+            backgroundColor: Colors.green,
+          ),
+        );
+        ref.read(pagerNotifierProvider.notifier).clearMessages();
+        Navigator.pop(context);
+      }
+
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        ref.read(pagerNotifierProvider.notifier).clearMessages();
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColor.white,
       appBar: AppBar(
@@ -31,7 +74,10 @@ class AddPagerPage extends StatelessWidget {
           color: AppColor.white,
           border: Border(top: BorderSide(color: AppColor.grey300, width: 1)),
         ),
-        child: PrimaryButton(text: "Create Pager", onPressed: () {}),
+        child: PrimaryButton(
+          text: pagerState.isLoading ? "Creating..." : "Create Pager",
+          onPressed: pagerState.isLoading ? null : _handleCreatePager,
+        ),
       ),
       body: Container(
         height: 460,
@@ -48,6 +94,7 @@ class AddPagerPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextInputField(
+                controller: _labelController,
                 hint: 'Enter seat number (Optional)',
                 label: 'Seat Number',
               ),
@@ -82,5 +129,26 @@ class AddPagerPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleCreatePager() async {
+    final authState = ref.read(authNotifierProvider);
+    final user = authState.user;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not authenticated'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final label = _labelController.text.trim();
+
+    await ref
+        .read(pagerNotifierProvider.notifier)
+        .createPager(merchantId: user.uid, label: label.isEmpty ? null : label);
   }
 }

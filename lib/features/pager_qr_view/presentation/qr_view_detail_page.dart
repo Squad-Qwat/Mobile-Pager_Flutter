@@ -51,14 +51,12 @@ class _QrDetailPageState extends State<QrDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Contoh Data QR View
     const String restaurantName = "Restoran Seafood Enak";
     const int currentQueue = 12;
     const int estimatedWaitTime = 28;
     const String qrLabel = "Counter 1 (Dine-in)";
     const String qrCategory = "Regular Queue (antrian biasa)";
 
-    // Placeholder untuk gambar QR (Pakai link untuk sementara)
     const String qrImageUrl =
         "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=YourQueueDataHere";
 
