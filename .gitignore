@@ -39,6 +39,9 @@ linux/
 macos/
 windows/
 
+# exclude ai
+ai_discussion.md
+
 # Symbolication related
 app.*.symbols
 

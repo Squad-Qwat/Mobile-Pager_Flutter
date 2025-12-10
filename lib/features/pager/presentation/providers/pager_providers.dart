@@ -37,3 +37,17 @@ final customerPagersStreamProvider =
       final repository = ref.watch(pagerRepositoryProvider);
       return repository.getCustomerActivePagers(customerId);
     });
+
+/// Stream provider for merchant's history pagers
+final merchantHistoryPagersStreamProvider =
+    StreamProvider.family<List<PagerModel>, String>((ref, merchantId) {
+      final repository = ref.watch(pagerRepositoryProvider);
+      return repository.getMerchantHistoryPagers(merchantId);
+    });
+
+/// Stream provider for customer's history pagers
+final customerHistoryPagersStreamProvider =
+    StreamProvider.family<List<PagerModel>, String>((ref, customerId) {
+      final repository = ref.watch(pagerRepositoryProvider);
+      return repository.getCustomerHistoryPagers(customerId);
+    });

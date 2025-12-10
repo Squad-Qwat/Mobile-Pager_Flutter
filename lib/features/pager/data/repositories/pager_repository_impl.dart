@@ -212,6 +212,46 @@ class PagerRepositoryImpl implements IPagerRepository {
         });
   }
 
+  @override
+  Stream<List<PagerModel>> getMerchantHistoryPagers(String merchantId) {
+    return _firestore
+        .collection(_activeCollection)
+        .where('merchantId', isEqualTo: merchantId)
+        .orderBy('activatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .where((doc) {
+                final data = doc.data();
+                final status = data['status'] ?? '';
+                return status == PagerStatus.finished.name ||
+                    status == PagerStatus.expired.name;
+              })
+              .map((doc) => PagerModel.fromFirestore(doc))
+              .toList();
+        });
+  }
+
+  @override
+  Stream<List<PagerModel>> getCustomerHistoryPagers(String customerId) {
+    return _firestore
+        .collection(_activeCollection)
+        .where('customerId', isEqualTo: customerId)
+        .orderBy('activatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .where((doc) {
+                final data = doc.data();
+                final status = data['status'] ?? '';
+                return status == PagerStatus.finished.name ||
+                    status == PagerStatus.expired.name;
+              })
+              .map((doc) => PagerModel.fromFirestore(doc))
+              .toList();
+        });
+  }
+
   Future<int> _getNextPagerNumber(String merchantId) async {
     try {
       // Query both collections to get the highest number

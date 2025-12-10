@@ -36,4 +36,10 @@ abstract class IPagerRepository {
 
   /// Get customer's active pagers
   Stream<List<PagerModel>> getCustomerActivePagers(String customerId);
+
+  /// Get history pagers for merchant (finished, expired, cancelled)
+  Stream<List<PagerModel>> getMerchantHistoryPagers(String merchantId);
+
+  /// Get history pagers for customer (finished, expired, cancelled)
+  Stream<List<PagerModel>> getCustomerHistoryPagers(String customerId);
 }

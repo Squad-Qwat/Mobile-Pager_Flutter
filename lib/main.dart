@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
                 const DetailHistoryPage(orderId: "a"),
             AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
             AppRoutes.profile: (context) => const ProfilePage(),
+            AppRoutes.activePagers: (context) => const ActivePagersPage(),
           },
           theme: ThemeData(
             useMaterial3: true,

@@ -213,7 +213,7 @@ class HomePage extends ConsumerWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to full list
+                        Navigator.pushNamed(context, AppRoutes.activePagers);
                       },
                       child: Text(
                         'Lihat Semua',

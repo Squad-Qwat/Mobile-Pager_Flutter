@@ -1,121 +1,206 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
-import 'package:mobile_pager_flutter/features/pager_history/domain/extendedDummy.dart';
-import 'package:mobile_pager_flutter/features/pager_history/domain/history.dart';
+import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/filter_widget.dart';
 import 'history_filter_service.dart';
 
-class HistoryPage extends StatefulWidget {
+class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
 
   @override
-  State<HistoryPage> createState() => _HistoryPageState();
+  ConsumerState<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage> {
-  List<History> _allHistory = [];
-  List<History> _filteredHistory = [];
+class _HistoryPageState extends ConsumerState<HistoryPage> {
   HistoryFilterOptions _filterOptions = HistoryFilterOptions();
 
   // Pagination
   static const int _itemsPerPage = 10;
   int _currentPage = 0;
-  bool _hasMore = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHistory();
-  }
-
-  void _loadHistory() {
-    setState(() {
-      // Load all data
-      _allHistory = ExtendedDummyDataService.getExtendedDummyHistory();
-      
-      // Apply filters
-      _applyFilters();
-    });
-  }
 
   void _applyFilters() {
     setState(() {
-      _filteredHistory = HistoryFilterService.filterHistory(
-        _allHistory,
-        _filterOptions,
-      );
       _currentPage = 0;
-      _hasMore = _filteredHistory.length > _itemsPerPage;
     });
   }
 
-  List<History> _getPaginatedHistory() {
+  List<PagerModel> _applyLocalFilters(List<PagerModel> pagers) {
+    List<PagerModel> filtered = List.from(pagers);
+
+    // Apply time filter
+    if (_filterOptions.timeFilter != 'all') {
+      final now = DateTime.now();
+      filtered = filtered.where((pager) {
+        final pagerDate = pager.activatedAt ?? pager.createdAt;
+
+        switch (_filterOptions.timeFilter) {
+          case 'today':
+            return pagerDate.year == now.year &&
+                pagerDate.month == now.month &&
+                pagerDate.day == now.day;
+          case 'yesterday':
+            final yesterday = now.subtract(const Duration(days: 1));
+            return pagerDate.year == yesterday.year &&
+                pagerDate.month == yesterday.month &&
+                pagerDate.day == yesterday.day;
+          case 'this_week':
+            final weekStart = now.subtract(Duration(days: now.weekday - 1));
+            return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
+          case 'this_month':
+            return pagerDate.year == now.year && pagerDate.month == now.month;
+          case 'last_month':
+            final lastMonth = DateTime(now.year, now.month - 1);
+            return pagerDate.year == lastMonth.year &&
+                pagerDate.month == lastMonth.month;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    // Apply status filter
+    if (_filterOptions.statusFilter.isNotEmpty) {
+      filtered = filtered.where((pager) {
+        return _filterOptions.statusFilter.contains(pager.status.name);
+      }).toList();
+    }
+
+    // Apply search query
+    if (_filterOptions.searchQuery.isNotEmpty) {
+      final query = _filterOptions.searchQuery.toLowerCase();
+      filtered = filtered.where((pager) {
+        final displayId = pager.displayId.toLowerCase();
+        final queueNumber = pager.queueNumber?.toString().toLowerCase() ?? '';
+        return displayId.contains(query) || queueNumber.contains(query);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  List<PagerModel> _getPaginatedPagers(List<PagerModel> pagers) {
     final startIndex = 0;
     final endIndex = (_currentPage + 1) * _itemsPerPage;
-    
-    if (endIndex >= _filteredHistory.length) {
-      _hasMore = false;
-      return _filteredHistory;
+
+    if (endIndex >= pagers.length) {
+      return pagers;
     }
-    
-    return _filteredHistory.sublist(startIndex, endIndex);
+
+    return pagers.sublist(startIndex, endIndex);
+  }
+
+  bool _hasMore(List<PagerModel> pagers) {
+    return pagers.length > (_currentPage + 1) * _itemsPerPage;
   }
 
   void _loadMore() {
-    if (_hasMore && _filteredHistory.length > (_currentPage + 1) * _itemsPerPage) {
-      setState(() {
-        _currentPage++;
-      });
-    }
+    setState(() {
+      _currentPage++;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+    final user = authState.user;
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: _buildHeader(),
+        body: const Center(child: Text('Please login')),
+      );
+    }
+
+    // Get appropriate stream based on user role
+    final historyPagersAsync = user.isMerchant
+        ? ref.watch(merchantHistoryPagersStreamProvider(user.uid))
+        : ref.watch(customerHistoryPagersStreamProvider(user.uid));
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildHeader(),
-      body: Column(
-        children: [
-          // Filter Widget
-          HistoryFilterWidget(
-            currentOptions: _filterOptions,
-            onFilterChanged: (newOptions) {
-              setState(() {
-                _filterOptions = newOptions;
-              });
-              _applyFilters();
-            },
-          ),
+      body: historyPagersAsync.when(
+        data: (pagers) {
+          final filteredPagers = _applyLocalFilters(pagers);
+          final paginatedPagers = _getPaginatedPagers(filteredPagers);
+          final hasMore = _hasMore(filteredPagers);
 
-          // Results Count
-          _buildResultsInfo(),
+          return Column(
+            children: [
+              // Filter Widget
+              HistoryFilterWidget(
+                currentOptions: _filterOptions,
+                onFilterChanged: (newOptions) {
+                  setState(() {
+                    _filterOptions = newOptions;
+                  });
+                  _applyFilters();
+                },
+              ),
 
-          // History List
-          Expanded(
-            child: _filteredHistory.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _refreshHistory,
-                    child: ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppPadding.p16,
-                        vertical: 8.h,
+              // Results Count
+              _buildResultsInfo(filteredPagers.length),
+
+              // History List
+              Expanded(
+                child: filteredPagers.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          // Refresh is handled automatically by stream
+                          await Future.delayed(const Duration(milliseconds: 500));
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppPadding.p16,
+                            vertical: 8.h,
+                          ),
+                          itemCount: paginatedPagers.length + (hasMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == paginatedPagers.length) {
+                              return _buildLoadMoreButton();
+                            }
+                            return _buildHistoryItem(paginatedPagers[index]);
+                          },
+                        ),
                       ),
-                      itemCount: _getPaginatedHistory().length + (_hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _getPaginatedHistory().length) {
-                          return _buildLoadMoreButton();
-                        }
-                        return _buildHistoryItem(_getPaginatedHistory()[index]);
-                      },
-                    ),
-                  ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading history',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -149,7 +234,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildResultsInfo() {
+  Widget _buildResultsInfo(int count) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       color: Colors.white,
@@ -157,14 +242,14 @@ class _HistoryPageState extends State<HistoryPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            '${_filteredHistory.length} order ditemukan',
+            '$count order ditemukan',
             style: GoogleFonts.inter(
               fontSize: 13.sp,
               color: Colors.grey[600],
               fontWeight: FontWeight.w500,
             ),
           ),
-          if (_filteredHistory.isNotEmpty)
+          if (count > 0)
             Text(
               HistoryFilterService.getTimeFilterLabel(_filterOptions),
               style: GoogleFonts.inter(
@@ -176,11 +261,6 @@ class _HistoryPageState extends State<HistoryPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _refreshHistory() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _loadHistory();
   }
 
   Widget _buildEmptyState() {
@@ -247,7 +327,12 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildHistoryItem(History history) {
+  Widget _buildHistoryItem(PagerModel pager) {
+    final dateFormat = DateFormat('dd MMM yyyy');
+    final formattedDate = pager.activatedAt != null
+        ? dateFormat.format(pager.activatedAt!)
+        : dateFormat.format(pager.createdAt);
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -268,7 +353,7 @@ class _HistoryPageState extends State<HistoryPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DetailHistoryPage(orderId: history.orderId),
+              builder: (context) => DetailHistoryPage(orderId: pager.pagerId),
             ),
           );
         },
@@ -281,7 +366,7 @@ class _HistoryPageState extends State<HistoryPage> {
               children: [
                 Expanded(
                   child: Text(
-                    history.orderId,
+                    pager.displayId,
                     style: GoogleFonts.inter(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w700,
@@ -289,7 +374,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                 ),
                 Text(
-                  history.getFormattedDate(),
+                  formattedDate,
                   style: GoogleFonts.inter(
                     fontSize: 12.sp,
                     color: Colors.grey.shade600,
@@ -299,7 +384,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
             SizedBox(height: 12.h),
 
-            // Details: Nomor Pager & Nama
+            // Details: Nomor Pager & Label
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -317,7 +402,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        history.queueNumber,
+                        '#${pager.queueNumber ?? pager.number}',
                         style: GoogleFonts.inter(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w700,
@@ -327,30 +412,31 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                 ),
 
-                // Nama Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nama',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.sp,
-                          color: Colors.grey.shade600,
+                // Label Column
+                if (pager.label != null)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Lokasi',
+                          style: GoogleFonts.inter(
+                            fontSize: 12.sp,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        history.businessName ?? 'Guest',
-                        style: GoogleFonts.inter(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
+                        SizedBox(height: 4.h),
+                        Text(
+                          pager.label!,
+                          style: GoogleFonts.inter(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
             SizedBox(height: 12.h),
@@ -366,19 +452,19 @@ class _HistoryPageState extends State<HistoryPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(history.status).withOpacity(0.1),
+                    color: _getStatusColor(pager.status).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: _getStatusColor(history.status).withOpacity(0.3),
+                      color: _getStatusColor(pager.status).withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    history.getStatusText(),
+                    _getStatusText(pager.status),
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
-                      color: _getStatusColor(history.status),
+                      color: _getStatusColor(pager.status),
                     ),
                   ),
                 ),
@@ -408,24 +494,36 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(PagerStatus status) {
     switch (status) {
-      case 'waiting':
+      case PagerStatus.waiting:
         return Colors.orange;
-      case 'processing':
+      case PagerStatus.ready:
+      case PagerStatus.ringing:
         return Colors.blue;
-      case 'ready':
-        return Colors.green;
-      case 'picked_up':
-        return Colors.lightGreen;
-      case 'finished':
+      case PagerStatus.finished:
         return Colors.grey;
-      case 'expired':
-        return Colors.red;
-      case 'cancelled':
+      case PagerStatus.expired:
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  String _getStatusText(PagerStatus status) {
+    switch (status) {
+      case PagerStatus.waiting:
+        return 'Menunggu';
+      case PagerStatus.ready:
+        return 'Siap Diambil';
+      case PagerStatus.ringing:
+        return 'Berdering';
+      case PagerStatus.finished:
+        return 'Selesai';
+      case PagerStatus.expired:
+        return 'Kedaluwarsa';
+      case PagerStatus.temporary:
+        return 'Temporary';
     }
   }
 }
