@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
 import 'package:mobile_pager_flutter/features/authentication/data/datasources/i_auth_remote_datasource.dart';
 import 'package:mobile_pager_flutter/features/authentication/domain/repositories/i_auth_repository.dart';

@@ -72,7 +72,7 @@ class PagerRepositoryImpl implements IPagerRepository {
         .map((snapshot) {
           return snapshot.docs
               .where((doc) {
-                final data = doc.data() as Map<String, dynamic>;
+                final data = doc.data();
                 final status = data['status'] ?? '';
                 return status == PagerStatus.waiting.name ||
                     status == PagerStatus.ready.name;
@@ -202,7 +202,7 @@ class PagerRepositoryImpl implements IPagerRepository {
         .map((snapshot) {
           return snapshot.docs
               .where((doc) {
-                final data = doc.data() as Map<String, dynamic>;
+                final data = doc.data();
                 final status = data['status'] ?? '';
                 return status == PagerStatus.waiting.name ||
                     status == PagerStatus.ready.name;

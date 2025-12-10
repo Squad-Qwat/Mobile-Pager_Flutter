@@ -27,7 +27,7 @@ class _AddPagerPageState extends ConsumerState<AddPagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
+    ref.watch(authNotifierProvider);
     final pagerState = ref.watch(pagerNotifierProvider);
 
     ref.listen<PagerState>(pagerNotifierProvider, (previous, next) {
