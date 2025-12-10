@@ -89,10 +89,7 @@ class ActivePagersPage extends ConsumerWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: AppColor.black),
-        onPressed: () => Navigator.pop(context),
-      ),
+      automaticallyImplyLeading: false,
       title: Text(
         'Active Pagers',
         style: GoogleFonts.inter(
