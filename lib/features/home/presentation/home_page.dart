@@ -4,8 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/pager_ticket_card.dart';
+import 'package:mobile_pager_flutter/core/providers/navigation_provider.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
+import 'package:mobile_pager_flutter/features/analytics/presentation/widgets/analytics_grid.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 
@@ -63,155 +65,67 @@ class HomePage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          SizedBox(height: 24.h),
+          // Analytics Grid (only for merchants)
+          if (user.isMerchant)
+            Column(
               children: [
-                Text(
-                  'Welcome,',
-                  style: GoogleFonts.inter(
-                    fontSize: 36.sp,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  user.displayName ?? 'User',
-                  style: GoogleFonts.inter(
-                    fontSize: 36.sp,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
-          SizedBox(
-            height: 170.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.only(left: AppPadding.p16),
-              children: [
-                Container(
-                  width: 330.w,
-                  margin: EdgeInsets.only(right: AppPadding.p16),
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                  child: Row(
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'Antrian aktif hari ini',
-                          textAlign: TextAlign.start,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
+                      Icon(
+                        Icons.analytics_outlined,
+                        size: 20.sp,
+                        color: AppColor.primary,
                       ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          '${pagers.length}',
-                          textAlign: TextAlign.end,
-                          style: GoogleFonts.inter(
-                            fontSize: 52.sp,
-                            color: AppColor.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'Antrian',
-                          textAlign: TextAlign.end,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Statistik',
+                        style: GoogleFonts.inter(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  width: 330.w,
-                  margin: EdgeInsets.only(right: AppPadding.p16),
-                  padding: EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'Antrian aktif hari ini',
-                          textAlign: TextAlign.start,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            color: Colors.grey.shade700,
-                          ),
+                SizedBox(height: 16.h),
+                AnalyticsGrid(merchantId: user.uid),
+                SizedBox(height: 24.h),
+              ],
+            ),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_activity,
+                          size: 20.sp,
+                          color: AppColor.primary,
                         ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          '${pagers.length}',
-                          textAlign: TextAlign.end,
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Aktivitas Terkini',
                           style: GoogleFonts.inter(
-                            fontSize: 52.sp,
-                            color: AppColor.primary,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'Antrian',
-                          textAlign: TextAlign.end,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 36),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Aktivitas Terkini',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
+                      ],
                     ),
-                    GestureDetector(
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                    child: GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.activePagers);
+                        // Switch ke tab Active Pagers (index 1) di bottom navigation
+                        ref.read(navigationIndexProvider.notifier).state = 1;
                       },
                       child: Text(
                         'Lihat Semua',
@@ -222,10 +136,10 @@ class HomePage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
           SizedBox(height: 20),
           pagers.isEmpty
@@ -266,14 +180,11 @@ class HomePage extends ConsumerWidget {
     if (user != null && user.displayName != null) {
       List<String> nameParts = user.displayName!.split(' ');
       if (nameParts.length >= 2) {
-        initial =
-            nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+        initial = nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
       } else if (nameParts.isNotEmpty) {
         initial = nameParts[0][0].toUpperCase();
       }
     }
-    
-    
 
     return AppBar(
       automaticallyImplyLeading: false,

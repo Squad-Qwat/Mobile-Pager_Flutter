@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:mobile_pager_flutter/core/providers/navigation_provider.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
@@ -10,26 +11,18 @@ import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view
 import 'package:mobile_pager_flutter/features/pager_scan/presentation/pager_scan_page.dart';
 import 'package:mobile_pager_flutter/features/home/presentation/home_page.dart';
 
-class MainNavigation extends ConsumerStatefulWidget {
+class MainNavigation extends ConsumerWidget {
   const MainNavigation({super.key});
 
-  @override
-  ConsumerState<MainNavigation> createState() => _MainNavigationState();
-}
-
-class _MainNavigationState extends ConsumerState<MainNavigation> {
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _onItemTapped(WidgetRef ref, int index) {
+    ref.read(navigationIndexProvider.notifier).state = index;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final isMerchant = authState.isMerchant;
+    final selectedIndex = ref.watch(navigationIndexProvider);
 
     // Define pages based on merchant status
     // Merchant: [Home, Pagers, QR, History] - 4 items
@@ -48,7 +41,7 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
           ];
 
     return Scaffold(
-      body: pages[_selectedIndex],
+      body: pages[selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColor.white,
@@ -65,24 +58,32 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
                   ? [
                       // Merchant: 4 items
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.home_copy,
                         selectedIcon: Iconsax.home_copy,
                         label: 'Home',
                         index: 0,
                       ),
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.receipt_copy,
                         selectedIcon: Iconsax.receipt,
                         label: 'Pagers',
                         index: 1,
                       ),
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.barcode_copy,
                         selectedIcon: Iconsax.barcode_copy,
                         label: 'QR',
                         index: 2,
                       ),
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.clock_copy,
                         selectedIcon: Iconsax.clock,
                         label: 'History',
@@ -92,18 +93,24 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
                   : [
                       // Customer: 3 items
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.home_copy,
                         selectedIcon: Iconsax.home_copy,
                         label: 'Home',
                         index: 0,
                       ),
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.scan_copy,
                         selectedIcon: Iconsax.scan,
                         label: 'Scan',
                         index: 1,
                       ),
                       _buildNavItem(
+                        ref,
+                        selectedIndex,
                         icon: Iconsax.clock_copy,
                         selectedIcon: Iconsax.clock,
                         label: 'History',
@@ -117,16 +124,18 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildNavItem(
+    WidgetRef ref,
+    int selectedIndex, {
     required IconData icon,
     required IconData selectedIcon,
     required String label,
     required int index,
   }) {
-    final isSelected = _selectedIndex == index;
+    final isSelected = selectedIndex == index;
 
     return InkWell(
-      onTap: () => _onItemTapped(index),
+      onTap: () => _onItemTapped(ref, index),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
