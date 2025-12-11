@@ -32,12 +32,20 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
     final isMerchant = authState.isMerchant;
 
     // Define pages based on merchant status
-    final List<Widget> pages = [
-      const HomePage(),
-      const ActivePagersPage(),
-      isMerchant ? const QRViewPage() : const PagerScanPage(),
-      const HistoryPage(),
-    ];
+    // Merchant: [Home, Pagers, QR, History] - 4 items
+    // Customer: [Home, Scan, History] - 3 items (no Pagers)
+    final List<Widget> pages = isMerchant
+        ? [
+            const HomePage(),
+            const ActivePagersPage(),
+            const QRViewPage(),
+            const HistoryPage(),
+          ]
+        : [
+            const HomePage(),
+            const PagerScanPage(),
+            const HistoryPage(),
+          ];
 
     return Scaffold(
       body: pages[_selectedIndex],
@@ -53,34 +61,55 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  icon: Iconsax.home_copy,
-                  selectedIcon: Iconsax.home_copy,
-                  label: 'Home',
-                  index: 0,
-                ),
-                _buildNavItem(
-                  icon: Iconsax.receipt_copy,
-                  selectedIcon: Iconsax.receipt,
-                  label: 'Pagers',
-                  index: 1,
-                ),
-                _buildNavItem(
-                  icon: isMerchant ? Iconsax.barcode_copy : Iconsax.scan_copy,
-                  selectedIcon: isMerchant
-                      ? Iconsax.barcode_copy
-                      : Iconsax.scan,
-                  label: isMerchant ? 'QR' : 'Scan',
-                  index: 2,
-                ),
-                _buildNavItem(
-                  icon: Iconsax.clock_copy,
-                  selectedIcon: Iconsax.clock,
-                  label: 'History',
-                  index: 3,
-                ),
-              ],
+              children: isMerchant
+                  ? [
+                      // Merchant: 4 items
+                      _buildNavItem(
+                        icon: Iconsax.home_copy,
+                        selectedIcon: Iconsax.home_copy,
+                        label: 'Home',
+                        index: 0,
+                      ),
+                      _buildNavItem(
+                        icon: Iconsax.receipt_copy,
+                        selectedIcon: Iconsax.receipt,
+                        label: 'Pagers',
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Iconsax.barcode_copy,
+                        selectedIcon: Iconsax.barcode_copy,
+                        label: 'QR',
+                        index: 2,
+                      ),
+                      _buildNavItem(
+                        icon: Iconsax.clock_copy,
+                        selectedIcon: Iconsax.clock,
+                        label: 'History',
+                        index: 3,
+                      ),
+                    ]
+                  : [
+                      // Customer: 3 items
+                      _buildNavItem(
+                        icon: Iconsax.home_copy,
+                        selectedIcon: Iconsax.home_copy,
+                        label: 'Home',
+                        index: 0,
+                      ),
+                      _buildNavItem(
+                        icon: Iconsax.scan_copy,
+                        selectedIcon: Iconsax.scan,
+                        label: 'Scan',
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Iconsax.clock_copy,
+                        selectedIcon: Iconsax.clock,
+                        label: 'History',
+                        index: 2,
+                      ),
+                    ],
             ),
           ),
         ),

@@ -75,7 +75,8 @@ class PagerRepositoryImpl implements IPagerRepository {
                 final data = doc.data();
                 final status = data['status'] ?? '';
                 return status == PagerStatus.waiting.name ||
-                    status == PagerStatus.ready.name;
+                    status == PagerStatus.ready.name || 
+                    status == PagerStatus.ringing.name;
               })
               .map((doc) => PagerModel.fromFirestore(doc))
               .toList();

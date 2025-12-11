@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:mobile_pager_flutter/core/presentation/widget/pager_ticket_card.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
-import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class ActivePagersPage extends ConsumerWidget {
   const ActivePagersPage({Key? key}) : super(key: key);
@@ -52,7 +50,10 @@ class ActivePagersPage extends ConsumerWidget {
               ),
               itemCount: pagers.length,
               itemBuilder: (context, index) {
-                return _buildPagerItem(pagers[index]);
+                return PagerTicketCard(
+                  pager: pagers[index],
+                  isMerchant: user.isMerchant,
+                );
               },
             ),
           );
@@ -126,178 +127,5 @@ class ActivePagersPage extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildPagerItem(PagerModel pager) {
-    final timeFormat = DateFormat('HH:mm, dd MMM yyyy');
-    final activatedTime = pager.activatedAt != null
-        ? timeFormat.format(pager.activatedAt!)
-        : 'N/A';
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Display ID & Time
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  pager.displayId,
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                activatedTime,
-                style: GoogleFonts.inter(
-                  fontSize: 12.sp,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          // Details Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Queue Number Column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Queue Number',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '#${pager.queueNumber ?? pager.number}',
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Status Column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Status',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(pager.status),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      _getStatusText(pager.status),
-                      style: GoogleFonts.inter(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // Label if exists
-          if (pager.label != null) ...[
-            SizedBox(height: 12.h),
-            Divider(color: Colors.grey.shade300, height: 1),
-            SizedBox(height: 12.h),
-            Row(
-              children: [
-                Icon(
-                  Iconsax.location,
-                  size: 18,
-                  color: AppColor.primary,
-                ),
-                SizedBox(width: 6.w),
-                Expanded(
-                  child: Text(
-                    pager.label!,
-                    style: GoogleFonts.inter(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Color _getStatusColor(PagerStatus status) {
-    switch (status) {
-      case PagerStatus.waiting:
-        return Colors.orange;
-      case PagerStatus.ready:
-        return Colors.green;
-      case PagerStatus.ringing:
-        return Colors.purple;
-      case PagerStatus.finished:
-        return Colors.grey;
-      case PagerStatus.expired:
-        return Colors.red;
-      default:
-        return Colors.blue;
-    }
-  }
-
-  String _getStatusText(PagerStatus status) {
-    switch (status) {
-      case PagerStatus.waiting:
-        return 'WAITING';
-      case PagerStatus.ready:
-        return 'READY';
-      case PagerStatus.ringing:
-        return 'RINGING';
-      case PagerStatus.finished:
-        return 'FINISHED';
-      case PagerStatus.expired:
-        return 'EXPIRED';
-      case PagerStatus.temporary:
-        return 'TEMPORARY';
-    }
   }
 }
