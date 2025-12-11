@@ -260,6 +260,21 @@ class HomePage extends ConsumerWidget {
   }
 
   PreferredSizeWidget _buildHeader(BuildContext context, WidgetRef ref) {
+    // make initial for user name (contains 2)
+    final user = ref.watch(authNotifierProvider.select((state) => state.user));
+    String initial = '';
+    if (user != null && user.displayName != null) {
+      List<String> nameParts = user.displayName!.split(' ');
+      if (nameParts.length >= 2) {
+        initial =
+            nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+      } else if (nameParts.isNotEmpty) {
+        initial = nameParts[0][0].toUpperCase();
+      }
+    }
+    
+    
+
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
@@ -288,7 +303,7 @@ class HomePage extends ConsumerWidget {
             radius: 14.w,
             backgroundColor: AppColor.primary,
             child: Text(
-              'FC',
+              initial,
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
