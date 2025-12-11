@@ -16,6 +16,7 @@ class PagerModel {
   final DateTime? expiresAt;
   final String? label;
   final Map<String, dynamic>? scannedBy;
+  final int ringingCount;
   final String? notes;
   final Map<String, dynamic>? metadata;
 
@@ -33,6 +34,7 @@ class PagerModel {
     this.expiresAt,
     this.label,
     this.scannedBy,
+    this.ringingCount = 0,
     this.notes,
     this.metadata,
   });
@@ -55,6 +57,7 @@ class PagerModel {
       scannedBy: data['scannedBy'] != null
           ? Map<String, dynamic>.from(data['scannedBy'])
           : null,
+      ringingCount: data['ringingCount'] ?? 0,
       notes: data['notes'],
       metadata: data['metadata'] != null
           ? Map<String, dynamic>.from(data['metadata'])
@@ -76,6 +79,7 @@ class PagerModel {
       if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
       if (label != null) 'label': label,
       if (scannedBy != null) 'scannedBy': scannedBy,
+      'ringingCount': ringingCount,
       if (notes != null) 'notes': notes,
       if (metadata != null) 'metadata': metadata,
     };
@@ -114,6 +118,7 @@ class PagerModel {
     DateTime? expiresAt,
     String? label,
     Map<String, dynamic>? scannedBy,
+    int? ringingCount,
     String? notes,
     Map<String, dynamic>? metadata,
   }) {
@@ -131,6 +136,7 @@ class PagerModel {
       expiresAt: expiresAt ?? this.expiresAt,
       label: label ?? this.label,
       scannedBy: scannedBy ?? this.scannedBy,
+      ringingCount: ringingCount ?? this.ringingCount,
       notes: notes ?? this.notes,
       metadata: metadata ?? this.metadata,
     );

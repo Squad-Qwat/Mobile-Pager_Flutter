@@ -178,9 +178,40 @@ class PagerRepositoryImpl implements IPagerRepository {
         throw Exception('Active pager not found');
       }
 
-      await activeQuery.docs.first.reference.update({'status': status.name});
+      final updateData = <String, dynamic>{'status': status.name};
+
+      // If changing status to ringing, increment ringingCount
+      if (status == PagerStatus.ringing) {
+        final currentData = activeQuery.docs.first.data();
+        final currentCount = currentData['ringingCount'] ?? 0;
+        updateData['ringingCount'] = currentCount + 1;
+      }
+
+      await activeQuery.docs.first.reference.update(updateData);
     } catch (e) {
       throw Exception('Failed to update pager status: $e');
+    }
+  }
+
+  @override
+  Future<void> updatePagerNotes({
+    required String pagerId,
+    required String notes,
+  }) async {
+    try {
+      final activeQuery = await _firestore
+          .collection(_activeCollection)
+          .where('pagerId', isEqualTo: pagerId)
+          .limit(1)
+          .get();
+
+      if (activeQuery.docs.isEmpty) {
+        throw Exception('Active pager not found');
+      }
+
+      await activeQuery.docs.first.reference.update({'notes': notes});
+    } catch (e) {
+      throw Exception('Failed to update pager notes: $e');
     }
   }
 

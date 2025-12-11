@@ -304,13 +304,48 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
               painter: DashedLinePainter(),
             ),
 
-            // Bottom Section - Action Indicator (only for merchant)
+            // Bottom Section - Action Indicator & Notes (only for merchant)
             if (widget.isMerchant)
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // Notes Button
+                    GestureDetector(
+                      onTap: () => _showNotesBottomSheet(context),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.note_alt_outlined,
+                              size: 14,
+                              color: Colors.orange.shade700,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Catatan',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    // Action Button
                     Builder(
                       builder: (builderContext) {
                         final slidable = Slidable.of(builderContext);
@@ -453,6 +488,127 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
       case PagerStatus.temporary:
         return 'TEMPORARY';
     }
+  }
+
+  Future<void> _showNotesBottomSheet(BuildContext context) async {
+    final TextEditingController notesController = TextEditingController(
+      text: widget.pager.notes ?? '',
+    );
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Catatan untuk ${widget.pager.displayId}',
+                  style: GoogleFonts.inter(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: notesController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: 'Tulis catatan di sini...',
+                hintStyle: GoogleFonts.inter(
+                  color: Colors.grey.shade400,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColor.primary, width: 2),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: double.infinity,
+              height: 48.h,
+              child: ElevatedButton(
+                onPressed: () async {
+                  try {
+                    final repository = ref.read(pagerRepositoryProvider);
+                    await repository.updatePagerNotes(
+                      pagerId: widget.pager.pagerId,
+                      notes: notesController.text,
+                    );
+
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Catatan berhasil disimpan',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Gagal menyimpan catatan: ${e.toString()}',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Simpan',
+                  style: GoogleFonts.inter(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
+      ),
+    );
   }
 }
 

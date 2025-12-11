@@ -51,3 +51,10 @@ final customerHistoryPagersStreamProvider =
       final repository = ref.watch(pagerRepositoryProvider);
       return repository.getCustomerHistoryPagers(customerId);
     });
+
+/// Future provider for single pager detail (auto-dispose for fresh data)
+final pagerDetailProvider =
+    FutureProvider.autoDispose.family<PagerModel?, String>((ref, pagerId) async {
+      final repository = ref.watch(pagerRepositoryProvider);
+      return repository.getPagerById(pagerId);
+    });

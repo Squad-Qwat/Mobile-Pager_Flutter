@@ -31,6 +31,12 @@ abstract class IPagerRepository {
     required PagerStatus status,
   });
 
+  /// Update pager notes
+  Future<void> updatePagerNotes({
+    required String pagerId,
+    required String notes,
+  });
+
   /// Delete a temporary pager
   Future<void> deleteTemporaryPager(String pagerId);
 

@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.addPager: (context) => const AddPagerPage(),
             AppRoutes.authentication: (context) => const AuthenticationPage(),
             AppRoutes.detailPagerHistory: (context) =>
-                const DetailHistoryPage(orderId: "a"),
+                const DetailHistoryPage(pagerId: "a"),
             AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
             AppRoutes.profile: (context) => const ProfilePage(),
             AppRoutes.activePagers: (context) => const ActivePagersPage(),

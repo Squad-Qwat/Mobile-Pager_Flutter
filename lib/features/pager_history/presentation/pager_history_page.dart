@@ -211,7 +211,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       backgroundColor: Colors.white,
       elevation: 0,
       title: Text(
-        'Pager History',
+        'History',
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w800,
           color: AppColor.black,
@@ -219,16 +219,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       ),
       actions: [
         // Reset filter button
-        IconButton(
-          icon: Icon(Icons.refresh, color: AppColor.black),
-          onPressed: () {
-            setState(() {
-              _filterOptions = HistoryFilterOptions();
-            });
-            _applyFilters();
-          },
-          tooltip: 'Reset Filter',
-        ),
         SizedBox(width: 8.w),
       ],
     );
@@ -353,7 +343,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DetailHistoryPage(orderId: pager.pagerId),
+              builder: (context) => DetailHistoryPage(pagerId: pager.pagerId),
             ),
           );
         },
