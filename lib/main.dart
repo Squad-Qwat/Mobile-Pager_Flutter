@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/about/presentation/about_page.dart';
 import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.activePagers: (context) => const ActivePagersPage(),
             AppRoutes.merchantSettings: (context) => const MerchantSettingsPage(),
             AppRoutes.notifications: (context) => const NotificationHistoryPage(),
+            AppRoutes.about: (context) => const AboutPage(),
           },
           onGenerateRoute: (settings) {
             // Handle customer detail page with arguments

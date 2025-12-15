@@ -11,6 +11,7 @@ class AppRoutes {
   static const String merchantSettings = '/merchant-settings';
   static const String notifications = '/notifications';
   static const String customerDetail = '/customer_detail';
+  static const String about = '/about';
 
   AppRoutes._();
 }

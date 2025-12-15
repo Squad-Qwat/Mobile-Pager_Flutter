@@ -155,25 +155,40 @@ class ProfilePage extends ConsumerWidget {
               ),
             ),
             SizedBox(height: AppPadding.p24),
-            // Merchant Settings Button (only for merchants)
-            if (user?.isMerchant == true)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColor.grey300, width: 1),
-                  ),
-                  child: _buildMenuItem(
-                    icon: Iconsax.setting_2,
-                    title: 'Pengaturan Pager',
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.merchantSettings);
-                    },
-                  ),
+            // Menu Section
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColor.grey300, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    // Merchant Settings (only for merchants)
+                    if (user?.isMerchant == true)
+                      _buildMenuItem(
+                        icon: Iconsax.setting_2,
+                        title: 'Pengaturan Pager',
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.merchantSettings);
+                        },
+                      ),
+                    if (user?.isMerchant == true)
+                      Divider(height: 1, color: AppColor.grey300),
+                    // About App
+                    _buildMenuItem(
+                      icon: Iconsax.info_circle,
+                      title: 'Tentang Aplikasi',
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.about);
+                      },
+                    ),
+                  ],
                 ),
               ),
+            ),
             SizedBox(height: AppPadding.p16),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
