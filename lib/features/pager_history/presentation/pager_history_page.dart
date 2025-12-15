@@ -10,7 +10,13 @@ import 'package:mobile_pager_flutter/features/detail_history/presentation/detail
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/filter_widget.dart';
+import 'package:mobile_pager_flutter/features/pager_history/presentation/widgets/customer_list_view.dart';
 import 'history_filter_service.dart';
+
+enum HistoryViewMode {
+  allHistory,
+  perCustomer,
+}
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
@@ -21,6 +27,7 @@ class HistoryPage extends ConsumerStatefulWidget {
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
   HistoryFilterOptions _filterOptions = HistoryFilterOptions();
+  HistoryViewMode _viewMode = HistoryViewMode.allHistory;
 
   // Pagination
   static const int _itemsPerPage = 10;
@@ -128,78 +135,162 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildHeader(),
-      body: historyPagersAsync.when(
-        data: (pagers) {
-          final filteredPagers = _applyLocalFilters(pagers);
-          final paginatedPagers = _getPaginatedPagers(filteredPagers);
-          final hasMore = _hasMore(filteredPagers);
+      body: Column(
+        children: [
+          // View Mode Selector (Only for merchant)
+          if (user.isMerchant) _buildViewModeSelector(),
 
-          return Column(
-            children: [
-              // Filter Widget
-              HistoryFilterWidget(
-                currentOptions: _filterOptions,
-                onFilterChanged: (newOptions) {
-                  setState(() {
-                    _filterOptions = newOptions;
-                  });
-                  _applyFilters();
-                },
+          // Content based on view mode
+          Expanded(
+            child: _viewMode == HistoryViewMode.allHistory
+                ? _buildAllHistoryView(historyPagersAsync)
+                : CustomerListView(merchantId: user.uid),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewModeSelector() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Text(
+            'Tampilan:',
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
               ),
-
-              // Results Count
-              _buildResultsInfo(filteredPagers.length),
-
-              // History List
-              Expanded(
-                child: filteredPagers.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          // Refresh is handled automatically by stream
-                          await Future.delayed(const Duration(milliseconds: 500));
-                        },
-                        child: ListView.builder(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppPadding.p16,
-                            vertical: 8.h,
-                          ),
-                          itemCount: paginatedPagers.length + (hasMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == paginatedPagers.length) {
-                              return _buildLoadMoreButton();
-                            }
-                            return _buildHistoryItem(paginatedPagers[index]);
-                          },
-                        ),
-                      ),
-              ),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading history',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<HistoryViewMode>(
+                  value: _viewMode,
+                  isExpanded: true,
+                  icon: Icon(Icons.arrow_drop_down, color: AppColor.primary),
+                  style: GoogleFonts.inter(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.primary,
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: HistoryViewMode.allHistory,
+                      child: Text('Semua Riwayat'),
+                    ),
+                    DropdownMenuItem(
+                      value: HistoryViewMode.perCustomer,
+                      child: Text('Per Customer'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _viewMode = value;
+                      });
+                    }
+                  },
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllHistoryView(AsyncValue<List<PagerModel>> historyPagersAsync) {
+    return historyPagersAsync.when(
+      data: (pagers) {
+        final filteredPagers = _applyLocalFilters(pagers);
+        final paginatedPagers = _getPaginatedPagers(filteredPagers);
+        final hasMore = _hasMore(filteredPagers);
+
+        return Column(
+          children: [
+            // Filter Widget
+            HistoryFilterWidget(
+              currentOptions: _filterOptions,
+              onFilterChanged: (newOptions) {
+                setState(() {
+                  _filterOptions = newOptions;
+                });
+                _applyFilters();
+              },
+            ),
+
+            // Results Count
+            _buildResultsInfo(filteredPagers.length),
+
+            // History List
+            Expanded(
+              child: filteredPagers.isEmpty
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        // Refresh is handled automatically by stream
+                        await Future.delayed(const Duration(milliseconds: 500));
+                      },
+                      child: ListView.builder(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppPadding.p16,
+                          vertical: 8.h,
+                        ),
+                        itemCount: paginatedPagers.length + (hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == paginatedPagers.length) {
+                            return _buildLoadMoreButton();
+                          }
+                          return _buildHistoryItem(paginatedPagers[index]);
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading history',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

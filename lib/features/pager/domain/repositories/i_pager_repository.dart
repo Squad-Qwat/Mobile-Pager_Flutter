@@ -1,4 +1,5 @@
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/models/customer_stats_model.dart';
 
 abstract class IPagerRepository {
   /// Create a temporary pager for merchant
@@ -48,4 +49,13 @@ abstract class IPagerRepository {
 
   /// Get history pagers for customer (finished, expired, cancelled)
   Stream<List<PagerModel>> getCustomerHistoryPagers(String customerId);
+
+  /// Get list of customers with statistics for a merchant (non-guest users only)
+  Future<List<CustomerStatsModel>> getCustomerStatsList(String merchantId);
+
+  /// Get detailed pager history for a specific customer of a merchant
+  Future<List<PagerModel>> getCustomerPagerHistory({
+    required String merchantId,
+    required String customerId,
+  });
 }

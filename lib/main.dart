@@ -12,6 +12,7 @@ import 'package:mobile_pager_flutter/features/authentication/presentation/page/a
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
 import 'package:mobile_pager_flutter/features/merchant/presentation/pages/merchant_settings_page.dart';
 import 'package:mobile_pager_flutter/features/notifications/presentation/pages/notification_history_page.dart';
+import 'package:mobile_pager_flutter/features/pager_history/presentation/pages/customer_detail_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_detail_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 import 'package:mobile_pager_flutter/features/profile/presentation/profile_page.dart';
@@ -67,6 +68,20 @@ class MyApp extends StatelessWidget {
             AppRoutes.activePagers: (context) => const ActivePagersPage(),
             AppRoutes.merchantSettings: (context) => const MerchantSettingsPage(),
             AppRoutes.notifications: (context) => const NotificationHistoryPage(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle customer detail page with arguments
+            if (settings.name == AppRoutes.customerDetail) {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (context) => CustomerDetailPage(
+                  merchantId: args['merchantId'] as String,
+                  customerId: args['customerId'] as String,
+                  customerName: args['customerName'] as String,
+                ),
+              );
+            }
+            return null;
           },
           theme: ThemeData(
             useMaterial3: true,

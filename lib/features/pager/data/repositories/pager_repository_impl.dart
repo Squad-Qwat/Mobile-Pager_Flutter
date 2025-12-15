@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mobile_pager_flutter/core/domains/users.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/repositories/i_pager_repository.dart';
+import 'package:mobile_pager_flutter/features/pager_history/domain/models/customer_stats_model.dart';
 
 class PagerRepositoryImpl implements IPagerRepository {
   final FirebaseFirestore _firestore;
@@ -335,6 +337,130 @@ class PagerRepositoryImpl implements IPagerRepository {
       return (query.docs.first.data()['queueNumber'] ?? 0) + 1;
     } catch (e) {
       return 1;
+    }
+  }
+
+  @override
+  Future<List<CustomerStatsModel>> getCustomerStatsList(String merchantId) async {
+    try {
+      // Get all pagers for this merchant
+      final pagersSnapshot = await _firestore
+          .collection(_activeCollection)
+          .where('merchantId', isEqualTo: merchantId)
+          .get();
+
+      // Group pagers by customerId
+      final Map<String, List<PagerModel>> customerPagers = {};
+      final Set<String> customerIds = {};
+
+      for (final doc in pagersSnapshot.docs) {
+        final pager = PagerModel.fromFirestore(doc);
+
+        // Skip if no customerId
+        if (pager.customerId == null) continue;
+
+        customerIds.add(pager.customerId!);
+        customerPagers.putIfAbsent(pager.customerId!, () => []);
+        customerPagers[pager.customerId!]!.add(pager);
+      }
+
+      // Fetch user data for all customers (filter out guest users)
+      final List<CustomerStatsModel> customerStats = [];
+
+      for (final customerId in customerIds) {
+        // Get user data
+        final userDoc = await _firestore.collection('users').doc(customerId).get();
+
+        if (!userDoc.exists) continue;
+
+        final user = UserModel.fromFirestore(userDoc);
+
+        // Skip guest users
+        if (user.isGuestUser) continue;
+
+        final pagers = customerPagers[customerId]!;
+
+        // Calculate statistics
+        final totalOrders = pagers.length;
+
+        // Calculate average wait time (from activatedAt to ready/finished status)
+        double totalWaitMinutes = 0;
+        int countWithWaitTime = 0;
+
+        for (final pager in pagers) {
+          if (pager.activatedAt != null) {
+            DateTime? endTime;
+
+            // Determine end time based on status
+            if (pager.status == PagerStatus.finished || pager.status == PagerStatus.expired) {
+              // For finished/expired pagers, use updatedAt or assume some time
+              // Since we don't have updatedAt field, we'll estimate based on status changes
+              // This is a simplified calculation
+              endTime = pager.activatedAt!.add(const Duration(minutes: 15)); // Default estimate
+            } else if (pager.status == PagerStatus.ready || pager.status == PagerStatus.ringing) {
+              endTime = DateTime.now();
+            }
+
+            if (endTime != null) {
+              final waitMinutes = endTime.difference(pager.activatedAt!).inMinutes;
+              if (waitMinutes >= 0) {
+                totalWaitMinutes += waitMinutes;
+                countWithWaitTime++;
+              }
+            }
+          }
+        }
+
+        final averageWaitMinutes = countWithWaitTime > 0
+            ? totalWaitMinutes / countWithWaitTime
+            : 0.0;
+
+        // Get last order date
+        final lastOrderDate = pagers
+            .map((p) => p.activatedAt)
+            .whereType<DateTime>()
+            .fold<DateTime?>(null, (prev, date) {
+              if (prev == null) return date;
+              return date.isAfter(prev) ? date : prev;
+            });
+
+        customerStats.add(CustomerStatsModel(
+          customerId: customerId,
+          customerName: user.displayName ?? user.email ?? 'Unknown',
+          customerEmail: user.email ?? '',
+          totalOrders: totalOrders,
+          averageWaitMinutes: averageWaitMinutes,
+          lastOrderDate: lastOrderDate,
+        ));
+      }
+
+      // Sort by total orders descending
+      customerStats.sort((a, b) => b.totalOrders.compareTo(a.totalOrders));
+
+      return customerStats;
+    } catch (e) {
+      throw Exception('Failed to get customer stats list: $e');
+    }
+  }
+
+  @override
+  Future<List<PagerModel>> getCustomerPagerHistory({
+    required String merchantId,
+    required String customerId,
+  }) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_activeCollection)
+          .where('merchantId', isEqualTo: merchantId)
+          .where('customerId', isEqualTo: customerId)
+          .orderBy('activatedAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => PagerModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get customer pager history: $e');
     }
   }
 }
