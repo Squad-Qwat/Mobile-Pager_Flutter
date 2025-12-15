@@ -8,6 +8,7 @@ class AppRoutes {
   static const String detailPagerHistory = '/detail-pager-history';
   static const String profile = '/profile';
   static const String activePagers = '/active-pagers';
+  static const String merchantSettings = '/merchant-settings';
 
   AppRoutes._();
 }

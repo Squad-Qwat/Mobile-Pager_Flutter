@@ -321,25 +321,9 @@ class AuthenticationPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final isProfileComplete = await ref
-        .read(authNotifierProvider.notifier)
-        .checkMerchantProfile();
-
     if (!context.mounted) return;
 
-    if (isProfileComplete) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } else {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please complete your merchant profile',
-            style: GoogleFonts.inter(color: Colors.white),
-          ),
-          backgroundColor: AppColor.primary,
-        ),
-      );
-    }
+    // Navigate to home directly - merchant settings use default values if not configured
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 }

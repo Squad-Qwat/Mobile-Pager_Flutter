@@ -7,6 +7,7 @@ import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_bu
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -15,6 +16,11 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
+
+    // Watch merchant settings if user is merchant
+    final merchantSettingsAsync = user?.isMerchant == true
+        ? ref.watch(merchantSettingsStreamProvider(user!.uid))
+        : null;
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -103,10 +109,72 @@ class ProfilePage extends ConsumerWidget {
                         ),
                       ),
                     ),
+                  // Merchant name display
+                  if (user?.isMerchant == true && merchantSettingsAsync != null)
+                    merchantSettingsAsync.when(
+                      data: (settings) {
+                        if (settings.merchantName.isNotEmpty) {
+                          return Container(
+                            margin: EdgeInsets.only(top: AppPadding.p12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppPadding.p16,
+                              vertical: AppPadding.p12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColor.grey100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Nama Merchant',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppColor.textSecondary,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  settings.merchantName,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return SizedBox.shrink();
+                      },
+                      loading: () => SizedBox.shrink(),
+                      error: (_, __) => SizedBox.shrink(),
+                    ),
                 ],
               ),
             ),
             SizedBox(height: AppPadding.p24),
+            // Merchant Settings Button (only for merchants)
+            if (user?.isMerchant == true)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColor.grey300, width: 1),
+                  ),
+                  child: _buildMenuItem(
+                    icon: Iconsax.setting_2,
+                    title: 'Pengaturan Pager',
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.merchantSettings);
+                    },
+                  ),
+                ),
+              ),
+            SizedBox(height: AppPadding.p16),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
               child: PrimaryButton(
