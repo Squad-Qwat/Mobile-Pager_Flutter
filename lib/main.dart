@@ -1,24 +1,42 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
+import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
 import 'package:mobile_pager_flutter/features/merchant/presentation/pages/merchant_settings_page.dart';
+import 'package:mobile_pager_flutter/features/notifications/presentation/pages/notification_history_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_detail_page.dart';
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 import 'package:mobile_pager_flutter/features/profile/presentation/profile_page.dart';
 import 'package:mobile_pager_flutter/firebase_options.dart';
 import 'package:mobile_pager_flutter/main_navigation.dart';
 
+/// Background message handler (must be top-level function)
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print('Handling background message: ${message.messageId}');
+  print('Title: ${message.notification?.title}');
+  print('Body: ${message.notification?.body}');
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Set up FCM background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Initialize FCM service
+  await FCMService().initialize();
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -48,6 +66,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.profile: (context) => const ProfilePage(),
             AppRoutes.activePagers: (context) => const ActivePagersPage(),
             AppRoutes.merchantSettings: (context) => const MerchantSettingsPage(),
+            AppRoutes.notifications: (context) => const NotificationHistoryPage(),
           },
           theme: ThemeData(
             useMaterial3: true,

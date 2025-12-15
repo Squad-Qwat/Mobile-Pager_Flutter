@@ -9,6 +9,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String activePagers = '/active-pagers';
   static const String merchantSettings = '/merchant-settings';
+  static const String notifications = '/notifications';
 
   AppRoutes._();
 }

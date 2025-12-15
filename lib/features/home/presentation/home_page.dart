@@ -9,6 +9,7 @@ import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/analytics/presentation/widgets/analytics_grid.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:mobile_pager_flutter/features/notifications/presentation/providers/notification_providers.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 
 class HomePage extends ConsumerWidget {
@@ -202,10 +203,9 @@ class HomePage extends ConsumerWidget {
           onPressed: () => print('Hello World'),
           icon: Icon(Icons.add),
         ),
-        IconButton(
-          onPressed: () => print('Hello World'),
-          icon: Icon(Icons.notifications),
-        ),
+        // Notification icon with badge
+        _buildNotificationBadge(ref, user),
+        SizedBox(width: 8.w),
         GestureDetector(
           onTap: () {
             Navigator.pushNamed(context, AppRoutes.profile);
@@ -224,6 +224,65 @@ class HomePage extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNotificationBadge(WidgetRef ref, user) {
+    if (user == null) {
+      return IconButton(
+        onPressed: () {},
+        icon: Icon(Icons.notifications),
+      );
+    }
+
+    final unreadCountAsync = ref.watch(unreadNotificationCountProvider(user.uid));
+
+    return unreadCountAsync.when(
+      data: (count) => Stack(
+        children: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(ref.context, AppRoutes.notifications);
+            },
+            icon: Icon(Icons.notifications),
+          ),
+          if (count > 0)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  count > 99 ? '99+' : count.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+      loading: () => IconButton(
+        onPressed: () {},
+        icon: Icon(Icons.notifications),
+      ),
+      error: (_, __) => IconButton(
+        onPressed: () {
+          Navigator.pushNamed(ref.context, AppRoutes.notifications);
+        },
+        icon: Icon(Icons.notifications),
+      ),
     );
   }
 }
