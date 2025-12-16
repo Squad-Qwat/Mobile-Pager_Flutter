@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_pager_flutter/core/providers/navigation_provider.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
@@ -86,18 +87,12 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> {
 
       final customerType = user.isGuest == true ? 'guest' : 'registered';
 
-      // Show confirmation dialog
-      final confirmed = await _showConfirmationDialog(
-        'Activate Pager',
-        'Do you want to activate this pager?',
-      );
+      print('🔍 Starting pager activation...');
+      print('   PagerId: $pagerId');
+      print('   CustomerId: ${user.uid}');
+      print('   CustomerType: $customerType');
 
-      if (!confirmed) {
-        _resetScanner();
-        return;
-      }
-
-      // Activate pager
+      // Activate pager immediately without confirmation
       await ref
           .read(pagerNotifierProvider.notifier)
           .activatePager(
@@ -107,16 +102,33 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> {
             customerInfo: customerInfo,
           );
 
+      print('✅ Pager activation completed successfully');
+
       if (!mounted) return;
 
-      _showSuccessDialog(
-        'Pager Activated',
-        'Your pager has been activated successfully!',
+      // Navigate to Home page (index 0) to show success
+      // Don't use Navigator.pop() because scanner is in bottom nav
+      ref.read(navigationIndexProvider.notifier).state = 0;
+
+      // Show success snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pager berhasil diaktifkan! Lihat di Home.',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ ERROR activating pager: $e');
+      print('📍 Stack trace: $stackTrace');
+
       _showErrorDialog(
         'Scan Error',
-        'Failed to process QR code: ${e.toString()}',
+        'Gagal mengaktifkan pager: ${e.toString()}',
       );
       _resetScanner();
     }
@@ -149,55 +161,6 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> {
     );
   }
 
-  void _showSuccessDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          title,
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        content: Text(message, style: GoogleFonts.inter()),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetScanner();
-            },
-            child: Text('OK', style: GoogleFonts.inter()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<bool> _showConfirmationDialog(String title, String message) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          title,
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-        ),
-        content: Text(message, style: GoogleFonts.inter()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: GoogleFonts.inter()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Activate', style: GoogleFonts.inter()),
-          ),
-        ],
-      ),
-    );
-
-    return result ?? false;
-  }
 
   @override
   Widget build(BuildContext context) {

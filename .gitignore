@@ -42,6 +42,10 @@ windows/
 # exclude ai
 ai_discussion.md
 
+# Claude Code files
+.claude/
+.claude-worktrees/
+
 # Symbolication related
 app.*.symbols
 

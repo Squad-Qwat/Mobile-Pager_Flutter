@@ -18,6 +18,7 @@ class PagerModel {
   final Map<String, dynamic>? scannedBy;
   final int ringingCount;
   final String? notes;
+  final String? invoiceImageUrl;
   final Map<String, dynamic>? metadata;
 
   PagerModel({
@@ -36,6 +37,7 @@ class PagerModel {
     this.scannedBy,
     this.ringingCount = 0,
     this.notes,
+    this.invoiceImageUrl,
     this.metadata,
   });
 
@@ -59,6 +61,7 @@ class PagerModel {
           : null,
       ringingCount: data['ringingCount'] ?? 0,
       notes: data['notes'],
+      invoiceImageUrl: data['invoiceImageUrl'],
       metadata: data['metadata'] != null
           ? Map<String, dynamic>.from(data['metadata'])
           : null,
@@ -81,6 +84,7 @@ class PagerModel {
       if (scannedBy != null) 'scannedBy': scannedBy,
       'ringingCount': ringingCount,
       if (notes != null) 'notes': notes,
+      if (invoiceImageUrl != null) 'invoiceImageUrl': invoiceImageUrl,
       if (metadata != null) 'metadata': metadata,
     };
   }
@@ -120,6 +124,7 @@ class PagerModel {
     Map<String, dynamic>? scannedBy,
     int? ringingCount,
     String? notes,
+    String? invoiceImageUrl,
     Map<String, dynamic>? metadata,
   }) {
     return PagerModel(
@@ -138,6 +143,7 @@ class PagerModel {
       scannedBy: scannedBy ?? this.scannedBy,
       ringingCount: ringingCount ?? this.ringingCount,
       notes: notes ?? this.notes,
+      invoiceImageUrl: invoiceImageUrl ?? this.invoiceImageUrl,
       metadata: metadata ?? this.metadata,
     );
   }

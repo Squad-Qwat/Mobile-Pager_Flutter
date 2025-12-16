@@ -16,7 +16,10 @@ class AuthRemoteDataSourceImpl implements IAuthRemoteDataSource {
     GoogleSignIn? googleSignIn,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn();
+       _googleSignIn = googleSignIn ?? GoogleSignIn(
+         // Explicitly specify the Web Client ID from google-services.json
+         serverClientId: '964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com',
+       );
 
   @override
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
@@ -27,6 +30,7 @@ class AuthRemoteDataSourceImpl implements IAuthRemoteDataSource {
   @override
   Future<UserCredential> signInWithGoogle() async {
     try {
+      print('🔐 Step 1: Starting Google Sign-In...');
       final GoogleSignInAccount? googleUser = await _googleSignIn
           .signIn()
           .timeout(
@@ -35,8 +39,12 @@ class AuthRemoteDataSourceImpl implements IAuthRemoteDataSource {
           );
 
       if (googleUser == null) {
+        print('❌ Google Sign-In cancelled by user');
         throw AuthCancelledException('Autentikasi dibatalkan');
       }
+
+      print('✅ Step 1 complete: Google user = ${googleUser.email}');
+      print('🔐 Step 2: Getting Google authentication...');
 
       final GoogleSignInAuthentication googleAuth = await googleUser
           .authentication
@@ -45,22 +53,37 @@ class AuthRemoteDataSourceImpl implements IAuthRemoteDataSource {
             onTimeout: () => throw Exception('Gagal mendapatkan kredensial'),
           );
 
+      print('✅ Step 2 complete: Got tokens');
+      print('   Access token: ${googleAuth.accessToken?.substring(0, 20)}...');
+      print('   ID token: ${googleAuth.idToken?.substring(0, 20)}...');
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      return await _firebaseAuth
+      print('🔐 Step 3: Signing in to Firebase with credential...');
+      print('   This may take a while on real devices...');
+
+      final result = await _firebaseAuth
           .signInWithCredential(credential)
           .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () => throw Exception('Gagal sign in ke Firebase'),
+            const Duration(seconds: 60), // Increased timeout for real devices
+            onTimeout: () {
+              print('❌ Firebase sign-in timeout after 60 seconds');
+              throw Exception('Firebase sign-in timeout. Check internet connection and Firebase configuration.');
+            },
           );
+
+      print('✅ Step 3 complete: Firebase user = ${result.user?.email}');
+      return result;
     } on AuthCancelledException {
       rethrow;
     } on FirebaseAuthException catch (e) {
+      print('❌ FirebaseAuthException: ${e.code} - ${e.message}');
       throw _handleAuthException(e);
     } catch (e) {
+      print('❌ Unexpected error during Google Sign-In: $e');
       throw Exception('Error signing in with Google: $e');
     }
   }
@@ -132,18 +155,41 @@ class AuthRemoteDataSourceImpl implements IAuthRemoteDataSource {
 
   @override
   Future<DocumentSnapshot> getUserDocument(String uid) async {
-    try {
-      return await _firestore
-          .collection('users')
-          .doc(uid)
-          .get()
-          .timeout(
-            const Duration(seconds: 15),
-            onTimeout: () => throw Exception('Gagal mengakses database'),
-          );
-    } catch (e) {
-      throw Exception('Error getting user document: $e');
+    // Retry logic for transient network errors
+    int retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = Duration(seconds: 2);
+
+    while (retryCount < maxRetries) {
+      try {
+        print('📡 Attempting to get user document (attempt ${retryCount + 1}/$maxRetries)...');
+
+        final doc = await _firestore
+            .collection('users')
+            .doc(uid)
+            .get(const GetOptions(source: Source.serverAndCache))
+            .timeout(
+              const Duration(seconds: 15),
+              onTimeout: () => throw Exception('Timeout mengakses database'),
+            );
+
+        print('✅ Successfully retrieved user document');
+        return doc;
+      } catch (e) {
+        retryCount++;
+        print('⚠️ Error getting user document (attempt $retryCount/$maxRetries): $e');
+
+        if (retryCount >= maxRetries) {
+          print('❌ Max retries reached, giving up');
+          throw Exception('Error getting user document after $maxRetries attempts: $e');
+        }
+
+        print('🔄 Retrying in ${retryDelay.inSeconds} seconds...');
+        await Future.delayed(retryDelay);
+      }
     }
+
+    throw Exception('Failed to get user document');
   }
 
   @override

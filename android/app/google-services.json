@@ -29,6 +29,13 @@
             {
               "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "964457949557-kvf8jr3kb7btl8ckgfmkgt001prhrsit.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.squadqwat.mobilePagerFlutter"
+              }
             }
           ]
         }
@@ -42,6 +49,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "964457949557-gsdl8hh187uvtifjpr0j1tqrcmiam9ln.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squadqwat.mobile_pager_flutter",
+            "certificate_hash": "fb76c017a5f74e5a8b6a4790ccaecc44c4b35102"
+          }
+        },
+        {
+          "client_id": "964457949557-klk8ilbhh9qtnvqn8r9dfs2n33mf3peu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squadqwat.mobile_pager_flutter",
+            "certificate_hash": "70273c3108bbad04347200cff8615d0ae73b3e2e"
+          }
+        },
         {
           "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
           "client_type": 3
@@ -58,6 +81,13 @@
             {
               "client_id": "964457949557-ad2gh78g5v677anoh086n4cibun64vvl.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "964457949557-kvf8jr3kb7btl8ckgfmkgt001prhrsit.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.squadqwat.mobilePagerFlutter"
+              }
             }
           ]
         }

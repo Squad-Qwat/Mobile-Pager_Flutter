@@ -93,6 +93,19 @@ class PagerRepositoryImpl implements IPagerRepository {
     required Map<String, dynamic> customerInfo,
   }) async {
     try {
+      print('📦 [REPO] Checking if pager already activated...');
+      // Check if pager is already activated
+      final activeDoc = await _firestore
+          .collection(_activeCollection)
+          .doc(pagerId)
+          .get();
+
+      if (activeDoc.exists) {
+        print('⚠️ [REPO] Pager already activated!');
+        throw Exception('Pager sudah diaktifkan sebelumnya');
+      }
+
+      print('📦 [REPO] Getting temporary pager from Firestore...');
       // Get the temporary pager
       final tempDoc = await _firestore
           .collection(_temporaryCollection)
@@ -100,13 +113,17 @@ class PagerRepositoryImpl implements IPagerRepository {
           .get();
 
       if (!tempDoc.exists) {
-        throw Exception('Temporary pager not found');
+        print('❌ [REPO] Temporary pager not found in collection: $_temporaryCollection');
+        throw Exception('QR Code tidak valid atau sudah digunakan');
       }
 
+      print('✅ [REPO] Temporary pager found, parsing data...');
       final tempPager = PagerModel.fromFirestore(tempDoc);
 
+      print('📦 [REPO] Getting queue number for merchant: ${tempPager.merchantId}');
       // Get queue number for this merchant
       final queueNumber = await _getNextQueueNumber(tempPager.merchantId);
+      print('✅ [REPO] Queue number assigned: $queueNumber');
 
       // Create active pager
       final activePagerData = {
@@ -120,16 +137,28 @@ class PagerRepositoryImpl implements IPagerRepository {
         'createdAt': Timestamp.fromDate(tempPager.createdAt),
         'activatedAt': Timestamp.fromDate(DateTime.now()),
         if (tempPager.label != null) 'label': tempPager.label,
+        if (tempPager.invoiceImageUrl != null) 'invoiceImageUrl': tempPager.invoiceImageUrl,
         'scannedBy': customerInfo,
         if (tempPager.metadata != null) 'metadata': tempPager.metadata,
       };
 
-      // Add to active collection
-      await _firestore.collection(_activeCollection).add(activePagerData);
+      print('📦 [REPO] Writing active pager to Firestore...');
+      print('   Collection: $_activeCollection');
+      print('   Document ID: $pagerId');
+      // CRITICAL FIX: Use .doc(pagerId).set() instead of .add()
+      // This ensures we use the same pagerId as document ID, preventing duplicates
+      await _firestore.collection(_activeCollection).doc(pagerId).set(activePagerData);
+      print('✅ [REPO] Active pager created successfully');
 
+      print('📦 [REPO] Deleting temporary pager...');
       // Delete from temporary collection
       await _firestore.collection(_temporaryCollection).doc(pagerId).delete();
-    } catch (e) {
+      print('✅ [REPO] Temporary pager deleted');
+
+      print('🎉 [REPO] Pager activation completed successfully!');
+    } catch (e, stackTrace) {
+      print('❌ [REPO] Error activating pager: $e');
+      print('📍 [REPO] Stack trace: $stackTrace');
       throw Exception('Failed to activate pager: $e');
     }
   }
@@ -147,15 +176,14 @@ class PagerRepositoryImpl implements IPagerRepository {
         return PagerModel.fromFirestore(tempDoc);
       }
 
-      // Try active collection
-      final activeQuery = await _firestore
+      // Try active collection - now using direct doc access
+      final activeDoc = await _firestore
           .collection(_activeCollection)
-          .where('pagerId', isEqualTo: pagerId)
-          .limit(1)
+          .doc(pagerId)
           .get();
 
-      if (activeQuery.docs.isNotEmpty) {
-        return PagerModel.fromFirestore(activeQuery.docs.first);
+      if (activeDoc.exists) {
+        return PagerModel.fromFirestore(activeDoc);
       }
 
       return null;
@@ -170,13 +198,11 @@ class PagerRepositoryImpl implements IPagerRepository {
     required PagerStatus status,
   }) async {
     try {
-      final activeQuery = await _firestore
-          .collection(_activeCollection)
-          .where('pagerId', isEqualTo: pagerId)
-          .limit(1)
-          .get();
+      // Direct doc access - no query needed
+      final docRef = _firestore.collection(_activeCollection).doc(pagerId);
+      final docSnapshot = await docRef.get();
 
-      if (activeQuery.docs.isEmpty) {
+      if (!docSnapshot.exists) {
         throw Exception('Active pager not found');
       }
 
@@ -184,12 +210,12 @@ class PagerRepositoryImpl implements IPagerRepository {
 
       // If changing status to ringing, increment ringingCount
       if (status == PagerStatus.ringing) {
-        final currentData = activeQuery.docs.first.data();
-        final currentCount = currentData['ringingCount'] ?? 0;
+        final currentData = docSnapshot.data();
+        final currentCount = currentData?['ringingCount'] ?? 0;
         updateData['ringingCount'] = currentCount + 1;
       }
 
-      await activeQuery.docs.first.reference.update(updateData);
+      await docRef.update(updateData);
     } catch (e) {
       throw Exception('Failed to update pager status: $e');
     }
@@ -201,17 +227,15 @@ class PagerRepositoryImpl implements IPagerRepository {
     required String notes,
   }) async {
     try {
-      final activeQuery = await _firestore
-          .collection(_activeCollection)
-          .where('pagerId', isEqualTo: pagerId)
-          .limit(1)
-          .get();
+      // Direct doc access - no query needed
+      final docRef = _firestore.collection(_activeCollection).doc(pagerId);
+      final docSnapshot = await docRef.get();
 
-      if (activeQuery.docs.isEmpty) {
+      if (!docSnapshot.exists) {
         throw Exception('Active pager not found');
       }
 
-      await activeQuery.docs.first.reference.update({'notes': notes});
+      await docRef.update({'notes': notes});
     } catch (e) {
       throw Exception('Failed to update pager notes: $e');
     }

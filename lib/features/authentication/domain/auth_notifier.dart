@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_pager_flutter/core/domains/users.dart';
 import 'package:mobile_pager_flutter/features/authentication/domain/repositories/i_auth_repository.dart';
 import 'package:mobile_pager_flutter/features/authentication/data/datasources/auth_remote_datasource_impl.dart';
+import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
+import 'package:mobile_pager_flutter/features/notifications/data/repositories/notification_repository_impl.dart';
 
 class AuthState {
   final UserModel? user;
@@ -53,6 +55,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userModel = await _authRepository.getUserData(firebaseUser.uid);
       if (userModel != null) {
         state = AuthState(user: userModel, isAuthenticated: true);
+        // Save FCM token for push notifications (non-blocking)
+        _saveFCMToken(userModel.uid); // Remove await - don't block authentication
       } else {
         state = const AuthState(isAuthenticated: false);
       }
@@ -61,6 +65,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
         errorMessage: 'Error loading user data: $e',
         isAuthenticated: false,
       );
+    }
+  }
+
+  Future<void> _saveFCMToken(String userId) async {
+    try {
+      final fcmService = FCMService();
+      final token = await fcmService.getToken();
+      if (token != null) {
+        final notificationRepo = NotificationRepositoryImpl();
+        await notificationRepo.saveFCMToken(userId, token);
+        print('✅ FCM token saved for user: $userId');
+      }
+    } catch (e) {
+      print('⚠️ Error saving FCM token: $e');
+      // Don't throw error, just log it
     }
   }
 

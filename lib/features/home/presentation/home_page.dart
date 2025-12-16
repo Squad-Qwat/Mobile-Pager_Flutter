@@ -62,10 +62,19 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, user, List pagers) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Trigger refresh by invalidating the provider
+        ref.invalidate(user.isMerchant
+            ? activePagersStreamProvider(user.uid)
+            : customerPagersStreamProvider(user.uid));
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           SizedBox(height: 24.h),
           // Analytics Grid (only for merchants)
           if (user.isMerchant)
@@ -121,23 +130,25 @@ class HomePage extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
-                    child: GestureDetector(
-                      onTap: () {
-                        // Switch ke tab Active Pagers (index 1) di bottom navigation
-                        ref.read(navigationIndexProvider.notifier).state = 1;
-                      },
-                      child: Text(
-                        'Lihat Semua',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          color: AppColor.primary,
-                          fontWeight: FontWeight.w700,
+                  // Only show "Lihat Semua" for merchants
+                  if (user.isMerchant)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
+                      child: GestureDetector(
+                        onTap: () {
+                          // Switch ke tab Active Pagers (index 1) di bottom navigation
+                          ref.read(navigationIndexProvider.notifier).state = 1;
+                        },
+                        child: Text(
+                          'Lihat Semua',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            color: AppColor.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -169,7 +180,8 @@ class HomePage extends ConsumerWidget {
                   },
                 ),
           SizedBox(height: 20),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -199,10 +211,6 @@ class HomePage extends ConsumerWidget {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: () => print('Hello World'),
-          icon: Icon(Icons.add),
-        ),
         // Notification icon with badge
         _buildNotificationBadge(ref, user),
         SizedBox(width: 8.w),
