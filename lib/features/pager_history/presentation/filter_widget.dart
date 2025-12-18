@@ -52,8 +52,6 @@ class _HistoryFilterWidgetState extends State<HistoryFilterWidget> {
             children: [
               Expanded(child: _buildTimeFilterButton()),
               SizedBox(width: 8.w),
-              _buildStatusFilterButton(),
-              SizedBox(width: 8.w),
               _buildSortButton(),
             ],
           ),
@@ -122,38 +120,6 @@ class _HistoryFilterWidgetState extends State<HistoryFilterWidget> {
     );
   }
 
-  Widget _buildStatusFilterButton() {
-    return PopupMenuButton<List<String>>(
-      icon: Container(
-        padding: EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(Icons.filter_list, size: 20, color: Colors.grey[700]),
-      ),
-      onSelected: (value) {
-        setState(() {
-          _options = _options.copyWith(statusFilter: value);
-        });
-        widget.onFilterChanged(_options);
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: const ['finished', 'expired', 'cancelled'],
-          child: Text('Selesai', style: GoogleFonts.inter()),
-        ),
-        PopupMenuItem(
-          value: const ['waiting', 'processing', 'ready', 'picked_up'],
-          child: Text('Aktif', style: GoogleFonts.inter()),
-        ),
-        PopupMenuItem(
-          value: const ['all'],
-          child: Text('Semua', style: GoogleFonts.inter()),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSortButton() {
     return PopupMenuButton<SortOrder>(

@@ -24,7 +24,6 @@ class HistoryFilterOptions {
   final int? year;
   final String searchQuery;
   final SortOrder sortOrder;
-  final List<String> statusFilter; // ['finished', 'expired', 'cancelled'] atau ['all']
 
   HistoryFilterOptions({
     this.timeFilter = TimeFilter.today,
@@ -34,7 +33,6 @@ class HistoryFilterOptions {
     this.year,
     this.searchQuery = '',
     this.sortOrder = SortOrder.dateDescending,
-    this.statusFilter = const ['finished', 'expired', 'cancelled'],
   });
 
   HistoryFilterOptions copyWith({
@@ -45,7 +43,6 @@ class HistoryFilterOptions {
     int? year,
     String? searchQuery,
     SortOrder? sortOrder,
-    List<String>? statusFilter,
   }) {
     return HistoryFilterOptions(
       timeFilter: timeFilter ?? this.timeFilter,
@@ -55,7 +52,6 @@ class HistoryFilterOptions {
       year: year ?? this.year,
       searchQuery: searchQuery ?? this.searchQuery,
       sortOrder: sortOrder ?? this.sortOrder,
-      statusFilter: statusFilter ?? this.statusFilter,
     );
   }
 }
@@ -69,33 +65,18 @@ class HistoryFilterService {
   ) {
     List<History> filtered = historyList;
 
-    // 1. Filter by status
-    filtered = _filterByStatus(filtered, options.statusFilter);
-
-    // 2. Filter by time
+    // 1. Filter by time
     filtered = _filterByTime(filtered, options);
 
-    // 3. Filter by search query
+    // 2. Filter by search query
     if (options.searchQuery.isNotEmpty) {
       filtered = _filterBySearch(filtered, options.searchQuery);
     }
 
-    // 4. Sort
+    // 3. Sort
     filtered = _sortHistory(filtered, options.sortOrder);
 
     return filtered;
-  }
-
-  /// Filter berdasarkan status
-  static List<History> _filterByStatus(
-    List<History> historyList,
-    List<String> statusFilter,
-  ) {
-    if (statusFilter.contains('all')) {
-      return historyList;
-    }
-
-    return historyList.where((h) => statusFilter.contains(h.status)).toList();
   }
 
   /// Filter berdasarkan waktu

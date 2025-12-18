@@ -7,7 +7,7 @@ import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/pager_history/domain/models/customer_stats_model.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/providers/customer_stats_providers.dart';
 
-class CustomerListView extends ConsumerWidget {
+class CustomerListView extends ConsumerStatefulWidget {
   final String merchantId;
 
   const CustomerListView({
@@ -16,31 +16,95 @@ class CustomerListView extends ConsumerWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final customerStatsAsync = ref.watch(customerStatsListProvider(merchantId));
+  ConsumerState<CustomerListView> createState() => _CustomerListViewState();
+}
+
+class _CustomerListViewState extends ConsumerState<CustomerListView> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final customerStatsAsync = ref.watch(customerStatsListProvider(widget.merchantId));
 
     return customerStatsAsync.when(
       data: (customerStats) {
-        if (customerStats.isEmpty) {
-          return _buildEmptyState();
-        }
+        // Apply search filter
+        final filteredCustomers = _searchQuery.isEmpty
+            ? customerStats
+            : customerStats.where((customer) {
+                final query = _searchQuery.toLowerCase();
+                final name = customer.customerName.toLowerCase();
+                final email = customer.customerEmail.toLowerCase();
+                return name.contains(query) || email.contains(query);
+              }).toList();
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(customerStatsListProvider(merchantId));
-            await Future.delayed(const Duration(milliseconds: 500));
-          },
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-            itemCount: customerStats.length,
-            itemBuilder: (context, index) {
-              return _buildCustomerCard(context, customerStats[index]);
-            },
-          ),
+        return Column(
+          children: [
+            // Search bar
+            _buildSearchBar(),
+
+            // Customer list
+            Expanded(
+              child: filteredCustomers.isEmpty
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(customerStatsListProvider(widget.merchantId));
+                        await Future.delayed(const Duration(milliseconds: 500));
+                      },
+                      child: ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        itemCount: filteredCustomers.length,
+                        itemBuilder: (context, index) {
+                          return _buildCustomerCard(context, filteredCustomers[index]);
+                        },
+                      ),
+                    ),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildErrorState(error),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Cari nama atau email customer...',
+          hintStyle: GoogleFonts.inter(
+            fontSize: 14.sp,
+            color: Colors.grey[500],
+          ),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        ),
+        style: GoogleFonts.inter(fontSize: 14.sp),
+      ),
     );
   }
 
@@ -177,7 +241,7 @@ class CustomerListView extends ConsumerWidget {
                   context,
                   '/customer_detail',
                   arguments: {
-                    'merchantId': merchantId,
+                    'merchantId': widget.merchantId,
                     'customerId': customer.customerId,
                     'customerName': customer.customerName,
                   },

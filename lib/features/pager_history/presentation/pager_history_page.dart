@@ -73,13 +73,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       }).toList();
     }
 
-    // Apply status filter
-    if (_filterOptions.statusFilter.isNotEmpty) {
-      filtered = filtered.where((pager) {
-        return _filterOptions.statusFilter.contains(pager.status.name);
-      }).toList();
-    }
-
     // Apply search query
     if (_filterOptions.searchQuery.isNotEmpty) {
       final query = _filterOptions.searchQuery.toLowerCase();
@@ -89,6 +82,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         return displayId.contains(query) || queueNumber.contains(query);
       }).toList();
     }
+
+    // Apply sorting
+    filtered.sort((a, b) {
+      final dateA = a.activatedAt ?? a.createdAt;
+      final dateB = b.activatedAt ?? b.createdAt;
+
+      if (_filterOptions.sortOrder == SortOrder.dateDescending) {
+        return dateB.compareTo(dateA);
+      } else {
+        return dateA.compareTo(dateB);
+      }
+    });
 
     return filtered;
   }
