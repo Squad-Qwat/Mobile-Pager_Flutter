@@ -84,6 +84,13 @@ class FCMService {
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
     print('Foreground message received: ${message.notification?.title}');
+    print('Message data: ${message.data}');
+
+    // Check if this is a pager call notification
+    if (message.data['type'] == 'pager_call') {
+      print('📳 Pager call notification received!');
+      // PagerStatusListener will handle this via Firestore stream
+    }
 
     // Show local notification
     _showLocalNotification(message);

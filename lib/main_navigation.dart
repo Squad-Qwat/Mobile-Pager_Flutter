@@ -10,6 +10,7 @@ import 'package:mobile_pager_flutter/features/pager_history/presentation/pager_h
 import 'package:mobile_pager_flutter/features/pager_qr_view/presentation/qr_view_page.dart';
 import 'package:mobile_pager_flutter/features/pager_scan/presentation/pager_scan_page.dart';
 import 'package:mobile_pager_flutter/features/home/presentation/home_page.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_status_listener_provider.dart';
 
 class MainNavigation extends ConsumerWidget {
   const MainNavigation({super.key});
@@ -23,6 +24,12 @@ class MainNavigation extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final isMerchant = authState.isMerchant;
     final selectedIndex = ref.watch(navigationIndexProvider);
+
+    // Initialize pager status listener for customers
+    // This will monitor pager status changes and show notifications
+    if (!isMerchant && authState.isAuthenticated) {
+      ref.watch(pagerStatusListenerProvider);
+    }
 
     // Define pages based on merchant status
     // Merchant: [Home, Pagers, QR, History] - 4 items

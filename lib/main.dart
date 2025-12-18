@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile_pager_flutter/core/constants/app_routes.dart';
 import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
+import 'package:mobile_pager_flutter/core/services/pager_notification_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/about/presentation/about_page.dart';
 import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
@@ -25,9 +26,17 @@ import 'package:mobile_pager_flutter/main_navigation.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('Handling background message: ${message.messageId}');
+  print('🔔 Handling background message: ${message.messageId}');
   print('Title: ${message.notification?.title}');
   print('Body: ${message.notification?.body}');
+  print('Data: ${message.data}');
+
+  // Check if this is a pager call notification
+  if (message.data['type'] == 'pager_call') {
+    print('📳 Background pager call notification received!');
+    // The notification will be shown automatically by FCM
+    // But we can also trigger local notification here for better control
+  }
 }
 
 void main() async {
@@ -46,6 +55,9 @@ void main() async {
 
   // Initialize FCM service
   await FCMService().initialize();
+
+  // Initialize Pager Notification Service
+  await PagerNotificationService().initialize();
 
   runApp(const ProviderScope(child: MyApp()));
 }
