@@ -52,15 +52,19 @@ class PagerRepositoryImpl implements IPagerRepository {
 
   @override
   Stream<List<PagerModel>> watchTemporaryPagers(String merchantId) {
+    print('🔄 [STREAM] Starting to watch temporary pagers for merchant: $merchantId');
     return _firestore
         .collection(_temporaryCollection)
         .where('merchantId', isEqualTo: merchantId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
+          print('🔄 [STREAM] Temporary pagers stream update - count: ${snapshot.docs.length}');
+          final pagers = snapshot.docs
               .map((doc) => PagerModel.fromFirestore(doc))
               .toList();
+          print('🔄 [STREAM] Mapped pagers: ${pagers.map((p) => p.displayId).join(', ')}');
+          return pagers;
         });
   }
 
@@ -262,8 +266,10 @@ class PagerRepositoryImpl implements IPagerRepository {
               .where((doc) {
                 final data = doc.data();
                 final status = data['status'] ?? '';
+                // Include waiting, ready, and ringing statuses for customer view
                 return status == PagerStatus.waiting.name ||
-                    status == PagerStatus.ready.name;
+                    status == PagerStatus.ready.name ||
+                    status == PagerStatus.ringing.name;
               })
               .map((doc) => PagerModel.fromFirestore(doc))
               .toList();

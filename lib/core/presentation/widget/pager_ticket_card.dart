@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 
@@ -69,6 +70,102 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
         );
       }
     }
+  }
+
+  Widget _buildMerchantInfo() {
+    // Fetch merchant settings to get merchantName
+    final merchantSettingsAsync = ref.watch(
+      merchantSettingsFutureProvider(widget.pager.merchantId),
+    );
+
+    return merchantSettingsAsync.when(
+      data: (merchantSettings) {
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: AppColor.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Iconsax.shop,
+                size: 14,
+                color: AppColor.primary,
+              ),
+              SizedBox(width: 6.w),
+              Flexible(
+                child: Text(
+                  merchantSettings.merchantName,
+                  style: GoogleFonts.inter(
+                    fontSize: 12.sp,
+                    color: AppColor.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              'Loading...',
+              style: GoogleFonts.inter(
+                fontSize: 12.sp,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      error: (error, stack) => Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Iconsax.shop,
+              size: 14,
+              color: Colors.grey.shade600,
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              'Unknown Merchant',
+              style: GoogleFonts.inter(
+                fontSize: 12.sp,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildActionButtons(BuildContext context) {
@@ -229,6 +326,13 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
                       ),
                     ],
                   ),
+
+                  // Merchant Info Section (only for customers)
+                  if (!widget.isMerchant) ...[
+                    SizedBox(height: 8.h),
+                    _buildMerchantInfo(),
+                  ],
+
                   SizedBox(height: 12.h),
 
                   // Details Row: Queue Number & Label

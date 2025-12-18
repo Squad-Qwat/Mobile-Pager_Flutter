@@ -17,11 +17,14 @@ class PagerScanPage extends ConsumerStatefulWidget {
   ConsumerState<PagerScanPage> createState() => _PagerScanPageState();
 }
 
-class _PagerScanPageState extends ConsumerState<PagerScanPage> {
+class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKeepAliveClientMixin {
   late MobileScannerController cameraController;
   bool isScanning = true;
   String? scannedData;
   bool isFlashOn = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -35,6 +38,18 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> {
   void dispose() {
     cameraController.dispose();
     super.dispose();
+  }
+
+  /// Reset scanner when page becomes visible again
+  void _ensureScannerReady() {
+    if (!isScanning) {
+      print('🔄 [SCANNER] Resetting scanner for new scan');
+      setState(() {
+        isScanning = true;
+        scannedData = null;
+      });
+      cameraController.start();
+    }
   }
 
   void _onDetect(BarcodeCapture capture) {
@@ -164,6 +179,11 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    // Reset scanner when page is rebuilt (user returns to this tab)
+    _ensureScannerReady();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildHeader(),

@@ -18,7 +18,7 @@ final merchantSettingsStreamProvider =
 
 /// Future provider for merchant settings (one-time fetch)
 final merchantSettingsFutureProvider =
-    FutureProvider.family<MerchantSettingsModel, String>((ref, merchantId) async {
+    FutureProvider.autoDispose.family<MerchantSettingsModel, String>((ref, merchantId) async {
   final repository = ref.watch(merchantSettingsRepositoryProvider);
   return repository.getMerchantSettings(merchantId);
 });

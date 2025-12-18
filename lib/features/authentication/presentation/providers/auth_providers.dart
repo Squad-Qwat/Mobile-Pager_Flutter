@@ -31,3 +31,9 @@ final userStreamProvider = StreamProvider.autoDispose<UserModel?>((ref) {
 
   return authRepository.streamUserData(currentUser.uid);
 });
+
+/// Provider to fetch user data by userId (useful for fetching merchant info)
+final userByIdProvider = FutureProvider.autoDispose.family<UserModel?, String>((ref, userId) async {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return authRepository.getUserData(userId);
+});

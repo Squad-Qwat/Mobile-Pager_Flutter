@@ -20,42 +20,55 @@ class QRViewPage extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
 
+    print('🖼️ [QR_VIEW] Building QR View Page');
+
     if (user == null) {
+      print('⚠️ [QR_VIEW] No user authenticated');
       return Scaffold(
         backgroundColor: Colors.white,
-        appBar: _buildHeader(),
+        appBar: _buildHeader(ref),
         body: const Center(child: Text('Please login as merchant')),
       );
     }
 
+    print('🖼️ [QR_VIEW] Watching temporary pagers for merchant: ${user.uid}');
     final temporaryPagersAsync = ref.watch(
       temporaryPagersStreamProvider(user.uid),
     );
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildHeader(),
+      appBar: _buildHeader(ref),
       body: SafeArea(
         child: temporaryPagersAsync.when(
-          data: (pagers) => _buildContent(context, ref, pagers),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Error loading pagers',
-                  style: GoogleFonts.inter(fontSize: 16, color: Colors.red),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+          data: (pagers) {
+            print('✅ [QR_VIEW] Received ${pagers.length} temporary pagers');
+            return _buildContent(context, ref, pagers);
+          },
+          loading: () {
+            print('⏳ [QR_VIEW] Loading temporary pagers...');
+            return const Center(child: CircularProgressIndicator());
+          },
+          error: (error, stack) {
+            print('❌ [QR_VIEW] Error loading pagers: $error');
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error loading pagers',
+                    style: GoogleFonts.inter(fontSize: 16, color: Colors.red),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -177,7 +190,7 @@ class QRViewPage extends ConsumerWidget {
     );
   }
 
-  PreferredSizeWidget _buildHeader() {
+  PreferredSizeWidget _buildHeader(WidgetRef ref) {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
@@ -188,6 +201,21 @@ class QRViewPage extends ConsumerWidget {
           color: AppColor.black,
         ),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () {
+            print('🔄 [QR_VIEW] Manual refresh triggered');
+            // Invalidate the stream provider to force a refresh
+            final authState = ref.read(authNotifierProvider);
+            final user = authState.user;
+            if (user != null) {
+              ref.invalidate(temporaryPagersStreamProvider(user.uid));
+            }
+          },
+          tooltip: 'Refresh QR List',
+        ),
+      ],
     );
   }
 }

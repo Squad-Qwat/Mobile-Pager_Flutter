@@ -18,10 +18,19 @@ final pagerNotifierProvider = StateNotifierProvider<PagerNotifier, PagerState>((
 });
 
 /// Stream provider for temporary pagers (merchant view)
+/// Uses autoDispose to ensure stream is properly refreshed on changes
 final temporaryPagersStreamProvider =
-    StreamProvider.family<List<PagerModel>, String>((ref, merchantId) {
+    StreamProvider.autoDispose.family<List<PagerModel>, String>((ref, merchantId) {
+      print('🔌 [PROVIDER] Creating temporaryPagersStreamProvider for: $merchantId');
       final repository = ref.watch(pagerRepositoryProvider);
-      return repository.watchTemporaryPagers(merchantId);
+      final stream = repository.watchTemporaryPagers(merchantId);
+
+      // Keep the stream alive and log when provider is disposed
+      ref.onDispose(() {
+        print('🔌 [PROVIDER] Disposing temporaryPagersStreamProvider for: $merchantId');
+      });
+
+      return stream;
     });
 
 /// Stream provider for active pagers (merchant view)

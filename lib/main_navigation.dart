@@ -41,7 +41,10 @@ class MainNavigation extends ConsumerWidget {
           ];
 
     return Scaffold(
-      body: pages[selectedIndex],
+      body: IndexedStack(
+        index: selectedIndex,
+        children: pages,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColor.white,
