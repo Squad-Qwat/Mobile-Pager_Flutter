@@ -28,10 +28,27 @@ class PagerTicketCard extends ConsumerStatefulWidget {
 
 class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
     with TickerProviderStateMixin {
-  Future<void> _updateStatus(BuildContext context, PagerStatus newStatus) async {
+  // Store BuildContext reference for safe access in async methods
+  BuildContext? _savedContext;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Save context reference during dependencies phase (safe time)
+    _savedContext = context;
+  }
+
+  @override
+  void dispose() {
+    // Clear context reference to avoid using deactivated widget
+    _savedContext = null;
+    super.dispose();
+  }
+
+  Future<void> _updateStatus(BuildContext buttonContext, PagerStatus newStatus) async {
     try {
-      // Close the slidable first
-      Slidable.of(context)?.close();
+      // Close the slidable using the button context (which is still valid)
+      Slidable.of(buttonContext)?.close();
 
       final notifier = ref.read(pagerNotifierProvider.notifier);
 
@@ -40,9 +57,9 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
         status: newStatus,
       );
 
-      // Show success feedback
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      // Use saved context only if widget is still mounted
+      if (mounted && _savedContext != null) {
+        ScaffoldMessenger.of(_savedContext!).showSnackBar(
           SnackBar(
             content: Text(
               'Status berhasil diubah ke ${_getStatusText(newStatus)}',
@@ -55,9 +72,9 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
         );
       }
     } catch (e) {
-      // Show error feedback
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      // Show error feedback using saved context
+      if (mounted && _savedContext != null) {
+        ScaffoldMessenger.of(_savedContext!).showSnackBar(
           SnackBar(
             content: Text(
               'Gagal mengubah status: ${e.toString()}',

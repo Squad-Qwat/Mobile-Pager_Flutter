@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum PagerStatus { temporary, waiting, ready, ringing, finished, expired }
@@ -20,6 +21,7 @@ class PagerModel {
   final String? notes;
   final String? invoiceImageUrl;
   final Map<String, dynamic>? metadata;
+  final String? randomCode; // Random code for secure, unpredictable display IDs
 
   PagerModel({
     required this.id,
@@ -39,10 +41,23 @@ class PagerModel {
     this.notes,
     this.invoiceImageUrl,
     this.metadata,
+    this.randomCode,
   });
 
   factory PagerModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Auto-generate randomCode for old pagers that don't have it
+    String? randomCode = data['randomCode'];
+    if (randomCode == null || randomCode.isEmpty) {
+      randomCode = generateRandomCode();
+      // Update Firestore document with new randomCode (fire and forget)
+      doc.reference.update({'randomCode': randomCode}).catchError((e) {
+        print('⚠️ Failed to update randomCode for ${doc.id}: $e');
+      });
+      print('✅ Auto-generated randomCode for old pager: ${doc.id} -> $randomCode');
+    }
+
     return PagerModel(
       id: doc.id,
       pagerId: data['pagerId'] ?? doc.id,
@@ -65,6 +80,7 @@ class PagerModel {
       metadata: data['metadata'] != null
           ? Map<String, dynamic>.from(data['metadata'])
           : null,
+      randomCode: randomCode,
     );
   }
 
@@ -86,6 +102,7 @@ class PagerModel {
       if (notes != null) 'notes': notes,
       if (invoiceImageUrl != null) 'invoiceImageUrl': invoiceImageUrl,
       if (metadata != null) 'metadata': metadata,
+      if (randomCode != null) 'randomCode': randomCode,
     };
   }
 
@@ -126,6 +143,7 @@ class PagerModel {
     String? notes,
     String? invoiceImageUrl,
     Map<String, dynamic>? metadata,
+    String? randomCode,
   }) {
     return PagerModel(
       id: id ?? this.id,
@@ -145,8 +163,26 @@ class PagerModel {
       notes: notes ?? this.notes,
       invoiceImageUrl: invoiceImageUrl ?? this.invoiceImageUrl,
       metadata: metadata ?? this.metadata,
+      randomCode: randomCode ?? this.randomCode,
     );
   }
 
-  String get displayId => 'PG-${number.toString().padLeft(4, '0')}';
+  /// Generate a secure, unpredictable random code (6 characters)
+  /// Uses alphanumeric characters excluding confusing ones (0,O,1,I,l)
+  static String generateRandomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final random = Random.secure();
+    return List.generate(6, (index) => chars[random.nextInt(chars.length)]).join();
+  }
+
+  /// Display ID in format: PG-[RANDOM]-[NUMBER]
+  /// Example: PG-A3K9M2-001 (unpredictable)
+  /// Falls back to old format if randomCode is null (for backward compatibility)
+  String get displayId {
+    if (randomCode != null && randomCode!.isNotEmpty) {
+      return 'PG-$randomCode-${number.toString().padLeft(3, '0')}';
+    }
+    // Fallback for old pagers without randomCode
+    return 'PG-${number.toString().padLeft(4, '0')}';
+  }
 }

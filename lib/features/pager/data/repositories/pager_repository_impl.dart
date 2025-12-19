@@ -23,6 +23,9 @@ class PagerRepositoryImpl implements IPagerRepository {
       // Get the next pager number for this merchant
       final number = await _getNextPagerNumber(merchantId);
 
+      // Generate secure random code for unpredictable display ID
+      final randomCode = PagerModel.generateRandomCode();
+
       final now = DateTime.now();
       final expiresAt = now.add(const Duration(hours: 24));
 
@@ -30,6 +33,7 @@ class PagerRepositoryImpl implements IPagerRepository {
         'pagerId': '', // Will be updated with doc ID
         'merchantId': merchantId,
         'number': number,
+        'randomCode': randomCode, // Add random code for secure display ID
         'status': PagerStatus.temporary.name,
         'createdAt': Timestamp.fromDate(now),
         'expiresAt': Timestamp.fromDate(expiresAt),
@@ -43,6 +47,8 @@ class PagerRepositoryImpl implements IPagerRepository {
 
       // Update with actual doc ID
       await docRef.update({'pagerId': docRef.id});
+
+      print('✅ Created pager with secure ID - Number: $number, RandomCode: $randomCode');
 
       return docRef.id;
     } catch (e) {
@@ -142,6 +148,7 @@ class PagerRepositoryImpl implements IPagerRepository {
         'activatedAt': Timestamp.fromDate(DateTime.now()),
         if (tempPager.label != null) 'label': tempPager.label,
         if (tempPager.invoiceImageUrl != null) 'invoiceImageUrl': tempPager.invoiceImageUrl,
+        if (tempPager.randomCode != null) 'randomCode': tempPager.randomCode, // Preserve random code
         'scannedBy': customerInfo,
         if (tempPager.metadata != null) 'metadata': tempPager.metadata,
       };
@@ -353,19 +360,33 @@ class PagerRepositoryImpl implements IPagerRepository {
 
   Future<int> _getNextQueueNumber(String merchantId) async {
     try {
+      // Get all active pagers for this merchant
+      // We can't use orderBy with where without composite index
+      // So we fetch all and find max manually
       final query = await _firestore
           .collection(_activeCollection)
           .where('merchantId', isEqualTo: merchantId)
-          .orderBy('queueNumber', descending: true)
-          .limit(1)
           .get();
 
       if (query.docs.isEmpty) {
+        print('📊 No active pagers found, starting queue at 1');
         return 1;
       }
 
-      return (query.docs.first.data()['queueNumber'] ?? 0) + 1;
+      // Find the maximum queue number manually
+      int maxQueueNumber = 0;
+      for (final doc in query.docs) {
+        final queueNumber = doc.data()['queueNumber'] as int?;
+        if (queueNumber != null && queueNumber > maxQueueNumber) {
+          maxQueueNumber = queueNumber;
+        }
+      }
+
+      final nextQueue = maxQueueNumber + 1;
+      print('📊 Current max queue: $maxQueueNumber, next queue: $nextQueue');
+      return nextQueue;
     } catch (e) {
+      print('❌ Error getting next queue number: $e');
       return 1;
     }
   }
