@@ -43,35 +43,25 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     List<PagerModel> filtered = List.from(pagers);
 
     // Apply time filter
-    if (_filterOptions.timeFilter != 'all') {
-      final now = DateTime.now();
-      filtered = filtered.where((pager) {
-        final pagerDate = pager.activatedAt ?? pager.createdAt;
+    final now = DateTime.now();
+    filtered = filtered.where((pager) {
+      final pagerDate = pager.activatedAt ?? pager.createdAt;
 
-        switch (_filterOptions.timeFilter) {
-          case 'today':
-            return pagerDate.year == now.year &&
-                pagerDate.month == now.month &&
-                pagerDate.day == now.day;
-          case 'yesterday':
-            final yesterday = now.subtract(const Duration(days: 1));
-            return pagerDate.year == yesterday.year &&
-                pagerDate.month == yesterday.month &&
-                pagerDate.day == yesterday.day;
-          case 'this_week':
-            final weekStart = now.subtract(Duration(days: now.weekday - 1));
-            return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
-          case 'this_month':
-            return pagerDate.year == now.year && pagerDate.month == now.month;
-          case 'last_month':
-            final lastMonth = DateTime(now.year, now.month - 1);
-            return pagerDate.year == lastMonth.year &&
-                pagerDate.month == lastMonth.month;
-          default:
-            return true;
-        }
-      }).toList();
-    }
+      switch (_filterOptions.timeFilter) {
+        case TimeFilter.today:
+          return pagerDate.year == now.year &&
+              pagerDate.month == now.month &&
+              pagerDate.day == now.day;
+        case TimeFilter.thisWeek:
+          final weekStart = now.subtract(Duration(days: now.weekday - 1));
+          return pagerDate.isAfter(weekStart.subtract(const Duration(days: 1)));
+        case TimeFilter.thisMonth:
+          return pagerDate.year == now.year && pagerDate.month == now.month;
+        case TimeFilter.customRange:
+        case TimeFilter.customMonthYear:
+          return true; // Handle custom ranges if needed
+      }
+    }).toList();
 
     // Apply search query
     if (_filterOptions.searchQuery.isNotEmpty) {
@@ -142,13 +132,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       appBar: _buildHeader(),
       body: Column(
         children: [
-          // View Mode Selector (Only for merchant)
-          if (user.isMerchant) _buildViewModeSelector(),
+          // Integrated Filter Bar (for merchant includes view mode)
+          _buildIntegratedFilterBar(user.isMerchant),
 
           // Content based on view mode
           Expanded(
             child: _viewMode == HistoryViewMode.allHistory
-                ? _buildAllHistoryView(historyPagersAsync)
+                ? _buildAllHistoryContent(historyPagersAsync)
                 : CustomerListView(merchantId: user.uid),
           ),
         ],
@@ -156,7 +146,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     );
   }
 
-  Widget _buildViewModeSelector() {
+  Widget _buildIntegratedFilterBar(bool isMerchant) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -169,62 +159,210 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Text(
-            'Tampilan:',
-            style: GoogleFonts.inter(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+          // Search Bar
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                _filterOptions = _filterOptions.copyWith(searchQuery: value);
+              });
+              _applyFilters();
+            },
+            decoration: InputDecoration(
+              hintText: 'Cari order ID atau nomor pager...',
+              hintStyle: GoogleFonts.inter(
+                fontSize: 14.sp,
+                color: Colors.grey[500],
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<HistoryViewMode>(
-                  value: _viewMode,
-                  isExpanded: true,
-                  icon: Icon(Icons.arrow_drop_down, color: AppColor.primary),
-                  style: GoogleFonts.inter(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColor.primary,
+              prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            ),
+            style: GoogleFonts.inter(fontSize: 14.sp),
+          ),
+          SizedBox(height: 12.h),
+
+          // Filter Row: Time Filter + View Mode (for merchant) + Sort
+          Row(
+            children: [
+              // Time Filter Dropdown
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
-                  items: [
-                    DropdownMenuItem(
-                      value: HistoryViewMode.allHistory,
-                      child: Text('Semua Riwayat'),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<TimeFilter>(
+                      value: _filterOptions.timeFilter,
+                      isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey[700]),
+                      style: GoogleFonts.inter(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: TimeFilter.today,
+                          child: Text('Hari Ini'),
+                        ),
+                        DropdownMenuItem(
+                          value: TimeFilter.thisWeek,
+                          child: Text('Minggu Ini'),
+                        ),
+                        DropdownMenuItem(
+                          value: TimeFilter.thisMonth,
+                          child: Text('Bulan Ini'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _filterOptions = _filterOptions.copyWith(timeFilter: value);
+                          });
+                          _applyFilters();
+                        }
+                      },
                     ),
-                    DropdownMenuItem(
-                      value: HistoryViewMode.perCustomer,
-                      child: Text('Per Customer'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _viewMode = value;
-                      });
-                    }
-                  },
+                  ),
                 ),
               ),
-            ),
+              
+              SizedBox(width: 8.w),
+
+              // View Mode Dropdown (only for merchant)
+              if (isMerchant)
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<HistoryViewMode>(
+                        value: _viewMode,
+                        isExpanded: true,
+                        icon: Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey[700]),
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: HistoryViewMode.allHistory,
+                            child: Text('Riwayat'),
+                          ),
+                          DropdownMenuItem(
+                            value: HistoryViewMode.perCustomer,
+                            child: Text('Customer'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _viewMode = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              
+              if (isMerchant) SizedBox(width: 8.w),
+
+              // Sort Toggle Button
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _filterOptions = _filterOptions.copyWith(
+                      sortOrder: _filterOptions.sortOrder == SortOrder.dateDescending
+                          ? SortOrder.dateAscending
+                          : SortOrder.dateDescending,
+                    );
+                  });
+                  _applyFilters();
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _filterOptions.sortOrder == SortOrder.dateAscending
+                        ? AppColor.primary
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _filterOptions.sortOrder == SortOrder.dateAscending
+                          ? AppColor.primary
+                          : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Icon(
+                    _filterOptions.sortOrder == SortOrder.dateDescending
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    size: 20,
+                    color: _filterOptions.sortOrder == SortOrder.dateAscending
+                        ? Colors.white
+                        : Colors.grey[700],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAllHistoryView(AsyncValue<List<PagerModel>> historyPagersAsync) {
+  void _showTimeFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Filter Waktu', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTimeFilterOption('Hari Ini', TimeFilter.today),
+            _buildTimeFilterOption('Minggu Ini', TimeFilter.thisWeek),
+            _buildTimeFilterOption('Bulan Ini', TimeFilter.thisMonth),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeFilterOption(String label, TimeFilter filter) {
+    return ListTile(
+      title: Text(label, style: GoogleFonts.inter()),
+      trailing: _filterOptions.timeFilter == filter
+          ? Icon(Icons.check, color: AppColor.primary)
+          : null,
+      onTap: () {
+        Navigator.pop(context);
+        setState(() {
+          _filterOptions = _filterOptions.copyWith(timeFilter: filter);
+        });
+        _applyFilters();
+      },
+    );
+  }
+
+  Widget _buildAllHistoryContent(AsyncValue<List<PagerModel>> historyPagersAsync) {
     return historyPagersAsync.when(
       data: (pagers) {
         final filteredPagers = _applyLocalFilters(pagers);
@@ -233,16 +371,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
         return Column(
           children: [
-            // Filter Widget
-            HistoryFilterWidget(
-              currentOptions: _filterOptions,
-              onFilterChanged: (newOptions) {
-                setState(() {
-                  _filterOptions = newOptions;
-                });
-                _applyFilters();
-              },
-            ),
 
             // Results Count
             _buildResultsInfo(filteredPagers.length),
@@ -415,140 +543,150 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+            spreadRadius: 0,
           ),
         ],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetailHistoryPage(pagerId: pager.pagerId),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: ID & Date/Time
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailHistoryPage(pagerId: pager.pagerId),
+              ),
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    pager.displayId,
-                    style: GoogleFonts.inter(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Text(
-                  formattedDate,
-                  style: GoogleFonts.inter(
-                    fontSize: 12.sp,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-
-            // Details: Nomor Pager & Label
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Nomor Pager Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nomor Pager',
+                // Header: ID & Status Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        pager.displayId,
                         style: GoogleFonts.inter(
-                          fontSize: 12.sp,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '#${pager.queueNumber ?? pager.number}',
-                        style: GoogleFonts.inter(
-                          fontSize: 14.sp,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                // Label Column
-                if (pager.label != null)
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lokasi',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.sp,
-                            color: Colors.grey.shade600,
-                          ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(pager.status),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _getStatusText(pager.status).toUpperCase(),
+                        style: GoogleFonts.inter(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          pager.label!,
-                          style: GoogleFonts.inter(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-
-            // Divider
-            Divider(color: Colors.grey.shade300, height: 1),
-            SizedBox(height: 12.h),
-
-            // Footer: Status Badge & Detail Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(pager.status).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: _getStatusColor(pager.status).withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    _getStatusText(pager.status),
-                    style: GoogleFonts.inter(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      color: _getStatusColor(pager.status),
-                    ),
-                  ),
+                  ],
                 ),
+                SizedBox(height: 12.h),
+
+                // Details Row: Queue Number & Label
                 Row(
+                  children: [
+                    // Queue Number
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Queue',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.sp,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '#${pager.queueNumber ?? pager.number}',
+                            style: GoogleFonts.inter(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Label if exists
+                    if (pager.label != null)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Lokasi',
+                              style: GoogleFonts.inter(
+                                fontSize: 11.sp,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              pager.label!,
+                              style: GoogleFonts.inter(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Date
+                    Text(
+                      formattedDate,
+                      style: GoogleFonts.inter(
+                        fontSize: 12.sp,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+
+                // Divider
+                Divider(color: Colors.grey.shade200, height: 1),
+                SizedBox(height: 12.h),
+
+                // Footer: View Detail Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
                       'Lihat Detail',
@@ -568,11 +706,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
+
 
   Color _getStatusColor(PagerStatus status) {
     switch (status) {
