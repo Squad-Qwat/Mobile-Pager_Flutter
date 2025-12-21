@@ -37,7 +37,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _disposeCamera();
+    _disposeCamera(isDisposing: true);
     super.dispose();
   }
 
@@ -104,11 +104,12 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage>
     }
   }
 
-  Future<void> _disposeCamera() async {
+  Future<void> _disposeCamera({bool isDisposing = false}) async {
     final controller = _controller;
     _controller = null;
 
-    if (mounted) {
+    // Only update state if not disposing and still mounted
+    if (!isDisposing && mounted) {
       setState(() {
         _isCameraReady = false;
       });

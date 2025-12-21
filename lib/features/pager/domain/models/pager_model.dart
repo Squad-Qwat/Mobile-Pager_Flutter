@@ -14,6 +14,7 @@ class PagerModel {
   final PagerStatus status;
   final DateTime createdAt;
   final DateTime? activatedAt;
+  final DateTime? finishedAt; // NEW: When order was completed
   final DateTime? expiresAt;
   final String? label;
   final Map<String, dynamic>? scannedBy;
@@ -34,6 +35,7 @@ class PagerModel {
     required this.status,
     required this.createdAt,
     this.activatedAt,
+    this.finishedAt,
     this.expiresAt,
     this.label,
     this.scannedBy,
@@ -64,6 +66,7 @@ class PagerModel {
       status: _statusFromString(data['status'] ?? 'temporary'),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       activatedAt: (data['activatedAt'] as Timestamp?)?.toDate(),
+      finishedAt: (data['finishedAt'] as Timestamp?)?.toDate(),
       expiresAt: (data['expiresAt'] as Timestamp?)?.toDate(),
       label: data['label'],
       scannedBy: data['scannedBy'] != null
@@ -90,6 +93,7 @@ class PagerModel {
       'status': status.name,
       'createdAt': Timestamp.fromDate(createdAt),
       if (activatedAt != null) 'activatedAt': Timestamp.fromDate(activatedAt!),
+      if (finishedAt != null) 'finishedAt': Timestamp.fromDate(finishedAt!),
       if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
       if (label != null) 'label': label,
       if (scannedBy != null) 'scannedBy': scannedBy,
@@ -131,6 +135,7 @@ class PagerModel {
     PagerStatus? status,
     DateTime? createdAt,
     DateTime? activatedAt,
+    DateTime? finishedAt,
     DateTime? expiresAt,
     String? label,
     Map<String, dynamic>? scannedBy,
@@ -151,6 +156,7 @@ class PagerModel {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       activatedAt: activatedAt ?? this.activatedAt,
+      finishedAt: finishedAt ?? this.finishedAt,
       expiresAt: expiresAt ?? this.expiresAt,
       label: label ?? this.label,
       scannedBy: scannedBy ?? this.scannedBy,

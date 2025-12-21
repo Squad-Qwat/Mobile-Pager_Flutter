@@ -71,7 +71,7 @@ class PagerRepositoryImpl implements IPagerRepository {
     return _firestore
         .collection(_activeCollection)
         .where('merchantId', isEqualTo: merchantId)
-        .orderBy('activatedAt', descending: true)
+        .orderBy('activatedAt', descending: false)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
@@ -189,6 +189,11 @@ class PagerRepositoryImpl implements IPagerRepository {
         final currentData = docSnapshot.data();
         final currentCount = currentData?['ringingCount'] ?? 0;
         updateData['ringingCount'] = currentCount + 1;
+      }
+
+      // If changing status to finished, set finishedAt
+      if (status == PagerStatus.finished) {
+        updateData['finishedAt'] = Timestamp.now();
       }
 
       await docRef.update(updateData);

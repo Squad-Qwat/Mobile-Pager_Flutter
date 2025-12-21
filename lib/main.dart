@@ -9,7 +9,7 @@ import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
 import 'package:mobile_pager_flutter/core/services/pager_notification_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/about/presentation/about_page.dart';
-import 'package:mobile_pager_flutter/features/active_pagers/presentation/active_pagers_page.dart';
+import 'package:mobile_pager_flutter/features/pager/presentation/pages/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
