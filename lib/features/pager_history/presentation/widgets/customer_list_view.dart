@@ -47,18 +47,12 @@ class _CustomerListViewState extends ConsumerState<CustomerListView> {
             Expanded(
               child: filteredCustomers.isEmpty
                   ? _buildEmptyState()
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(customerStatsListProvider(widget.merchantId));
-                        await Future.delayed(const Duration(milliseconds: 500));
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                      itemCount: filteredCustomers.length,
+                      itemBuilder: (context, index) {
+                        return _buildCustomerCard(context, filteredCustomers[index]);
                       },
-                      child: ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                        itemCount: filteredCustomers.length,
-                        itemBuilder: (context, index) {
-                          return _buildCustomerCard(context, filteredCustomers[index]);
-                        },
-                      ),
                     ),
             ),
           ],

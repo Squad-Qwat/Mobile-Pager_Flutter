@@ -251,24 +251,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             Expanded(
               child: filteredPagers.isEmpty
                   ? _buildEmptyState()
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        // Refresh is handled automatically by stream
-                        await Future.delayed(const Duration(milliseconds: 500));
-                      },
-                      child: ListView.builder(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppPadding.p16,
-                          vertical: 8.h,
-                        ),
-                        itemCount: paginatedPagers.length + (hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == paginatedPagers.length) {
-                            return _buildLoadMoreButton();
-                          }
-                          return _buildHistoryItem(paginatedPagers[index]);
-                        },
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppPadding.p16,
+                        vertical: 8.h,
                       ),
+                      itemCount: paginatedPagers.length + (hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == paginatedPagers.length) {
+                          return _buildLoadMoreButton();
+                        }
+                        return _buildHistoryItem(paginatedPagers[index]);
+                      },
                     ),
             ),
           ],
