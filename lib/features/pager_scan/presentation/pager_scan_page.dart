@@ -17,38 +17,68 @@ class PagerScanPage extends ConsumerStatefulWidget {
   ConsumerState<PagerScanPage> createState() => _PagerScanPageState();
 }
 
-class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKeepAliveClientMixin {
-  late MobileScannerController cameraController;
+class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindingObserver {
+  MobileScannerController? cameraController;
   bool isScanning = true;
   String? scannedData;
   bool isFlashOn = false;
-
-  @override
-  bool get wantKeepAlive => true;
+  bool _isPageVisible = false;
 
   @override
   void initState() {
     super.initState();
-    cameraController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-    );
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    cameraController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopCamera();
     super.dispose();
   }
 
-  /// Reset scanner when page becomes visible again
-  void _ensureScannerReady() {
-    if (!isScanning) {
-      print('🔄 [SCANNER] Resetting scanner for new scan');
-      setState(() {
-        isScanning = true;
-        scannedData = null;
-      });
-      cameraController.start();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.resumed && _isPageVisible) {
+      _startCamera();
+    } else if (state == AppLifecycleState.paused || 
+               state == AppLifecycleState.inactive ||
+               state == AppLifecycleState.detached) {
+      _stopCamera();
+    }
+  }
+
+  Future<void> _startCamera() async {
+    if (cameraController != null) return; // Already started
+    
+    cameraController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      autoStart: true,
+    );
+    
+    setState(() {
+      isScanning = true;
+      scannedData = null;
+    });
+  }
+
+  Future<void> _stopCamera() async {
+    if (cameraController == null) return; // Already stopped
+    
+    await cameraController?.stop();
+    await cameraController?.dispose();
+    cameraController = null;
+  }
+
+  Future<void> _resetScanner() async {
+    setState(() {
+      isScanning = true;
+      scannedData = null;
+    });
+    
+    if (cameraController != null && !cameraController!.value.isRunning) {
+      await cameraController?.start();
     }
   }
 
@@ -63,7 +93,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
           isScanning = false;
           scannedData = barcode.rawValue;
         });
-        cameraController.stop();
+        cameraController?.stop();
         _showScanResult(barcode.rawValue!);
       }
     }
@@ -102,12 +132,6 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
 
       final customerType = user.isGuest == true ? 'guest' : 'registered';
 
-      print('🔍 Starting pager activation...');
-      print('   PagerId: $pagerId');
-      print('   CustomerId: ${user.uid}');
-      print('   CustomerType: $customerType');
-
-      // Activate pager immediately without confirmation
       await ref
           .read(pagerNotifierProvider.notifier)
           .activatePager(
@@ -116,8 +140,6 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
             customerType: customerType,
             customerInfo: customerInfo,
           );
-
-      print('✅ Pager activation completed successfully');
 
       if (!mounted) return;
 
@@ -138,23 +160,12 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
         ),
       );
     } catch (e, stackTrace) {
-      print('❌ ERROR activating pager: $e');
-      print('📍 Stack trace: $stackTrace');
-
       _showErrorDialog(
         'Scan Error',
         'Gagal mengaktifkan pager: ${e.toString()}',
       );
       _resetScanner();
     }
-  }
-
-  void _resetScanner() {
-    setState(() {
-      isScanning = true;
-      scannedData = null;
-    });
-    cameraController.start();
   }
 
   void _showErrorDialog(String title, String message) {
@@ -176,13 +187,15 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
-
-    // Reset scanner when page is rebuilt (user returns to this tab)
-    _ensureScannerReady();
+    // Start camera when page is visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isPageVisible) {
+        _isPageVisible = true;
+        _startCamera();
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -204,11 +217,70 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with AutomaticKee
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: [
-                        MobileScanner(
-                          controller: cameraController,
-                          onDetect: _onDetect,
+                    child: cameraController == null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Memulai kamera...',
+                                  style: GoogleFonts.inter(),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Stack(
+                            children: [
+                              MobileScanner(
+                                controller: cameraController!,
+                                onDetect: _onDetect,
+                                errorBuilder: (context, error) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      size: 64,
+                                      color: Colors.red.shade300,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Gagal mengakses kamera',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      error.errorDetails?.message ?? 'Pastikan izin kamera sudah diberikan',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: () async {
+                                        // Restart camera completely
+                                        await _stopCamera();
+                                        await _startCamera();
+                                      },
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Coba Lagi'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

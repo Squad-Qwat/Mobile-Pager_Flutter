@@ -44,7 +44,6 @@ class PagerNotificationService {
     await _createPagerCallChannel();
 
     _isInitialized = true;
-    print('✅ PagerNotificationService initialized');
   }
 
   /// Create a high-priority notification channel for pager calls
@@ -65,15 +64,10 @@ class PagerNotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-
-    print('✅ Pager call notification channel created');
   }
 
   /// Show notification when pager status changes to "ringing"
   Future<void> showPagerCallNotification(PagerModel pager, String merchantName) async {
-    print('🔔 Showing pager call notification for: ${pager.displayId}');
-
-    // Start continuous vibration
     await _startContinuousVibration();
 
     // Show notification with full-screen intent
@@ -129,69 +123,52 @@ class PagerNotificationService {
       notificationDetails,
       payload: pager.pagerId,
     );
-
-    print('✅ Pager call notification shown with sound and vibration');
   }
 
-  /// Start continuous vibration pattern
   Future<void> _startContinuousVibration() async {
     try {
-      // Check if device has vibrator
       final hasVibrator = await Vibration.hasVibrator();
       if (hasVibrator != true) {
-        print('⚠️ Device does not have vibrator');
         return;
       }
 
-      // Cancel any existing vibration timer
       _vibrationTimer?.cancel();
 
-      // Vibrate continuously for 30 seconds (or until cancelled)
       int vibrationCount = 0;
-      const maxVibrations = 30; // 30 seconds
+      const maxVibrations = 30;
 
       _vibrationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (vibrationCount >= maxVibrations) {
           timer.cancel();
-          print('⏹️ Vibration stopped after 30 seconds');
           return;
         }
 
-        // Vibrate pattern: 500ms on, 500ms off
         Vibration.vibrate(duration: 500);
         vibrationCount++;
       });
-
-      print('✅ Started continuous vibration');
     } catch (e) {
-      print('❌ Error starting vibration: $e');
+      // Vibration failed silently
     }
   }
 
-  /// Stop continuous vibration
   Future<void> stopVibration() async {
     try {
       _vibrationTimer?.cancel();
       _vibrationTimer = null;
       await Vibration.cancel();
-      print('⏹️ Vibration stopped');
     } catch (e) {
-      print('❌ Error stopping vibration: $e');
+      // Stop failed silently
     }
   }
 
-  /// Cancel pager call notification
   Future<void> cancelPagerCallNotification(String pagerId) async {
     await _localNotifications.cancel(pagerId.hashCode);
     await stopVibration();
-    print('🔕 Pager call notification cancelled for: $pagerId');
   }
 
-  /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
     await _localNotifications.cancelAll();
     await stopVibration();
-    print('🔕 All notifications cancelled');
   }
 
   /// Show notification for status change (ready, finished, etc.)

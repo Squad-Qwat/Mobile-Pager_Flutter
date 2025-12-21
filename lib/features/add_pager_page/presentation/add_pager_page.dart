@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_pager_flutter/core/presentation/widget/buttons/primary_button.dart';
-import 'package:mobile_pager_flutter/core/presentation/widget/inputfileds/text_inputfiled.dart';
+import 'package:mobile_pager_flutter/core/presentation/widget/inputfields/text_inputfiled.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';

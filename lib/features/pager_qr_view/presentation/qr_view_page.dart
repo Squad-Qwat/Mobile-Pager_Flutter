@@ -20,10 +20,7 @@ class QRViewPage extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
 
-    print('🖼️ [QR_VIEW] Building QR View Page');
-
     if (user == null) {
-      print('⚠️ [QR_VIEW] No user authenticated');
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: _buildHeader(ref),
@@ -31,7 +28,6 @@ class QRViewPage extends ConsumerWidget {
       );
     }
 
-    print('🖼️ [QR_VIEW] Watching temporary pagers for merchant: ${user.uid}');
     final temporaryPagersAsync = ref.watch(
       temporaryPagersStreamProvider(user.uid),
     );
@@ -42,15 +38,12 @@ class QRViewPage extends ConsumerWidget {
       body: SafeArea(
         child: temporaryPagersAsync.when(
           data: (pagers) {
-            print('✅ [QR_VIEW] Received ${pagers.length} temporary pagers');
             return _buildContent(context, ref, pagers);
           },
           loading: () {
-            print('⏳ [QR_VIEW] Loading temporary pagers...');
             return const Center(child: CircularProgressIndicator());
           },
           error: (error, stack) {
-            print('❌ [QR_VIEW] Error loading pagers: $error');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -205,8 +198,6 @@ class QRViewPage extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: () {
-            print('🔄 [QR_VIEW] Manual refresh triggered');
-            // Invalidate the stream provider to force a refresh
             final authState = ref.read(authNotifierProvider);
             final user = authState.user;
             if (user != null) {

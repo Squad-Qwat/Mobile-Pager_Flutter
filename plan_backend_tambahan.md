@@ -170,12 +170,13 @@ firebase deploy --only functions
 
 ---
 
-### **Opsi 2: VPS Backend (Node.js + Express)**
+### **Opsi 2: VPS Backend (Node.js + Express + Firestore Listener)**
 
 #### Keuntungan:
 ✅ Full control atas server
 ✅ Biaya tetap bulanan (lebih predictable)
 ✅ Bisa host multiple services
+✅ **Realtime listener** - auto-trigger saat status berubah
 ✅ Tidak tergantung Firebase pricing
 
 #### Kekurangan:
@@ -185,119 +186,230 @@ firebase deploy --only functions
 ❌ Perlu handle Firestore admin SDK setup
 
 #### Biaya Estimasi VPS:
+- **Railway (Free Tier)**: 500 jam/bulan (gratis untuk testing)
+- **Render (Free Tier)**: 750 jam/bulan (gratis untuk testing)
 - **DigitalOcean Droplet**: $6-12/bulan (1-2GB RAM)
 - **Vultr**: $5-10/bulan
-- **AWS Lightsail**: $5-10/bulan
-- **Contabo**: $4-7/bulan (Europe servers)
+
+#### Struktur Folder Project:
+```
+pager-notification-server/
+├── src/
+│   ├── index.js              # Entry point
+│   ├── services/
+│   │   └── fcmService.js     # FCM notification logic
+│   ├── listeners/
+│   │   └── firestoreListener.js  # Realtime status listener
+│   └── routes/
+│       └── notificationRoutes.js # Optional API endpoints
+├── serviceAccountKey.json    # Firebase Admin credentials
+├── .env
+├── package.json
+└── .gitignore
+```
+
+#### Struktur FCM Token di Firestore:
+```
+fcm_tokens/
+  └── {userId}/
+        ├── token: "fcm_token_string"
+        └── updatedAt: Timestamp
+```
 
 #### Implementasi:
 
-**File: `server.js`**
+**File: `.env`**
+```env
+PORT=3000
+FIREBASE_PROJECT_ID=your-project-id
+```
+
+**File: `src/index.js`**
 ```javascript
+require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
-const bodyParser = require('body-parser');
+const { startFirestoreListener } = require('./listeners/firestoreListener');
 
 // Initialize Firebase Admin
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = require('../serviceAccountKey.json');
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
+  projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Endpoint: Get Next Queue Number
-app.post('/api/queue/next', async (req, res) => {
-  try {
-    const { merchantId } = req.body;
-
-    const counterRef = admin.firestore()
-      .collection('queue_counters')
-      .doc(merchantId);
-
-    const result = await admin.firestore().runTransaction(async (transaction) => {
-      const counterDoc = await transaction.get(counterRef);
-
-      const today = new Date().toISOString().split('T')[0];
-      const lastDate = counterDoc.data()?.lastDate;
-
-      let newCount = 1;
-      if (lastDate === today && counterDoc.exists) {
-        newCount = (counterDoc.data()?.count || 0) + 1;
-      }
-
-      transaction.set(counterRef, {
-        count: newCount,
-        lastDate: today
-      });
-
-      return newCount;
-    });
-
-    res.json({ success: true, queueNumber: result });
-  } catch (error) {
-    console.error('Error getting queue number:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Endpoint: Send Notification
-app.post('/api/notification/send', async (req, res) => {
-  try {
-    const { customerId, merchantId, pagerId, queueNumber } = req.body;
-
-    // Get FCM token
-    const userDoc = await admin.firestore()
-      .collection('users')
-      .doc(customerId)
-      .get();
-
-    const fcmToken = userDoc.data()?.fcmToken;
-    if (!fcmToken) {
-      return res.status(404).json({ success: false, error: 'No FCM token' });
-    }
-
-    // Get merchant name
-    const merchantDoc = await admin.firestore()
-      .collection('merchants')
-      .doc(merchantId)
-      .get();
-
-    const merchantName = merchantDoc.data()?.businessName || 'Merchant';
-
-    // Send FCM
-    const message = {
-      token: fcmToken,
-      notification: {
-        title: `📞 ${merchantName} memanggil Anda`,
-        body: `Antrian ${queueNumber} - Pesanan siap!`
-      },
-      android: {
-        priority: 'high',
-        notification: {
-          channelId: 'pager_call_channel',
-          priority: 'max',
-          sound: 'default'
-        }
-      }
-    };
-
-    await admin.messaging().send(message);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  
+  // Start Firestore realtime listener (auto-detect status changes)
+  startFirestoreListener();
 });
 ```
 
-**Deploy di VPS:**
+**File: `src/services/fcmService.js`**
+```javascript
+const admin = require('firebase-admin');
+const db = admin.firestore();
+const messaging = admin.messaging();
+
+// Get FCM token from Firestore
+async function getFCMToken(userId) {
+  try {
+    const tokenDoc = await db.collection('fcm_tokens').doc(userId).get();
+    return tokenDoc.exists ? tokenDoc.data().token : null;
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+    return null;
+  }
+}
+
+// Send FCM notification
+async function sendNotificationToUser(userId, notification, data = {}) {
+  const token = await getFCMToken(userId);
+  if (!token) return { success: false, error: 'No FCM token' };
+
+  const message = {
+    token: token,
+    notification: {
+      title: notification.title,
+      body: notification.body,
+    },
+    data: { ...data, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
+    android: {
+      priority: 'high',
+      notification: {
+        channelId: 'pager_call_channel',
+        priority: 'max',
+        sound: 'default',
+      },
+    },
+  };
+
+  try {
+    const response = await messaging.send(message);
+    console.log('✅ FCM sent:', response);
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error('❌ FCM error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+module.exports = { getFCMToken, sendNotificationToUser };
+```
+
+**File: `src/listeners/firestoreListener.js`** ⭐ PENTING
+```javascript
+const admin = require('firebase-admin');
+const { sendNotificationToUser } = require('../services/fcmService');
+
+const db = admin.firestore();
+const lastKnownStatus = new Map();
+
+function startFirestoreListener() {
+  console.log('🔔 Starting Firestore listener for active_pagers...');
+
+  // Realtime listener - auto-triggers on any change
+  db.collection('active_pagers').onSnapshot(
+    (snapshot) => {
+      snapshot.docChanges().forEach(async (change) => {
+        const pager = { ...change.doc.data(), pagerId: change.doc.id };
+
+        if (change.type === 'modified') {
+          const oldStatus = lastKnownStatus.get(pager.pagerId);
+          const newStatus = pager.status;
+
+          lastKnownStatus.set(pager.pagerId, newStatus);
+
+          if (oldStatus && oldStatus !== newStatus) {
+            console.log(`📊 Status: ${pager.pagerId} - ${oldStatus} → ${newStatus}`);
+            await handleStatusChange(pager, oldStatus, newStatus);
+          }
+        } else if (change.type === 'added') {
+          lastKnownStatus.set(pager.pagerId, pager.status);
+        } else if (change.type === 'removed') {
+          lastKnownStatus.delete(pager.pagerId);
+        }
+      });
+    },
+    (error) => console.error('❌ Firestore listener error:', error)
+  );
+}
+
+async function handleStatusChange(pager, oldStatus, newStatus) {
+  const customerId = pager.customerId;
+  if (!customerId) return;
+
+  // Get merchant name
+  let merchantName = 'Merchant';
+  try {
+    const merchantDoc = await db.collection('merchants').doc(pager.merchantId).get();
+    if (merchantDoc.exists) {
+      const data = merchantDoc.data();
+      merchantName = data.businessName || data.name || 'Merchant';
+    }
+  } catch (e) {}
+
+  // Send notification based on new status
+  switch (newStatus) {
+    case 'ringing':
+      console.log(`📳 PAGER CALL: ${pager.queueNumber}`);
+      await sendNotificationToUser(customerId, {
+        title: `📞 ${merchantName} memanggil Anda`,
+        body: `Antrian ${pager.queueNumber} - Pesanan siap!`,
+      }, { type: 'pager_call', pagerId: pager.pagerId });
+      break;
+
+    case 'ready':
+      await sendNotificationToUser(customerId, {
+        title: '✅ Pesanan Siap Diambil!',
+        body: `${merchantName} - Antrian ${pager.queueNumber}`,
+      }, { type: 'order_ready', pagerId: pager.pagerId });
+      break;
+
+    case 'finished':
+      await sendNotificationToUser(customerId, {
+        title: 'Terima Kasih!',
+        body: `Pesanan ${pager.queueNumber} selesai.`,
+      }, { type: 'order_finished', pagerId: pager.pagerId });
+      break;
+
+    case 'expired':
+      await sendNotificationToUser(customerId, {
+        title: 'Pesanan Kadaluarsa',
+        body: `Antrian ${pager.queueNumber} telah kadaluarsa.`,
+      }, { type: 'order_expired', pagerId: pager.pagerId });
+      break;
+  }
+}
+
+module.exports = { startFirestoreListener };
+```
+
+**Deploy ke Railway (Gratis):**
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login dan deploy
+railway login
+railway init
+railway up
+
+# Set environment variables di Railway dashboard
+# FIREBASE_PROJECT_ID=your-project-id
+```
+
+**Deploy di VPS (Berbayar):**
 ```bash
 # Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -305,18 +417,14 @@ sudo apt-get install -y nodejs
 
 # Clone & setup
 git clone <your-repo>
-cd backend
+cd pager-notification-server
 npm install
 
 # Use PM2 untuk keep alive
 npm install -g pm2
-pm2 start server.js
+pm2 start src/index.js
 pm2 startup
 pm2 save
-
-# Setup Nginx reverse proxy (optional)
-sudo apt install nginx
-# Configure nginx to proxy port 80 -> 3000
 ```
 
 ---
@@ -408,5 +516,6 @@ Jika butuh bantuan implementasi:
 ---
 
 **Dibuat:** 2025-12-19
-**Status:** Planning Phase
-**Next Step:** Verifikasi root cause queue number issue → Deploy backend solution jika diperlukan
+**Direvisi:** 2025-12-21
+**Status:** Planning Phase → Ready for Implementation
+**Next Step:** Deploy Express.js server dengan Firestore Listener ke Railway (gratis)

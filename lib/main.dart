@@ -26,17 +26,6 @@ import 'package:mobile_pager_flutter/main_navigation.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('🔔 Handling background message: ${message.messageId}');
-  print('Title: ${message.notification?.title}');
-  print('Body: ${message.notification?.body}');
-  print('Data: ${message.data}');
-
-  // Check if this is a pager call notification
-  if (message.data['type'] == 'pager_call') {
-    print('📳 Background pager call notification received!');
-    // The notification will be shown automatically by FCM
-    // But we can also trigger local notification here for better control
-  }
 }
 
 void main() async {
@@ -44,19 +33,12 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Configure Firestore settings for better connectivity on real devices
-  // Temporarily disable persistence for testing
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: false,  // Disabled for testing
+    persistenceEnabled: false,
   );
 
-  // Set up FCM background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // Initialize FCM service
   await FCMService().initialize();
-
-  // Initialize Pager Notification Service
   await PagerNotificationService().initialize();
 
   runApp(const ProviderScope(child: MyApp()));

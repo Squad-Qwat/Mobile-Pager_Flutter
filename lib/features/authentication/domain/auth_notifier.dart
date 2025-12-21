@@ -75,11 +75,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (token != null) {
         final notificationRepo = NotificationRepositoryImpl();
         await notificationRepo.saveFCMToken(userId, token);
-        print('✅ FCM token saved for user: $userId');
       }
     } catch (e) {
-      print('⚠️ Error saving FCM token: $e');
-      // Don't throw error, just log it
+      // Silently fail - FCM token is not critical
     }
   }
 
@@ -93,6 +91,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
         isLoading: false,
       );
+      // Save FCM token for push notifications
+      _saveFCMToken(userModel.uid);
     } on AuthCancelledException {
       state = state.copyWith(isLoading: false);
     } catch (e) {
@@ -111,6 +111,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
         isLoading: false,
       );
+      // Save FCM token for push notifications
+      _saveFCMToken(userModel.uid);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;

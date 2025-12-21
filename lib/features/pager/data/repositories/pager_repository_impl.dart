@@ -45,10 +45,7 @@ class PagerRepositoryImpl implements IPagerRepository {
           .collection(_temporaryCollection)
           .add(pagerData);
 
-      // Update with actual doc ID
       await docRef.update({'pagerId': docRef.id});
-
-      print('✅ Created pager with secure ID - Number: $number, RandomCode: $randomCode');
 
       return docRef.id;
     } catch (e) {
@@ -56,21 +53,16 @@ class PagerRepositoryImpl implements IPagerRepository {
     }
   }
 
-  @override
   Stream<List<PagerModel>> watchTemporaryPagers(String merchantId) {
-    print('🔄 [STREAM] Starting to watch temporary pagers for merchant: $merchantId');
     return _firestore
         .collection(_temporaryCollection)
         .where('merchantId', isEqualTo: merchantId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          print('🔄 [STREAM] Temporary pagers stream update - count: ${snapshot.docs.length}');
-          final pagers = snapshot.docs
+          return snapshot.docs
               .map((doc) => PagerModel.fromFirestore(doc))
               .toList();
-          print('🔄 [STREAM] Mapped pagers: ${pagers.map((p) => p.displayId).join(', ')}');
-          return pagers;
         });
   }
 
@@ -95,7 +87,6 @@ class PagerRepositoryImpl implements IPagerRepository {
         });
   }
 
-  @override
   Future<void> activatePager({
     required String pagerId,
     required String customerId,
@@ -103,39 +94,27 @@ class PagerRepositoryImpl implements IPagerRepository {
     required Map<String, dynamic> customerInfo,
   }) async {
     try {
-      print('📦 [REPO] Checking if pager already activated...');
-      // Check if pager is already activated
       final activeDoc = await _firestore
           .collection(_activeCollection)
           .doc(pagerId)
           .get();
 
       if (activeDoc.exists) {
-        print('⚠️ [REPO] Pager already activated!');
         throw Exception('Pager sudah diaktifkan sebelumnya');
       }
 
-      print('📦 [REPO] Getting temporary pager from Firestore...');
-      // Get the temporary pager
       final tempDoc = await _firestore
           .collection(_temporaryCollection)
           .doc(pagerId)
           .get();
 
       if (!tempDoc.exists) {
-        print('❌ [REPO] Temporary pager not found in collection: $_temporaryCollection');
         throw Exception('QR Code tidak valid atau sudah digunakan');
       }
 
-      print('✅ [REPO] Temporary pager found, parsing data...');
       final tempPager = PagerModel.fromFirestore(tempDoc);
-
-      print('📦 [REPO] Getting queue number for merchant: ${tempPager.merchantId}');
-      // Get queue number for this merchant
       final queueNumber = await _getNextQueueNumber(tempPager.merchantId);
-      print('✅ [REPO] Queue number assigned: $queueNumber');
 
-      // Create active pager
       final activePagerData = {
         'pagerId': pagerId,
         'merchantId': tempPager.merchantId,
@@ -148,28 +127,14 @@ class PagerRepositoryImpl implements IPagerRepository {
         'activatedAt': Timestamp.fromDate(DateTime.now()),
         if (tempPager.label != null) 'label': tempPager.label,
         if (tempPager.invoiceImageUrl != null) 'invoiceImageUrl': tempPager.invoiceImageUrl,
-        if (tempPager.randomCode != null) 'randomCode': tempPager.randomCode, // Preserve random code
+        if (tempPager.randomCode != null) 'randomCode': tempPager.randomCode,
         'scannedBy': customerInfo,
         if (tempPager.metadata != null) 'metadata': tempPager.metadata,
       };
 
-      print('📦 [REPO] Writing active pager to Firestore...');
-      print('   Collection: $_activeCollection');
-      print('   Document ID: $pagerId');
-      // CRITICAL FIX: Use .doc(pagerId).set() instead of .add()
-      // This ensures we use the same pagerId as document ID, preventing duplicates
       await _firestore.collection(_activeCollection).doc(pagerId).set(activePagerData);
-      print('✅ [REPO] Active pager created successfully');
-
-      print('📦 [REPO] Deleting temporary pager...');
-      // Delete from temporary collection
       await _firestore.collection(_temporaryCollection).doc(pagerId).delete();
-      print('✅ [REPO] Temporary pager deleted');
-
-      print('🎉 [REPO] Pager activation completed successfully!');
     } catch (e, stackTrace) {
-      print('❌ [REPO] Error activating pager: $e');
-      print('📍 [REPO] Stack trace: $stackTrace');
       throw Exception('Failed to activate pager: $e');
     }
   }
@@ -360,20 +325,15 @@ class PagerRepositoryImpl implements IPagerRepository {
 
   Future<int> _getNextQueueNumber(String merchantId) async {
     try {
-      // Get all active pagers for this merchant
-      // We can't use orderBy with where without composite index
-      // So we fetch all and find max manually
       final query = await _firestore
           .collection(_activeCollection)
           .where('merchantId', isEqualTo: merchantId)
           .get();
 
       if (query.docs.isEmpty) {
-        print('📊 No active pagers found, starting queue at 1');
         return 1;
       }
 
-      // Find the maximum queue number manually
       int maxQueueNumber = 0;
       for (final doc in query.docs) {
         final queueNumber = doc.data()['queueNumber'] as int?;
@@ -382,11 +342,8 @@ class PagerRepositoryImpl implements IPagerRepository {
         }
       }
 
-      final nextQueue = maxQueueNumber + 1;
-      print('📊 Current max queue: $maxQueueNumber, next queue: $nextQueue');
-      return nextQueue;
+      return maxQueueNumber + 1;
     } catch (e) {
-      print('❌ Error getting next queue number: $e');
       return 1;
     }
   }

@@ -40,7 +40,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending new customer notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -71,7 +71,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending order ready notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -102,7 +102,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending order calling notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -135,7 +135,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending expiring soon notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -166,7 +166,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending order expired notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -197,7 +197,7 @@ class NotificationService {
         data: notification.data ?? {},
       );
     } catch (e) {
-      print('Error sending order finished notification: $e');
+      // Notification failed silently
     }
   }
 
@@ -211,31 +211,14 @@ class NotificationService {
     required Map<String, dynamic> data,
   }) async {
     try {
-      // Get user's FCM token
       final token = await _notificationRepository.getFCMToken(userId);
       if (token == null) {
-        print('No FCM token found for user: $userId');
         return;
       }
 
-      // TODO: Call your Cloud Function here to send FCM notification
-      // For now, we just print the token
-      print('Would send FCM to token: $token');
-      print('Title: $title, Body: $body');
-
-      // Example of what the Cloud Function call would look like:
-      // await http.post(
-      //   Uri.parse('https://YOUR_CLOUD_FUNCTION_URL/sendNotification'),
-      //   headers: {'Content-Type': 'application/json'},
-      //   body: json.encode({
-      //     'token': token,
-      //     'title': title,
-      //     'body': body,
-      //     'data': data,
-      //   }),
-      // );
+      // TODO: Call Cloud Function to send FCM notification
     } catch (e) {
-      print('Error sending FCM notification: $e');
+      // FCM send failed silently
     }
   }
 }

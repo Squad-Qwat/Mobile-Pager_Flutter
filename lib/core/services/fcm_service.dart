@@ -24,9 +24,6 @@ class FCMService {
       sound: true,
     );
 
-    print('FCM Permission granted: ${settings.authorizationStatus}');
-
-    // Initialize local notifications
     await _initializeLocalNotifications();
 
     // Handle foreground messages
@@ -59,40 +56,24 @@ class FCMService {
     );
   }
 
-  /// Get FCM token
   Future<String?> getToken() async {
     try {
-      String? token = await _firebaseMessaging.getToken();
-      print('FCM Token: $token');
-      return token;
+      return await _firebaseMessaging.getToken();
     } catch (e) {
-      print('Error getting FCM token: $e');
+      debugPrint('Error getting FCM token: $e');
       return null;
     }
   }
 
-  /// Delete FCM token (on logout)
   Future<void> deleteToken() async {
     try {
       await _firebaseMessaging.deleteToken();
-      print('FCM Token deleted');
     } catch (e) {
-      print('Error deleting FCM token: $e');
+      debugPrint('Error deleting FCM token: $e');
     }
   }
 
-  /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    print('Foreground message received: ${message.notification?.title}');
-    print('Message data: ${message.data}');
-
-    // Check if this is a pager call notification
-    if (message.data['type'] == 'pager_call') {
-      print('📳 Pager call notification received!');
-      // PagerStatusListener will handle this via Firestore stream
-    }
-
-    // Show local notification
     _showLocalNotification(message);
   }
 
@@ -132,28 +113,19 @@ class FCMService {
     );
   }
 
-  /// Handle notification tap when app is in background/terminated
   void _handleMessageOpenedApp(RemoteMessage message) {
-    print('Notification tapped: ${message.data}');
-    // You can navigate to specific page based on message.data
-    // This will be handled in main.dart with navigation
+    // Navigation handling can be added here
   }
 
-  /// Handle notification tap from local notification
   void _onNotificationTapped(NotificationResponse response) {
-    print('Local notification tapped: ${response.payload}');
-    // Handle navigation here if needed
+    // Navigation handling can be added here
   }
 
-  /// Subscribe to topic (optional, for broadcast notifications)
   Future<void> subscribeToTopic(String topic) async {
     await _firebaseMessaging.subscribeToTopic(topic);
-    print('Subscribed to topic: $topic');
   }
 
-  /// Unsubscribe from topic
   Future<void> unsubscribeFromTopic(String topic) async {
     await _firebaseMessaging.unsubscribeFromTopic(topic);
-    print('Unsubscribed from topic: $topic');
   }
 }

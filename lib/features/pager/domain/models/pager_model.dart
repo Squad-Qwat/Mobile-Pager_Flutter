@@ -47,15 +47,10 @@ class PagerModel {
   factory PagerModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
-    // Auto-generate randomCode for old pagers that don't have it
     String? randomCode = data['randomCode'];
     if (randomCode == null || randomCode.isEmpty) {
       randomCode = generateRandomCode();
-      // Update Firestore document with new randomCode (fire and forget)
-      doc.reference.update({'randomCode': randomCode}).catchError((e) {
-        print('⚠️ Failed to update randomCode for ${doc.id}: $e');
-      });
-      print('✅ Auto-generated randomCode for old pager: ${doc.id} -> $randomCode');
+      doc.reference.update({'randomCode': randomCode}).catchError((e) {});
     }
 
     return PagerModel(
