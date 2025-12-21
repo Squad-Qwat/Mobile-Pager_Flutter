@@ -17,12 +17,16 @@ class PagerScanPage extends ConsumerStatefulWidget {
   ConsumerState<PagerScanPage> createState() => _PagerScanPageState();
 }
 
-class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindingObserver {
-  MobileScannerController? cameraController;
-  bool isScanning = true;
-  String? scannedData;
-  bool isFlashOn = false;
-  bool _isPageVisible = false;
+class _PagerScanPageState extends ConsumerState<PagerScanPage>
+    with WidgetsBindingObserver {
+  MobileScannerController? _controller;
+  bool _isScanning = true;
+  bool _isCameraReady = false;
+  int _cameraKey = 0; // Used to force rebuild MobileScanner widget
+  int? _lastNavIndex;
+
+  // Customer navigation: index 1 = Scan page
+  static const int _scanPageIndex = 1;
 
   @override
   void initState() {
@@ -33,67 +37,107 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _stopCamera();
+    _disposeCamera();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Handle app lifecycle changes
-    if (state == AppLifecycleState.resumed && _isPageVisible) {
-      _startCamera();
-    } else if (state == AppLifecycleState.paused || 
-               state == AppLifecycleState.inactive ||
-               state == AppLifecycleState.detached) {
-      _stopCamera();
+    if (!mounted) return;
+
+    final navIndex = ref.read(navigationIndexProvider);
+    final isMerchant = ref.read(authNotifierProvider).isMerchant;
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (!isMerchant && navIndex == _scanPageIndex) {
+          _initializeCamera();
+        }
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        _disposeCamera();
+        break;
     }
   }
 
-  Future<void> _startCamera() async {
-    if (cameraController != null) return; // Already started
+  /// Check if camera should be running based on navigation and user type
+  void _checkCameraState() {
+    final navIndex = ref.read(navigationIndexProvider);
+    final isMerchant = ref.read(authNotifierProvider).isMerchant;
+
+    // Camera should be active if: not merchant AND on scan page (index 1)
+    final shouldCameraRun = !isMerchant && navIndex == _scanPageIndex;
+
+    if (shouldCameraRun && _controller == null) {
+      _initializeCamera();
+    } else if (!shouldCameraRun && _controller != null) {
+      _disposeCamera();
+    }
     
-    cameraController = MobileScannerController(
+    _lastNavIndex = navIndex;
+  }
+
+  Future<void> _initializeCamera() async {
+    if (_controller != null) return;
+
+    setState(() {
+      _isCameraReady = false;
+    });
+
+    _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
       autoStart: true,
     );
-    
-    setState(() {
-      isScanning = true;
-      scannedData = null;
-    });
-  }
 
-  Future<void> _stopCamera() async {
-    if (cameraController == null) return; // Already stopped
-    
-    await cameraController?.stop();
-    await cameraController?.dispose();
-    cameraController = null;
-  }
+    // Wait a bit for camera to initialize
+    await Future.delayed(const Duration(milliseconds: 100));
 
-  Future<void> _resetScanner() async {
-    setState(() {
-      isScanning = true;
-      scannedData = null;
-    });
-    
-    if (cameraController != null && !cameraController!.value.isRunning) {
-      await cameraController?.start();
+    if (mounted) {
+      setState(() {
+        _isCameraReady = true;
+        _isScanning = true;
+        _cameraKey++; // Force rebuild with new key
+      });
     }
   }
 
+  Future<void> _disposeCamera() async {
+    final controller = _controller;
+    _controller = null;
+
+    if (mounted) {
+      setState(() {
+        _isCameraReady = false;
+      });
+    }
+
+    try {
+      await controller?.stop();
+      await controller?.dispose();
+    } catch (e) {
+      // Ignore dispose errors
+    }
+  }
+
+  Future<void> _restartCamera() async {
+    await _disposeCamera();
+    await _initializeCamera();
+  }
+
   void _onDetect(BarcodeCapture capture) {
-    if (!isScanning) return;
+    if (!_isScanning) return;
 
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isNotEmpty) {
       final barcode = barcodes.first;
       if (barcode.rawValue != null) {
         setState(() {
-          isScanning = false;
-          scannedData = barcode.rawValue;
+          _isScanning = false;
         });
-        cameraController?.stop();
+        _controller?.stop();
         _showScanResult(barcode.rawValue!);
       }
     }
@@ -123,7 +167,6 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
         return;
       }
 
-      // Prepare customer info
       final customerInfo = {
         'name': user.displayName ?? 'Guest',
         if (user.email != null) 'email': user.email,
@@ -132,9 +175,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
 
       final customerType = user.isGuest == true ? 'guest' : 'registered';
 
-      await ref
-          .read(pagerNotifierProvider.notifier)
-          .activatePager(
+      await ref.read(pagerNotifierProvider.notifier).activatePager(
             pagerId: pagerId,
             customerId: user.uid,
             customerType: customerType,
@@ -143,11 +184,8 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
 
       if (!mounted) return;
 
-      // Navigate to Home page (index 0) to show success
-      // Don't use Navigator.pop() because scanner is in bottom nav
       ref.read(navigationIndexProvider.notifier).state = 0;
 
-      // Show success snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -159,13 +197,20 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       _showErrorDialog(
         'Scan Error',
         'Gagal mengaktifkan pager: ${e.toString()}',
       );
       _resetScanner();
     }
+  }
+
+  void _resetScanner() {
+    setState(() {
+      _isScanning = true;
+    });
+    _controller?.start();
   }
 
   void _showErrorDialog(String title, String message) {
@@ -189,24 +234,37 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
 
   @override
   Widget build(BuildContext context) {
-    // Start camera when page is visible
+    // Listen to navigation changes to start/stop camera
+    final navIndex = ref.watch(navigationIndexProvider);
+    final isMerchant = ref.watch(authNotifierProvider).isMerchant;
+    
+    // Trigger camera check when navigation changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isPageVisible) {
-        _isPageVisible = true;
-        _startCamera();
+      if (_lastNavIndex != navIndex) {
+        _checkCameraState();
       }
     });
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildHeader(),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        title: Text(
+          'Scan QR Antrian',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            color: AppColor.black,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 20),
-            Padding(padding: EdgeInsets.symmetric(horizontal: AppPadding.p16)),
-            SizedBox(height: 24),
-
+            const SizedBox(height: 20),
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppPadding.p16)),
+            const SizedBox(height: 24),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppPadding.p16),
@@ -217,73 +275,7 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: cameraController == null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Memulai kamera...',
-                                  style: GoogleFonts.inter(),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Stack(
-                            children: [
-                              MobileScanner(
-                                controller: cameraController!,
-                                onDetect: _onDetect,
-                                errorBuilder: (context, error) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      size: 64,
-                                      color: Colors.red.shade300,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Gagal mengakses kamera',
-                                      style: GoogleFonts.inter(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      error.errorDetails?.message ?? 'Pastikan izin kamera sudah diberikan',
-                                      style: GoogleFonts.inter(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 14,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    ElevatedButton.icon(
-                                      onPressed: () async {
-                                        // Restart camera completely
-                                        await _stopCamera();
-                                        await _startCamera();
-                                      },
-                                      icon: const Icon(Icons.refresh),
-                                      label: const Text('Coba Lagi'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                    child: _buildCameraView(),
                   ),
                 ),
               ),
@@ -295,17 +287,69 @@ class _PagerScanPageState extends ConsumerState<PagerScanPage> with WidgetsBindi
     );
   }
 
-  PreferredSizeWidget _buildHeader() {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      backgroundColor: Colors.white,
-      title: Text(
-        'Scan QR Antrian',
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w800,
-          color: AppColor.black,
+  Widget _buildCameraView() {
+    if (!_isCameraReady || _controller == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Memulai kamera...',
+              style: GoogleFonts.inter(),
+            ),
+          ],
         ),
-      ),
+      );
+    }
+
+    return MobileScanner(
+      key: ValueKey(_cameraKey),
+      controller: _controller!,
+      onDetect: _onDetect,
+      errorBuilder: (context, error) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gagal mengakses kamera',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.errorDetails?.message ??
+                      'Pastikan izin kamera sudah diberikan',
+                  style: GoogleFonts.inter(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _restartCamera,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
