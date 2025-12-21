@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/core/theme/app_padding.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/features/detail_history/presentation/detail_history_page.dart';
+import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
 import 'package:mobile_pager_flutter/features/pager_history/presentation/filter_widget.dart';
@@ -470,6 +472,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             ),
             SizedBox(height: 12.h),
 
+            // Merchant/Customer Info
+            _buildMerchantOrCustomerInfo(pager),
+            SizedBox(height: 12.h),
+
             // Details: Nomor Pager & Label
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -578,6 +584,126 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildMerchantOrCustomerInfo(PagerModel pager) {
+    final authState = ref.watch(authNotifierProvider);
+    final isMerchant = authState.user?.isMerchant ?? false;
+
+    if (isMerchant) {
+      // Show customer name for merchant
+      if (pager.customerId == null) {
+        return SizedBox.shrink();
+      }
+
+      final customerAsync = ref.watch(userByIdProvider(pager.customerId!));
+
+      return customerAsync.when(
+        data: (customer) {
+          if (customer == null) return SizedBox.shrink();
+
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: AppColor.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Iconsax.user,
+                  size: 14,
+                  color: AppColor.primary,
+                ),
+                SizedBox(width: 6.w),
+                Flexible(
+                  child: Text(
+                    customer.displayName ?? customer.email ?? 'Customer',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.sp,
+                      color: AppColor.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => SizedBox.shrink(),
+        error: (_, __) => SizedBox.shrink(),
+      );
+    } else {
+      // Show merchant name for customer
+      final merchantSettingsAsync =
+          ref.watch(merchantSettingsFutureProvider(pager.merchantId));
+
+      return merchantSettingsAsync.when(
+        data: (merchantSettings) {
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: AppColor.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Iconsax.shop,
+                  size: 14,
+                  color: AppColor.primary,
+                ),
+                SizedBox(width: 6.w),
+                Flexible(
+                  child: Text(
+                    merchantSettings.merchantName,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.sp,
+                      color: AppColor.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                'Loading...',
+                style: GoogleFonts.inter(
+                  fontSize: 12.sp,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        error: (error, stack) => SizedBox.shrink(),
+      );
+    }
   }
 
   Color _getStatusColor(PagerStatus status) {

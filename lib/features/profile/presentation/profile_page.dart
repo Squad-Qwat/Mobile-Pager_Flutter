@@ -63,13 +63,37 @@ class ProfilePage extends ConsumerWidget {
                         : null,
                   ),
                   SizedBox(height: AppPadding.p16),
-                  Text(
-                    user?.displayName ?? 'Guest User',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.textPrimary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user?.displayName ?? 'Guest User',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColor.textPrimary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => _showEditNameDialog(context, ref, user?.displayName ?? ''),
+                        child: Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColor.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Iconsax.edit_2,
+                            size: 16,
+                            color: AppColor.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: AppPadding.p8),
                   Text(
@@ -224,6 +248,112 @@ class ProfilePage extends ConsumerWidget {
       trailing: Icon(Icons.chevron_right, color: AppColor.grey600),
       onTap: onTap,
     );
+  }
+
+  Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) async {
+    final TextEditingController nameController = TextEditingController(text: currentName);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Edit Nama',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: AppColor.textPrimary,
+          ),
+        ),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Masukkan nama Anda',
+            hintStyle: GoogleFonts.inter(color: AppColor.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColor.grey400),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColor.primary, width: 2),
+            ),
+          ),
+          style: GoogleFonts.inter(color: AppColor.textPrimary),
+        ),
+        backgroundColor: AppColor.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.inter(
+                color: AppColor.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Nama tidak boleh kosong',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                Navigator.of(context).pop();
+                await ref.read(authNotifierProvider.notifier).updateDisplayName(newName);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Nama berhasil diubah',
+                        style: GoogleFonts.inter(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Gagal mengubah nama: $e',
+                        style: GoogleFonts.inter(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Simpan',
+              style: GoogleFonts.inter(
+                color: AppColor.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    nameController.dispose();
   }
 
   Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {

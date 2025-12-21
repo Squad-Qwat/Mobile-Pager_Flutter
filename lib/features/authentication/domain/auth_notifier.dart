@@ -151,6 +151,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updateDisplayName(String displayName) async {
+    return updateProfile(displayName: displayName);
+  }
+
   Future<bool> checkMerchantProfile() async {
     if (state.user == null) return false;
     return await _authRepository.isMerchantProfileComplete(state.user!.uid);

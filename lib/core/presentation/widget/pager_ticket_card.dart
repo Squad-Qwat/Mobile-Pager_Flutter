@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
+import 'package:mobile_pager_flutter/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:mobile_pager_flutter/features/merchant/presentation/providers/merchant_settings_providers.dart';
 import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/providers/pager_providers.dart';
@@ -185,6 +186,79 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
     );
   }
 
+  Widget _buildCustomerInfo() {
+    // Fetch customer user data
+    final customerAsync = ref.watch(
+      userByIdProvider(widget.pager.customerId!),
+    );
+
+    return customerAsync.when(
+      data: (customer) {
+        if (customer == null) return SizedBox.shrink();
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: AppColor.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Iconsax.user,
+                size: 14,
+                color: AppColor.primary,
+              ),
+              SizedBox(width: 6.w),
+              Flexible(
+                child: Text(
+                  customer.displayName ?? customer.email ?? 'Customer',
+                  style: GoogleFonts.inter(
+                    fontSize: 12.sp,
+                    color: AppColor.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              'Loading...',
+              style: GoogleFonts.inter(
+                fontSize: 12.sp,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      error: (error, stack) => SizedBox.shrink(),
+    );
+  }
+
   List<Widget> _buildActionButtons(BuildContext context) {
     final List<SlidableAction> actions = [];
 
@@ -345,9 +419,13 @@ class _PagerTicketCardState extends ConsumerState<PagerTicketCard>
                   ),
 
                   // Merchant Info Section (only for customers)
+                  // Customer Info Section (only for merchants)
                   if (!widget.isMerchant) ...[
                     SizedBox(height: 8.h),
                     _buildMerchantInfo(),
+                  ] else if (widget.isMerchant && widget.pager.customerId != null) ...[
+                    SizedBox(height: 8.h),
+                    _buildCustomerInfo(),
                   ],
 
                   SizedBox(height: 12.h),
