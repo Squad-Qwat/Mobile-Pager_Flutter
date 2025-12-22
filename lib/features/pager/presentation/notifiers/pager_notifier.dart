@@ -50,6 +50,32 @@ class PagerNotifier extends StateNotifier<PagerState> {
     }
   }
 
+  /// Create a pager with an invoice image URL (from R2 upload)
+  Future<void> createPagerWithImage({
+    required String merchantId,
+    String? label,
+    String? invoiceImageUrl,
+    Map<String, dynamic>? metadata,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      await _repository.createTemporaryPager(
+        merchantId: merchantId,
+        label: label,
+        invoiceImageUrl: invoiceImageUrl,
+        metadata: metadata,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        successMessage: 'Pager created successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
   Future<void> activatePager({
     required String pagerId,
     required String customerId,

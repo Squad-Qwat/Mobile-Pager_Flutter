@@ -17,6 +17,7 @@ class PagerRepositoryImpl implements IPagerRepository {
   Future<String> createTemporaryPager({
     required String merchantId,
     String? label,
+    String? invoiceImageUrl,
     Map<String, dynamic>? metadata,
   }) async {
     try {
@@ -38,6 +39,7 @@ class PagerRepositoryImpl implements IPagerRepository {
         'createdAt': Timestamp.fromDate(now),
         'expiresAt': Timestamp.fromDate(expiresAt),
         if (label != null) 'label': label,
+        if (invoiceImageUrl != null) 'invoiceImageUrl': invoiceImageUrl,
         if (metadata != null) 'metadata': metadata,
       };
 
