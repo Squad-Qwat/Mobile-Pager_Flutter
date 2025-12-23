@@ -10,6 +10,7 @@ import 'package:mobile_pager_flutter/core/services/fcm_service.dart';
 import 'package:mobile_pager_flutter/core/services/pager_notification_service.dart';
 import 'package:mobile_pager_flutter/core/theme/app_color.dart';
 import 'package:mobile_pager_flutter/features/about/presentation/about_page.dart';
+import 'package:mobile_pager_flutter/features/pager/domain/models/pager_model.dart';
 import 'package:mobile_pager_flutter/features/pager/presentation/pages/active_pagers_page.dart';
 import 'package:mobile_pager_flutter/features/add_pager_page/presentation/add_pager_page.dart';
 import 'package:mobile_pager_flutter/features/authentication/presentation/page/authentication_page.dart';
@@ -73,7 +74,6 @@ class MyApp extends StatelessWidget {
             AppRoutes.authentication: (context) => const AuthenticationPage(),
             AppRoutes.detailPagerHistory: (context) =>
                 const DetailHistoryPage(pagerId: "a"),
-            AppRoutes.qrViewDetail: (context) => const QrDetailPage(),
             AppRoutes.profile: (context) => const ProfilePage(),
             AppRoutes.activePagers: (context) => const ActivePagersPage(),
             AppRoutes.merchantSettings: (context) => const MerchantSettingsPage(),
@@ -81,6 +81,13 @@ class MyApp extends StatelessWidget {
             AppRoutes.about: (context) => const AboutPage(),
           },
           onGenerateRoute: (settings) {
+            // Handle QR detail page with PagerModel argument
+            if (settings.name == AppRoutes.qrViewDetail) {
+              final pager = settings.arguments as PagerModel;
+              return MaterialPageRoute(
+                builder: (context) => QrDetailPage(pager: pager),
+              );
+            }
             // Handle customer detail page with arguments
             if (settings.name == AppRoutes.customerDetail) {
               final args = settings.arguments as Map<String, dynamic>;

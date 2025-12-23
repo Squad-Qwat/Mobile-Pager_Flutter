@@ -22,6 +22,12 @@ class CustomerListView extends ConsumerStatefulWidget {
 class _CustomerListViewState extends ConsumerState<CustomerListView> {
   String _searchQuery = '';
 
+  Future<void> _onRefresh() async {
+    ref.invalidate(customerStatsListProvider(widget.merchantId));
+    // Wait for the new data to load
+    await ref.read(customerStatsListProvider(widget.merchantId).future);
+  }
+
   @override
   Widget build(BuildContext context) {
     final customerStatsAsync = ref.watch(customerStatsListProvider(widget.merchantId));
@@ -43,17 +49,28 @@ class _CustomerListViewState extends ConsumerState<CustomerListView> {
             // Search bar
             _buildSearchBar(),
 
-            // Customer list
+            // Customer list with pull-to-refresh
             Expanded(
-              child: filteredCustomers.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                      itemCount: filteredCustomers.length,
-                      itemBuilder: (context, index) {
-                        return _buildCustomerCard(context, filteredCustomers[index]);
-                      },
-                    ),
+              child: RefreshIndicator(
+                onRefresh: _onRefresh,
+                color: AppColor.primary,
+                child: filteredCustomers.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(height: 100.h),
+                          _buildEmptyState(),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        itemCount: filteredCustomers.length,
+                        itemBuilder: (context, index) {
+                          return _buildCustomerCard(context, filteredCustomers[index]);
+                        },
+                      ),
+              ),
             ),
           ],
         );
