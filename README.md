@@ -1,6 +1,8 @@
 # Cammo - Sistem Pager Mobile
 
+<p align="center">
 <img width="200" height="200" alt="cammo_icon" src="https://github.com/user-attachments/assets/86b66d69-0abb-4b47-a560-b42c69f4ba9c" />
+</p>
 
 **Cammo** adalah sistem manajemen antrian mobile modern yang mendigitalisasi operasi antrian restoran dan layanan. Dibangun dengan Flutter dan didukung oleh Firebase, Cammo menyediakan manajemen pager real-time melalui kode QR, memungkinkan komunikasi yang mulus antara merchant dan pelanggan.
 
