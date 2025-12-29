@@ -364,29 +364,20 @@ class PagerRepositoryImpl implements IPagerRepository {
           .where('merchantId', isEqualTo: merchantId)
           .get();
 
-      print('DEBUG: Found ${pagersSnapshot.docs.length} pagers for merchant $merchantId');
-
       // Group pagers by customerId
       final Map<String, List<PagerModel>> customerPagers = {};
       final Set<String> customerIds = {};
 
       for (final doc in pagersSnapshot.docs) {
         final pager = PagerModel.fromFirestore(doc);
-        final data = doc.data();
-        print('DEBUG: Pager ${pager.pagerId} - customerId: ${pager.customerId}, customerType: ${data['customerType']}');
 
         // Skip if no customerId
-        if (pager.customerId == null) {
-          print('DEBUG: Skipping pager ${pager.pagerId} - no customerId');
-          continue;
-        }
+        if (pager.customerId == null) continue;
 
         customerIds.add(pager.customerId!);
         customerPagers.putIfAbsent(pager.customerId!, () => []);
         customerPagers[pager.customerId!]!.add(pager);
       }
-
-      print('DEBUG: Unique customerIds found: $customerIds');
 
       // Fetch user data for all customers (filter out guest users)
       final List<CustomerStatsModel> customerStats = [];
@@ -395,19 +386,12 @@ class PagerRepositoryImpl implements IPagerRepository {
         // Get user data
         final userDoc = await _firestore.collection('users').doc(customerId).get();
 
-        if (!userDoc.exists) {
-          print('DEBUG: User document NOT FOUND for customerId: $customerId');
-          continue;
-        }
+        if (!userDoc.exists) continue;
 
         final user = UserModel.fromFirestore(userDoc);
-        print('DEBUG: User found - name: ${user.displayName}, role: ${user.role}, isGuest: ${user.isGuestUser}');
 
         // Skip guest users
-        if (user.isGuestUser) {
-          print('DEBUG: Skipping guest user: $customerId');
-          continue;
-        }
+        if (user.isGuestUser) continue;
 
         final pagers = customerPagers[customerId]!;
 
